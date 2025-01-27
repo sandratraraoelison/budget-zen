@@ -3,13 +3,12 @@
 import { Credit } from "@/types/credit";
 import CreditItem from "./CreditItem";
 
-export default function CreditList({
-  credits,
-  setCredits,
-}: {
+interface CreditListProps {
   credits: Credit[];
   setCredits: React.Dispatch<React.SetStateAction<Credit[]>>;
-}) {
+}
+
+export default function CreditList({ credits, setCredits }: CreditListProps) {
   const deleteCredit = (id: string) => {
     if (window.confirm("Êtes-vous sûr de vouloir supprimer ce crédit ?")) {
       setCredits((prev) => prev.filter((credit) => credit.id !== id));
