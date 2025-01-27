@@ -6,7 +6,46 @@
   fill: rgba(229, 231, 235, 0.5);
 }
 
+.recharts-tooltip-item-list {
+  @apply dark:text-gray-200;
+}
+
 .recharts-default-tooltip {
   border-radius: 0.5rem !important;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+  @apply dark:border-gray-600 !important;
+}
+
+.magnifying-glass-wrapper {
+  filter: drop-shadow(0 0 8px rgba(225, 91, 100, 0.5));
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.95); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(0.95); }
+}
+
+@keyframes loading-bar {
+  0% { width: 0; opacity: 1; }
+  90% { width: 90%; opacity: 1; }
+  100% { width: 100%; opacity: 0; }
+}
+
+.animate-loading-bar {
+  animation: loading-bar 1.5s ease-out forwards;
+}
+
+.recharts-label {
+  font-family: 'Inter', sans-serif;
+}
+
+.recharts-tooltip-item-name {
+  @apply dark:text-gray-300;
+}
+
+.recharts-bar-rectangle:hover {
+  opacity: 0.9;
+  transition: opacity 0.2s ease;
 }

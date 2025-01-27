@@ -6,21 +6,28 @@ import { useState } from "react";
 type Props = {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (project: { name: string; initialFund: number }) => void;
+  onSave: (project: {
+    name: string;
+    initialFund: number;
+    startDate?: string;
+  }) => void;
 };
 
 export default function NewProjectModal({ isOpen, onClose, onSave }: Props) {
   const [name, setName] = useState("");
   const [initialFund, setInitialFund] = useState("");
+  const [startDate, setStartDate] = useState("");
 
   const handleSubmit = () => {
     if (name && initialFund) {
       onSave({
         name,
         initialFund: parseFloat(initialFund),
+        startDate: startDate || undefined,
       });
       setName("");
       setInitialFund("");
+      setStartDate("");
       onClose();
     }
   };
@@ -36,21 +43,37 @@ export default function NewProjectModal({ isOpen, onClose, onSave }: Props) {
 
           <div className="space-y-4">
             <div>
-              <label className="block mb-1">Nom du projet</label>
+              <label className="block mb-1">Nom du projet *</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full p-2 border rounded"
+                required
               />
             </div>
+
             <div>
-              <label className="block mb-1">Budget initial (MGA)</label>
+              <label className="block mb-1">Budget initial (MGA) *</label>
               <input
                 type="number"
                 value={initialFund}
                 onChange={(e) => setInitialFund(e.target.value)}
                 className="w-full p-2 border rounded"
+                min="0"
+                step="1000"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block mb-1">Date de commencement</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full p-2 border rounded"
+                max={new Date().toISOString().split("T")[0]}
               />
             </div>
           </div>
@@ -64,7 +87,8 @@ export default function NewProjectModal({ isOpen, onClose, onSave }: Props) {
             </button>
             <button
               onClick={handleSubmit}
-              className="bg-primary text-white px-4 py-2 rounded hover:bg-secondary"
+              className="bg-primary text-white px-4 py-2 rounded hover:bg-secondary disabled:opacity-50"
+              disabled={!name || !initialFund}
             >
               Créer le projet
             </button>

@@ -13,4 +13,5 @@ export type Expense = {
     currentFund: number;
     status: "en-cours" | "achevée";
     expenses: Expense[];
+    startDate?: string;
   };

@@ -77,7 +77,36 @@ export default function ProjectCard({
         </div>
       </div>
 
-      {isEditing ? (
+      {project.startDate && (
+        <div className="mb-2 text-sm text-gray-500">
+          Commencé le : {new Date(project.startDate).toLocaleDateString()}
+        </div>
+      )}
+
+      <div className="mb-4">
+        <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+          <div
+            className="bg-primary h-2 rounded-full transition-all duration-300"
+            style={{
+              width: `${Math.min(
+                ((project.initialFund - project.currentFund) /
+                  project.initialFund) *
+                  100,
+                100
+              )}%`,
+            }}
+          />
+        </div>
+        <div className="flex justify-between text-sm text-gray-600">
+          <span>
+            Utilisé : {(project.initialFund - project.currentFund).toFixed(2)}
+            MGA
+          </span>
+          <span>Restant : {project.currentFund.toFixed(2)}MGA</span>
+        </div>
+      </div>
+
+      {isEditing && (
         <div className="flex items-center gap-2 mb-4">
           <input
             type="number"
@@ -92,22 +121,9 @@ export default function ProjectCard({
             <CheckIcon className="w-5 h-5" />
           </button>
         </div>
-      ) : (
-        <div className="mb-4">
-          <p className="text-gray-600">
-            Budget initial : {project.initialFund.toFixed(2)}MGA
-          </p>
-          <p
-            className={`text-lg font-semibold ${
-              project.currentFund < 0 ? "text-red-600" : "text-gray-800"
-            }`}
-          >
-            Solde actuel : {project.currentFund.toFixed(2)}MGA
-          </p>
-        </div>
       )}
 
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-2 mb-4 flex-wrap">
         <button
           onClick={() => updateStatus("achevée")}
           className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-600"
