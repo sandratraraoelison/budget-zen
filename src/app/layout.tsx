@@ -8,6 +8,11 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "BudgetZen",
+  applicationName: "BudgetZen",
+  icons: {
+    icon: { url: "/budgetzen-icon.svg", type: "image/svg+xml" },
+    shortcut: "/budgetzen-icon.svg",
+  },
   description: "Gestion de budget intelligente",
 };
 
