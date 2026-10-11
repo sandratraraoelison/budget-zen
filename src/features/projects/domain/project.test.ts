@@ -47,3 +47,23 @@ test("completed projects reject expenses; dates and zero-fund progress stay vali
     0,
   );
 });
+
+test("funding progress measures money set aside, independently from spending", () => {
+  const goal = reconcileProject({
+    ...project(),
+    initialFund: 1000,
+    savedFund: 200,
+    expenses: [],
+  });
+  assert.equal(projectProgress(goal), 20);
+  assert.equal(goal.currentFund, 200);
+  const spent = recordExpense(goal, {
+    id: "ticket",
+    description: "Ticket",
+    category: "transport",
+    amount: 50,
+    date: "2026-10-11",
+  });
+  assert.equal(projectProgress(spent), 20);
+  assert.equal(spent.currentFund, 150);
+});

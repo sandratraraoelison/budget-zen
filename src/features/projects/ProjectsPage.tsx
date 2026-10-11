@@ -23,6 +23,7 @@ export default function ProjectsPage() {
   const {
     projects,
     setProjects,
+    contributeProject,
     error,
     loading,
     pending,
@@ -48,9 +49,11 @@ export default function ProjectsPage() {
     name: string;
     initialFund: number;
     startDate?: string;
+    targetDate?: string | null;
   }) => {
     const project = reconcileProject({
       ...newProject,
+      savedFund: 0,
       id: crypto.randomUUID(),
       currentFund: newProject.initialFund,
       expenses: [],
@@ -174,6 +177,7 @@ export default function ProjectsPage() {
               project={project}
               setProjects={setProjects}
               onDelete={deleteProject}
+              contribute={contributeProject}
             />
           ))}
         </div>

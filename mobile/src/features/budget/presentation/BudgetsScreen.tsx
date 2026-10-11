@@ -1,3 +1,5 @@
+import FundingHistory from "./FundingHistory";
+import SavingsSection from "./SavingsSection";
 import { useCallback, useState } from "react";
 import { Text } from "react-native";
 import { useServices } from "../../../composition/ServicesProvider";
@@ -74,6 +76,13 @@ export default function BudgetsScreen() {
           </Card>
         );
       })}
+      {resource.data && (
+        <SavingsSection
+          goals={resource.data.savingsGoals ?? []}
+          reload={resource.reload}
+        />
+      )}
+      <FundingHistory entries={resource.data?.fundingHistory} />
       {creating && (
         <NewBudgetModal
           summary={resource.data}

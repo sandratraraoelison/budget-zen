@@ -5,7 +5,19 @@ import type {
   Transaction,
 } from "../domain/budget";
 export const createBudgetRepository = (http: HttpClient): BudgetRepository => ({
-  reorderCategories: ids => http.request("categories/order", { method: "PATCH", body: { ids } }),
+  createSavings: (body) =>
+    http.request("savings-goals", { method: "POST", body }),
+  updateSavings: (id, body) =>
+    http.request(`savings-goals/${id}`, { method: "PATCH", body }),
+  removeSavings: (id) =>
+    http.request(`savings-goals/${id}`, { method: "DELETE" }),
+  contributeSavings: (id, amount, direction) =>
+    http.request(`savings-goals/${id}/contributions`, {
+      method: "POST",
+      body: { amount, direction },
+    }),
+  reorderCategories: (ids) =>
+    http.request("categories/order", { method: "PATCH", body: { ids } }),
   createCategory: (body) =>
     http.request("custom-categories", { method: "POST", body }),
   updateCategory: (id, body) =>

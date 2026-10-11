@@ -848,3 +848,116 @@ test("bank conditions and payment allocations persist through the authenticated 
     before.balance,
   );
 });
+
+test("project target dates persist and can be cleared through the API", async () => {
+  const project = await request<Project & { targetDate: string | null }>(
+    "projects",
+    "POST",
+    {
+      name: "Vacation",
+      initialFund: 1000,
+      startDate: "2026-11-01",
+      targetDate: "2026-12-15",
+    },
+    one.accessToken,
+    201,
+  );
+  assert.equal(project.targetDate, "2026-12-15");
+  await request(
+    `projects/${project.id}`,
+    "PATCH",
+    { targetDate: "2026-10-15" },
+    one.accessToken,
+    400,
+  );
+  const updated = await request<{ targetDate: null }>(
+    `projects/${project.id}`,
+    "PATCH",
+    { targetDate: null },
+    one.accessToken,
+  );
+  assert.equal(updated.targetDate, null);
+  await request(
+    `projects/${project.id}`,
+    "GET",
+    undefined,
+    two.accessToken,
+    404,
+  );
+  await request(
+    `projects/${project.id}`,
+    "DELETE",
+    undefined,
+    one.accessToken,
+    204,
+  );
+});
+
+test("savings contributions are validated, atomic and scoped to the owner", async () => {
+  const goal = await request<{ id: string }>(
+    "savings-goals",
+    "POST",
+    { name: "Vacation savings", target: 100, deadline: "2026-12-15" },
+    one.accessToken,
+    201,
+  );
+  const path = `savings-goals/${goal.id}/contributions`;
+  const results = await Promise.all([
+    request<{ current: number }>(
+      path,
+      "POST",
+      { direction: "add", amount: 10 },
+      one.accessToken,
+      201,
+    ),
+    request<{ current: number }>(
+      path,
+      "POST",
+      { direction: "add", amount: 20 },
+      one.accessToken,
+      201,
+    ),
+  ]);
+  assert.equal(Math.max(...results.map((result) => result.current)), 30);
+  await request(
+    path,
+    "POST",
+    { direction: "withdraw", amount: 31 },
+    one.accessToken,
+    400,
+  );
+  await request(
+    path,
+    "POST",
+    { direction: "add", amount: 1 },
+    two.accessToken,
+    404,
+  );
+  await request(
+    path,
+    "POST",
+    { direction: "other", amount: 1 },
+    one.accessToken,
+    400,
+  );
+  await request(
+    `savings-goals/${goal.id}`,
+    "DELETE",
+    undefined,
+    one.accessToken,
+    204,
+  );
+});
+
+test("project funding contributions synchronize without inventing initial funds", async () => {
+ const project = await request<Project & { savedFund:number }>("projects","POST",{ name:"Vacation fund",initialFund:1000,savedFund:0 },one.accessToken,201);
+ assert.equal(project.currentFund,0);assert.equal(project.savedFund,0);
+ const path = `projects/${project.id}/contributions`;
+ const results = await Promise.all([request<Project & {savedFund:number}>(path,"POST",{ amount:100,direction:"add" },one.accessToken,201),request<Project & {savedFund:number}>(path,"POST",{ amount:200,direction:"add" },one.accessToken,201)]);
+ assert.equal(Math.max(...results.map(project=>project.savedFund)),300);
+ await request(path,"POST",{ amount:301,direction:"withdraw" },one.accessToken,400);
+ await request(path,"POST",{ amount:1,direction:"add" },two.accessToken,404);
+ const current = await request<Project>(`projects/${project.id}`,"GET",undefined,one.accessToken);
+ assert.equal(current.currentFund,300);assert.equal("savedFundMinor" in current,false);
+ await request(`projects/${project.id}`,"DELETE",undefined,one.accessToken,204);
+});

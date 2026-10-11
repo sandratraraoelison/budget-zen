@@ -1,3 +1,12 @@
+export interface FundingEntry {
+  id: string;
+  goalId: string;
+  goalName: string;
+  source: "savings" | "project";
+  date: string;
+  amount: number;
+  reason: "deposit" | "withdrawal" | "adjustment" | "release" | "opening";
+}
 export const categories = [
   "salaire",
   "loyer",
@@ -21,7 +30,19 @@ export interface Transaction extends TransactionInput {
   syncStatus?: "pending";
   id: string;
 }
+export interface SavingsGoal {
+  history?: FundingEntry[];
+  id: string;
+  name: string;
+  target: number;
+  current: number;
+  deadline: string;
+}
 export interface BudgetSummary {
+  projectReserved?: number;
+  savingsReserved?: number;
+  fundingHistory?: FundingEntry[];
+  savingsGoals?: SavingsGoal[];
   creditBalance?: number;
   categoryOrder?: string[];
   hiddenCategories?: string[];
@@ -45,6 +66,21 @@ export interface BudgetSummary {
   }[];
 }
 export interface BudgetRepository {
+  createSavings(input: {
+    name: string;
+    target: number;
+    deadline: string;
+  }): Promise<unknown>;
+  updateSavings(
+    id: string,
+    input: { name: string; target: number; deadline: string },
+  ): Promise<unknown>;
+  removeSavings(id: string): Promise<unknown>;
+  contributeSavings(
+    id: string,
+    amount: number,
+    direction: "add" | "withdraw",
+  ): Promise<unknown>;
   reorderCategories(ids: string[]): Promise<unknown>;
   createCategory(input: {
     name: string;

@@ -27,7 +27,9 @@ export default function ExpenseList({
       ...expense,
       id: crypto.randomUUID(),
     });
-    await setProjects((prev) => prev.map((p) => (p.id === project.id ? updated : p)));
+    await setProjects((prev) =>
+      prev.map((p) => (p.id === project.id ? updated : p)),
+    );
   };
 
   return (
@@ -39,7 +41,9 @@ export default function ExpenseList({
           onClick={() => setIsModalOpen(true)}
           className="flex items-center gap-1 text-primary hover:text-secondary"
         >
-          <PlusIcon className="w-5 h-5" />{t("Ajouter une dépense")}</button>
+          <PlusIcon className="w-5 h-5" />
+          {t("Ajouter une dépense")}
+        </button>
       </div>
 
       <div className="space-y-2">
@@ -50,11 +54,19 @@ export default function ExpenseList({
           >
             <div>
               <p className="font-medium">{expense.description}</p>
-              <p className="text-sm text-gray-500 dark:text-slate-300">{new Date(`${expense.date}T00:00:00`).toLocaleDateString(locale)}</p>
+              <p className="text-sm text-gray-500 dark:text-slate-300">
+                {new Date(`${expense.date}T00:00:00`).toLocaleDateString(
+                  locale,
+                )}
+              </p>
             </div>
             <div className="text-right">
-              <p className="text-red-600 dark:text-red-300">-{formatMoney(expense.amount)}</p>
-              <p className="text-sm text-gray-500 dark:text-slate-300">{t(expense.category)}</p>
+              <p className="text-red-600 dark:text-red-300">
+                -{formatMoney(expense.amount)}
+              </p>
+              <p className="text-sm text-gray-500 dark:text-slate-300">
+                {t(expense.category)}
+              </p>
             </div>
           </div>
         ))}

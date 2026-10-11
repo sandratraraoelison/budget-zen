@@ -15,6 +15,7 @@ type Props = {
     name: string;
     initialFund: number;
     startDate?: string;
+    targetDate?: string | null;
   }) => Promise<void>;
 };
 
@@ -23,7 +24,10 @@ export default function NewProjectModal({ isOpen, onClose, onSave }: Props) {
   const { currency } = useCurrency();
   const [name, setName] = useState("");
   const [initialFund, setInitialFund] = useState("");
-  const [startDate, setStartDate] = useState("");
+  const [startDate, setStartDate] = useState(
+    new Date().toISOString().slice(0, 10),
+  );
+  const [targetDate, setTargetDate] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
 
@@ -34,6 +38,7 @@ export default function NewProjectModal({ isOpen, onClose, onSave }: Props) {
           name,
           initialFund: Number(initialFund),
           startDate: startDate || undefined,
+          targetDate: targetDate || null,
         });
       } catch (error) {
         setError((error as Error).message);
@@ -42,7 +47,8 @@ export default function NewProjectModal({ isOpen, onClose, onSave }: Props) {
       setError("");
       setName("");
       setInitialFund("");
-      setStartDate("");
+      setStartDate(new Date().toISOString().slice(0, 10));
+      setTargetDate("");
       onClose();
     }
   };
@@ -50,14 +56,20 @@ export default function NewProjectModal({ isOpen, onClose, onSave }: Props) {
   const handleSubmit = async () => {
     if (pending) return;
     setPending(true);
-    try { await saveForm(); } finally { setPending(false); }
+    try {
+      await saveForm();
+    } finally {
+      setPending(false);
+    }
   };
   return (
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center p-4">
         <Dialog.Panel className="ui-dialog bg-white p-6 w-full max-w-md dark:bg-slate-900">
-          <Dialog.Title className="text-xl font-bold mb-4">{t("Nouveau Projet")}</Dialog.Title>
+          <Dialog.Title className="text-xl font-bold mb-4">
+            {t("Nouveau Projet")}
+          </Dialog.Title>
 
           <div className="space-y-4">
             {error && (
@@ -77,7 +89,9 @@ export default function NewProjectModal({ isOpen, onClose, onSave }: Props) {
             </div>
 
             <div>
-              <label className="block mb-1">{t("Budget initial (")}{currency}) *
+              <label className="block mb-1">
+                {t("Montant cible (")}
+                {currency}) *
               </label>
               <AmountInput
                 type="number"
@@ -96,8 +110,22 @@ export default function NewProjectModal({ isOpen, onClose, onSave }: Props) {
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 className="w-full p-2 border rounded"
-                max={new Date().toISOString().split("T")[0]}
+                max={targetDate || undefined}
               />
+            </div>
+            <div>
+              <label className="mb-1 block">
+                {t("Date cible du projet (optionnel)")}
+              </label>
+              <DateInput
+                value={targetDate}
+                min={startDate || undefined}
+                onChange={(event) => setTargetDate(event.target.value)}
+                className="w-full rounded border p-2"
+              />
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                {t("Exemple : vos vacances le 15 décembre.")}
+              </p>
             </div>
           </div>
 
@@ -105,12 +133,16 @@ export default function NewProjectModal({ isOpen, onClose, onSave }: Props) {
             <button
               onClick={onClose}
               className="px-4 py-2 text-gray-500 hover:text-gray-700 dark:text-slate-300 dark:hover:text-slate-100"
-            >{t("Annuler")}</button>
+            >
+              {t("Annuler")}
+            </button>
             <button
               onClick={handleSubmit}
               className="ui-primary disabled:opacity-50"
               disabled={pending || !name || !initialFund}
-            >{t("Créer le projet")}</button>
+            >
+              {t("Créer le projet")}
+            </button>
           </div>
         </Dialog.Panel>
       </div>

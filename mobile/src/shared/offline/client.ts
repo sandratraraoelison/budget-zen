@@ -348,7 +348,7 @@ function projectSummary(
     transactions,
     totalIncome: income / 100,
     totalExpenses: expenses / 100,
-    balance: (income - expenses + Math.round((summary.creditBalance ?? 0) * 100)) / 100,
+    balance: (income - expenses + Math.round((summary.creditBalance ?? 0) * 100) - Math.round((summary.projectReserved ?? 0) * 100) - (summary.savingsGoals ?? []).reduce((sum, goal) => sum + Math.round(goal.current * 100), 0)) / 100,
     budgets: summary.budgets.map((b) => ({
       ...b,
       current:

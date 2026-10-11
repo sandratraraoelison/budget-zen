@@ -10,6 +10,14 @@ import {
 import { IsMoney } from "../../../shared/presentation/validators";
 
 export class ProjectDto {
+  @ApiPropertyOptional()
+  @ValidateIf((_o, v) => v !== undefined)
+  @IsMoney(true)
+  savedFund?: number;
+  @ApiPropertyOptional({ example: "2026-12-15", nullable: true })
+  @ValidateIf((_o, v) => v !== undefined && v !== null)
+  @IsISO8601({ strict: true })
+  targetDate?: string | null;
   @ApiProperty({ example: "Maison" })
   @IsString()
   @Matches(/\S/)
@@ -44,4 +52,11 @@ export class ExpenseDto {
   @Matches(/\S/)
   @MaxLength(100)
   category!: string;
+}
+
+export class ProjectContributionDto {
+  @ApiProperty({ enum: ["add", "withdraw"] })
+  @IsIn(["add", "withdraw"])
+  direction!: "add" | "withdraw";
+  @ApiProperty() @IsMoney() amount!: number;
 }

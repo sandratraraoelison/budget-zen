@@ -58,14 +58,20 @@ export default function NewExpenseModal({
   const handleSubmit = async () => {
     if (pending) return;
     setPending(true);
-    try { await saveForm(); } finally { setPending(false); }
+    try {
+      await saveForm();
+    } finally {
+      setPending(false);
+    }
   };
   return (
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center p-4">
         <Dialog.Panel className="ui-dialog bg-white p-6 w-full max-w-md dark:bg-slate-900">
-          <Dialog.Title className="text-xl font-bold mb-4">{t("Nouvelle Dépense")}</Dialog.Title>
+          <Dialog.Title className="text-xl font-bold mb-4">
+            {t("Nouvelle Dépense")}
+          </Dialog.Title>
 
           <div className="space-y-4">
             {error && (
@@ -85,7 +91,10 @@ export default function NewExpenseModal({
             </div>
 
             <div>
-              <label className="block mb-1">{t("Montant (")}{currency})</label>
+              <label className="block mb-1">
+                {t("Montant (")}
+                {currency})
+              </label>
               <AmountInput
                 type="number"
                 value={amount}
@@ -130,8 +139,17 @@ export default function NewExpenseModal({
               type="button"
               onClick={onClose}
               className="px-4 py-2 text-gray-500 hover:text-gray-700 dark:text-slate-300 dark:hover:text-slate-100"
-            >{t("Annuler")}</button>
-            <button type="button" disabled={pending} onClick={handleSubmit} className="ui-primary">{t("Ajouter")}</button>
+            >
+              {t("Annuler")}
+            </button>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={handleSubmit}
+              className="ui-primary"
+            >
+              {t("Ajouter")}
+            </button>
           </div>
         </Dialog.Panel>
       </div>

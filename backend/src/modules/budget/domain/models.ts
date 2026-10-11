@@ -1,3 +1,4 @@
+import type { FundingJournal } from "../../../shared/domain/funding";
 export const CATEGORIES = [
   "salaire",
   "loyer",
@@ -47,7 +48,7 @@ export interface CustomCategory {
   transactions: Transaction[];
   createdAt: string;
 }
-export interface BudgetState {
+export interface BudgetState extends FundingJournal {
   categoryOrder?: string[];
   syncReceipts?: { clientId: string; transaction: Transaction }[];
   transactions: Transaction[];

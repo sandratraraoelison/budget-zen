@@ -1,9 +1,10 @@
+import { openingFunding, recordFunding } from "../../../shared/domain/funding";
 import type {
   Runtime,
   StateRepository,
 } from "../../../shared/application/state-repository";
 import { DomainError, required } from "../../../shared/domain/errors";
-import { toMinor } from "../../../shared/domain/money";
+import { sumMinor, toMinor } from "../../../shared/domain/money";
 import { validateDateRange } from "../../../shared/domain/dates";
 import type {
   ExpenseInput,
@@ -20,27 +21,35 @@ export class ProjectsService {
   ) {}
 
   list(user: string) {
-    return this.repository.read(user).projects.map(projectView);
+    const state = this.repository.read(user);
+    return state.projects.map((project) => projectView(project, state.fundingHistory));
   }
   get(user: string, id: string) {
-    return projectView(
-      required(this.repository.read(user).projects.find((p) => p.id === id)),
-    );
+    const state = this.repository.read(user);
+    return projectView(required(state.projects.find((p) => p.id === id)), state.fundingHistory);
   }
 
   create(user: string, input: ProjectInput) {
-    if (input.startDate) validateDateRange(input.startDate);
+    if (input.startDate)
+      validateDateRange(input.startDate, input.targetDate ?? undefined);
+    else if (input.targetDate) validateDateRange(input.targetDate);
     return this.repository.mutate(user, (state) => {
       const project = {
         id: this.runtime.id(),
         name: input.name,
         initialFundMinor: toMinor(input.initialFund, true),
+        savedFundMinor:
+          input.savedFund === undefined
+            ? undefined
+            : toMinor(input.savedFund, true),
         status: "en-cours" as const,
         expenses: [],
         startDate: input.startDate,
+        targetDate: input.targetDate,
       };
       state.projects.push(project);
-      return projectView(project);
+      recordFunding(state, this.runtime, project, "project", project.savedFundMinor ?? 0, "deposit");
+      return projectView(project, state.fundingHistory);
     });
   }
 
@@ -55,16 +64,59 @@ export class ProjectsService {
           validateDateRange(input.startDate, expense.date);
         project.startDate = input.startDate;
       }
+      if (input.targetDate !== undefined) project.targetDate = input.targetDate;
+      if (project.startDate)
+        validateDateRange(project.startDate, project.targetDate ?? undefined);
+      else if (project.targetDate) validateDateRange(project.targetDate);
+      if (input.savedFund !== undefined) {
+        openingFunding(state, this.runtime, project, "project", project.savedFundMinor ?? 0);
+        const saved = toMinor(input.savedFund, true);
+        recordFunding(state, this.runtime, project, "project", saved - (project.savedFundMinor ?? 0), "adjustment");
+        project.savedFundMinor = saved;
+      }
       if (input.initialFund !== undefined)
         project.initialFundMinor = toMinor(input.initialFund, true);
       assertProjectFund(project);
-      return projectView(project);
+      return projectView(project, state.fundingHistory);
+    });
+  }
+
+  contribute(
+    user: string,
+    id: string,
+    input: { amount: number; direction: "add" | "withdraw" },
+  ) {
+    return this.repository.mutate(user, (state) => {
+      const project = required(
+        state.projects.find((project) => project.id === id),
+      );
+      if (project.status !== "en-cours")
+        throw new DomainError(
+          "CONFLICT",
+          "Réouvrez le projet pour modifier sa cagnotte.",
+        );
+      const next =
+        (project.savedFundMinor ?? project.initialFundMinor) +
+        (input.direction === "add" ? 1 : -1) * toMinor(input.amount);
+      if (!Number.isSafeInteger(next) || next < 0)
+        throw new DomainError("VALIDATION", "Montant de cagnotte invalide.");
+      openingFunding(state, this.runtime, project, "project", project.savedFundMinor ?? 0);
+      recordFunding(state, this.runtime, project, "project", next - (project.savedFundMinor ?? 0), input.direction === "add" ? "deposit" : "withdrawal");
+      project.savedFundMinor = next;
+      assertProjectFund(project);
+      return projectView(project, state.fundingHistory);
     });
   }
 
   remove(user: string, id: string) {
     this.repository.mutate(user, (state) => {
-      required(state.projects.find((p) => p.id === id));
+      const project = required(state.projects.find((p) => p.id === id));
+      if (project.savedFundMinor !== undefined) {
+        const spent = sumMinor(project.expenses.map((e) => e.amountMinor));
+        openingFunding(state, this.runtime, project, "project", project.savedFundMinor);
+        recordFunding(state, this.runtime, project, "project", -(project.savedFundMinor - spent), "release");
+        state.spentDeletedProjectsMinor = sumMinor([state.spentDeletedProjectsMinor ?? 0, spent]);
+      }
       state.projects = state.projects.filter((p) => p.id !== id);
     });
   }
@@ -86,7 +138,7 @@ export class ProjectsService {
         category: input.category,
       });
       assertProjectFund(project);
-      return projectView(project);
+      return projectView(project, state.fundingHistory);
     });
   }
 

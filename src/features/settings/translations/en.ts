@@ -1,5 +1,47 @@
 // French messages are stable translation keys; user-entered data is never translated.
 export const english: Record<string, string> = {
+  "Historique des mises de côté": "Savings history",
+  "Un versement réduit le solde disponible. Un retrait le réaugmente.": "A deposit reduces your available balance. A withdrawal increases it.",
+  "Aucun mouvement pour le moment.": "No movements yet.",
+  "Mise de côté": "Set aside",
+  "Correction du montant": "Amount adjustment",
+  "Restitution après suppression": "Funds released after deletion",
+  "Montant déjà mis de côté": "Opening savings amount",
+  "Déjà mis de côté": "Already set aside",
+  "Financement de l’objectif": "Goal funding",
+  "Mis de côté": "Set aside",
+  "Disponible dans la cagnotte": "Available project funds",
+  "Mettre de côté": "Set money aside",
+  "Objectif financé": "Goal funded",
+  Objectif: "Target",
+  "Montant cible (": "Target amount (",
+
+  "Nouvel objectif d’épargne": "New savings goal",
+  "Modifier l’objectif": "Edit goal",
+  "Ajouter à l’épargne": "Add savings",
+  "Retirer de l’épargne": "Withdraw savings",
+  "Supprimer cet objectif d’épargne ?": "Delete this savings goal?",
+  "Suivez les sommes déjà mises de côté.":
+    "Track the money you have already set aside.",
+  Nom: "Name",
+  "Montant cible": "Target amount",
+  "Reste à épargner": "Still to save",
+  "Rythme mensuel estimé": "Estimated monthly pace",
+  "+ Objectif": "+ Goal",
+  Retirer: "Withdraw",
+  "Le retrait dépasse l’épargne disponible.":
+    "Withdrawal exceeds available savings.",
+
+  "Date cible du projet (optionnel)": "Project target date (optional)",
+  "Date cible": "Target date",
+  "Exemple : vos vacances le 15 décembre.":
+    "For example: your vacation on December 15.",
+  "Modifier le projet": "Edit project",
+  "À venir": "Upcoming",
+  "Date cible dépassée": "Target date passed",
+  "C’est aujourd’hui": "It's today",
+  "{days} jours restants": "{days} days remaining",
+
   "Préremplir la mensualité estimée": "Prefill estimated installment",
   "Crédit bancaire": "Bank loan",
   "Crédits bancaires": "Bank loans",

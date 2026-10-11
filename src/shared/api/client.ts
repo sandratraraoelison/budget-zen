@@ -11,5 +11,7 @@ export async function accountRequest<T>(
     const data = await response.json().catch(() => ({}));
     throw new Error(data.message ?? "Impossible de terminer l’opération.");
   }
+  if (init.method && init.method !== "GET" && typeof window !== "undefined")
+    window.dispatchEvent(new Event("account-updated"));
   return response.status === 204 ? (undefined as T) : response.json();
 }

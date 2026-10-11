@@ -1,10 +1,11 @@
+import { fundingView, type FundingMovement } from "../../../shared/domain/funding";
 import { DomainError } from "../../../shared/domain/errors";
 import { fromMinor, sumMinor } from "../../../shared/domain/money";
 import type { Project } from "./models";
 
 export function availableFund(project: Project) {
   return (
-    project.initialFundMinor -
+    (project.savedFundMinor ?? project.initialFundMinor) -
     sumMinor(project.expenses.map((e) => e.amountMinor))
   );
 }
@@ -17,14 +18,17 @@ export function assertProjectFund(project: Project) {
 }
 export function projectView({
   initialFundMinor,
+  savedFundMinor,
   expenses,
   ...project
-}: Project) {
+}: Project, history: FundingMovement[] = []) {
   return {
     ...project,
+    history: history.filter((e) => e.goalId === project.id).map(fundingView),
     initialFund: fromMinor(initialFundMinor),
+    savedFund: fromMinor(savedFundMinor ?? initialFundMinor),
     currentFund: fromMinor(
-      availableFund({ ...project, initialFundMinor, expenses }),
+      availableFund({ ...project, initialFundMinor, savedFundMinor, expenses }),
     ),
     expenses: expenses.map(({ amountMinor, ...expense }) => ({
       ...expense,

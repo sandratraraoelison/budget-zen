@@ -61,6 +61,7 @@ export function useAccountResource<T>(
     };
     const timer = window.setInterval(resume, 15000);
     window.addEventListener("focus", resume);
+    window.addEventListener("account-updated", resume);
     window.addEventListener("online", resume);
     document.addEventListener("visibilitychange", resume);
     return () => {
@@ -70,6 +71,7 @@ export function useAccountResource<T>(
       controller.abort();
       clearInterval(timer);
       window.removeEventListener("focus", resume);
+      window.removeEventListener("account-updated", resume);
       window.removeEventListener("online", resume);
       document.removeEventListener("visibilitychange", resume);
     };

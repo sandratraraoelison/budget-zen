@@ -19,6 +19,7 @@ import {
   BudgetDto,
   CustomCategoryDto,
   GoalDto,
+  SavingsContributionDto,
   TransactionDto,
   UpdateBudgetDto,
   UpdateCustomCategoryDto,
@@ -100,6 +101,13 @@ export class BudgetController {
     @Body() dto: UpdateGoalDto,
   ) {
     return this.service.updateGoal(user, id, dto);
+  }
+  @Post("savings-goals/:id/contributions") contributeGoal(
+    @CurrentUser() user: string,
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() dto: SavingsContributionDto,
+  ) {
+    return this.service.contributeGoal(user, id, dto);
   }
   @Delete("savings-goals/:id") @HttpCode(204) removeGoal(
     @CurrentUser() user: string,

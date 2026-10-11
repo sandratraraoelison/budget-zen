@@ -4,12 +4,16 @@ import {
   sumAmounts,
   toMinor,
 } from "../../../shared/domain/money";
-import { calendarDay } from "../../../shared/domain/dates";
+import { calendarDay, validateDateRange } from "../../../shared/domain/dates";
 
 export function reconcileProject(project: Project): Project {
   if (!project.name.trim())
     throw new Error("Le nom du projet est obligatoire.");
   toMinor(project.initialFund, true);
+  toMinor(project.savedFund ?? project.initialFund, true);
+  if (project.startDate)
+    validateDateRange(project.startDate, project.targetDate ?? undefined);
+  else if (project.targetDate) calendarDay(project.targetDate);
   const start = project.startDate ? calendarDay(project.startDate) : null;
   project.expenses.forEach((expense) => {
     toMinor(expense.amount);
@@ -20,7 +24,7 @@ export function reconcileProject(project: Project): Project {
       throw new Error("Une dépense ne peut pas précéder le projet.");
   });
   const currentFund = subtractAmounts(
-    project.initialFund,
+    project.savedFund ?? project.initialFund,
     sumAmounts(project.expenses.map((e) => e.amount)),
   );
   if (currentFund < 0)
@@ -40,14 +44,13 @@ export function recordExpense(project: Project, expense: Expense): Project {
 }
 
 export function projectProgress(project: Project): number {
-  return project.initialFund === 0
+  return project.initialFund <= 0
     ? 0
-    : Math.max(
-        0,
-        Math.min(
-          100,
-          (subtractAmounts(project.initialFund, project.currentFund) /
-            project.initialFund) *
+    : Math.min(
+        100,
+        Math.max(
+          0,
+          ((project.savedFund ?? project.initialFund) / project.initialFund) *
             100,
         ),
       );

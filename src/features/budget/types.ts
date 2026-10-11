@@ -1,5 +1,15 @@
+export interface FundingEntry {
+  id: string;
+  goalId: string;
+  goalName: string;
+  source: "savings" | "project";
+  date: string;
+  amount: number;
+  reason: "deposit" | "withdrawal" | "adjustment" | "release" | "opening";
+}
 import type { TransactionCategory } from "./domain/categorization";
 export interface SavingsGoal {
+  history?: FundingEntry[];
   id: string;
   name: string;
   target: number;
@@ -42,6 +52,9 @@ export interface Budget {
 }
 
 export interface AppState {
+  projectReserved?: number;
+  savingsReserved?: number;
+  fundingHistory?: FundingEntry[];
   creditBalance?: number;
   categoryOrder?: string[];
   hiddenCategories?: string[];
@@ -53,6 +66,13 @@ export interface AppState {
 }
 
 export interface BudgetContextType {
+  saveSavingsGoal(goal: SavingsGoal, create?: boolean): Promise<void>;
+  removeSavingsGoal(id: string): Promise<void>;
+  contributeSavings(
+    id: string,
+    amount: number,
+    direction: "add" | "withdraw",
+  ): Promise<void>;
   reorderCategories: (ids: string[]) => Promise<void>;
   saveCategory: (category: CustomCategory, create?: boolean) => Promise<void>;
   removeCategory: (id: string) => Promise<void>;

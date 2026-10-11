@@ -1,4 +1,5 @@
 "use client";
+import FundingHistory from "./components/FundingHistory";
 import SyncStatus from "@/components/ui/SyncStatus";
 import { useLocale } from "@/features/settings/LocaleProvider";
 
@@ -9,17 +10,16 @@ import SpendingChart from "./components/SpendingChart";
 import BudgetCard from "./components/BudgetCard";
 import Link from "next/link";
 import AlertsCard from "./components/AlertsCard";
-import SavingsGoalCard from "./components/SavingsGoalCard";
+import SavingsSection from "./components/SavingsSection";
 import Navigation from "@/components/Navigation";
 import PageHeader from "@/components/ui/PageHeader";
-import EmptyState from "@/components/ui/EmptyState";
 import { TransactionsList } from "./components/TransactionsList";
 import BalanceCard from "./components/BalanceCard";
 import WorkspaceOverview from "./components/WorkspaceOverview";
 
 export default function Dashboard() {
   const { t } = useLocale();
-  const { state, error, loading, pending } = useBudget();
+  const { error, loading, pending } = useBudget();
   const [transactionModalOpen, setTransactionModalOpen] = useState(false);
   const [notice, setNotice] = useState("");
   return (
@@ -29,7 +29,9 @@ export default function Dashboard() {
         <SyncStatus loading={loading} pending={pending} error={error} />
         <PageHeader
           title={t("Tableau de bord")}
-          description={t("Une vue claire de vos finances, pour savoir où vous en êtes et préparer la suite.")}
+          description={t(
+            "Une vue claire de vos finances, pour savoir où vous en êtes et préparer la suite.",
+          )}
           action={
             <button
               disabled={loading || pending}
@@ -39,7 +41,9 @@ export default function Dashboard() {
                 setTransactionModalOpen(true);
               }}
               className="ui-primary"
-            >{t("+ Ajouter une transaction")}</button>
+            >
+              {t("+ Ajouter une transaction")}
+            </button>
           }
         />
         <BalanceCard />
@@ -68,21 +72,15 @@ export default function Dashboard() {
               aria-label={t("Vos budgets")}
             >
               <BudgetCard />
-              <Link href="/budgets" className="mt-4 inline-flex text-sm font-semibold text-teal-700 dark:text-teal-300">{t("Gérer les budgets")}</Link>
+              <Link
+                href="/budgets"
+                className="mt-4 inline-flex text-sm font-semibold text-teal-700 dark:text-teal-300"
+              >
+                {t("Gérer les budgets")}
+              </Link>
             </section>
-            <section className="ui-card" aria-labelledby="savings-heading">
-              <h2 id="savings-heading" className="ui-title mb-4">{t("Objectifs d’épargne")}</h2>
-              {state.savingsGoals.length === 0 ? (
-                <EmptyState
-                  title={t("Vos objectifs prennent forme ici")}
-                  description={t("Aucun objectif d’épargne défini pour le moment.")}
-                />
-              ) : (
-                state.savingsGoals.map((goal) => (
-                  <SavingsGoalCard key={goal.id} goal={goal} />
-                ))
-              )}
-            </section>
+            <SavingsSection />
+            <FundingHistory />
           </aside>
         </div>
       </main>

@@ -27,6 +27,8 @@ export function isAllowedAccountRoute(path: string, method: string): boolean {
     "business/transactions": ["GET", "POST"],
     "business/analytics": ["GET"],
   };
+  if (/^(?:savings-goals|projects)\/[0-9a-f-]{36}\/contributions$/i.test(path))
+    return method === "POST";
   const allowed =
     methods[path] ??
     (/^(business\/transactions|transactions|budgets|savings-goals|custom-categories|projects|credits)\/[0-9a-f-]{36}$/i.test(

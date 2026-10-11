@@ -52,6 +52,7 @@ next-env.d.ts
 !/.env.example
 
 /.next-validation/
+/.next-build-verify/
 
 /mobile/node_modules/
 /mobile/.expo/

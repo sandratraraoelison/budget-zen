@@ -1,3 +1,4 @@
+import { fundingView } from "../../../shared/domain/funding";
 import { fromMinor, sumMinor } from "../../../shared/domain/money";
 import type { BudgetState, Transaction } from "./models";
 
@@ -96,7 +97,10 @@ export function budgetSummary(state: BudgetState) {
     else if (category.spent >= category.budget * 0.9)
       alerts.push(`Attention : 90% du budget ${category.name} utilisé`);
   }
+  const savingsReservedMinor = sumMinor(state.savingsGoals.map((g) => g.currentMinor));
   return {
+    savingsReserved: fromMinor(savingsReservedMinor),
+    fundingHistory: (state.fundingHistory ?? []).map(fundingView),
     categoryOrder: state.categoryOrder ?? [],
     hiddenCategories: state.customCategories.flatMap((c) =>
       c.baseCategory ? [c.baseCategory] : [],
@@ -108,12 +112,13 @@ export function budgetSummary(state: BudgetState) {
     savingsGoals: state.savingsGoals.map(
       ({ targetMinor, currentMinor, ...goal }) => ({
         ...goal,
+        history: (state.fundingHistory ?? []).filter((e) => e.goalId === goal.id).map(fundingView),
         target: fromMinor(targetMinor),
         current: fromMinor(currentMinor),
       }),
     ),
     totalIncome: fromMinor(totalIncomeMinor),
     totalExpenses: fromMinor(totalExpensesMinor),
-    balance: fromMinor(totalIncomeMinor - totalExpensesMinor),
+    balance: fromMinor(totalIncomeMinor - totalExpensesMinor - savingsReservedMinor),
   };
 }

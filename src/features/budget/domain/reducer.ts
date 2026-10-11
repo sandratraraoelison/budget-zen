@@ -49,6 +49,14 @@ export type BudgetAction =
   | { type: "budget/add"; budget: Budget }
   | { type: "budget/update"; budget: Budget }
   | { type: "budget/remove"; id: string }
+  | { type: "savings/update"; goal: SavingsGoal }
+  | { type: "savings/remove"; id: string }
+  | {
+      type: "savings/contribute";
+      id: string;
+      amount: number;
+      direction: "add" | "withdraw";
+    }
   | { type: "savings/add"; goal: SavingsGoal }
   | { type: "category/update"; category: CustomCategory }
   | { type: "category/remove"; id: string }
@@ -112,6 +120,7 @@ export function budgetReducer(state: AppState, action: BudgetAction): AppState {
         budgets: state.budgets.filter((budget) => budget.id !== action.id),
       };
       break;
+    case "savings/update":
     case "savings/add":
       toMinor(action.goal.target);
       toMinor(action.goal.current, true);
@@ -120,8 +129,42 @@ export function budgetReducer(state: AppState, action: BudgetAction): AppState {
         !Number.isFinite(action.goal.deadline.getTime())
       )
         throw new Error("L’objectif est invalide.");
-      next = { ...state, savingsGoals: [...state.savingsGoals, action.goal] };
+      next = {
+        ...state,
+        savingsGoals:
+          action.type === "savings/update"
+            ? state.savingsGoals.map((goal) =>
+                goal.id === action.goal.id
+                  ? { ...action.goal, current: goal.current }
+                  : goal,
+              )
+            : [...state.savingsGoals, action.goal],
+      };
       break;
+    case "savings/remove":
+      next = {
+        ...state,
+        savingsGoals: state.savingsGoals.filter(
+          (goal) => goal.id !== action.id,
+        ),
+      };
+      break;
+    case "savings/contribute": {
+      const amount = toMinor(action.amount);
+      next = {
+        ...state,
+        savingsGoals: state.savingsGoals.map((goal) => {
+          if (goal.id !== action.id) return goal;
+          const current =
+            toMinor(goal.current, true) +
+            (action.direction === "add" ? amount : -amount);
+          if (current < 0 || !Number.isSafeInteger(current))
+            throw new Error("Le retrait dépasse l’épargne disponible.");
+          return { ...goal, current: current / 100 };
+        }),
+      };
+      break;
+    }
     case "category/add":
       toMinor(action.category.budget, true);
       if (!action.category.name.trim())

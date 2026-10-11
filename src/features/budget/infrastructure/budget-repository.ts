@@ -72,6 +72,23 @@ export async function saveAction(action: BudgetAction) {
       path = `budgets/${action.id}`;
       method = "DELETE";
       break;
+    case "savings/update":
+      path = `savings-goals/${action.goal.id}`;
+      method = "PATCH";
+      body = {
+        name: action.goal.name,
+        target: action.goal.target,
+        deadline: dateString(action.goal.deadline),
+      };
+      break;
+    case "savings/remove":
+      path = `savings-goals/${action.id}`;
+      method = "DELETE";
+      break;
+    case "savings/contribute":
+      path = `savings-goals/${action.id}/contributions`;
+      body = { amount: action.amount, direction: action.direction };
+      break;
     case "savings/add":
       path = "savings-goals";
       body = {
@@ -82,7 +99,10 @@ export async function saveAction(action: BudgetAction) {
       };
       break;
     case "category/order":
-      path = "categories/order"; method = "PATCH"; body = { ids: action.ids }; break;
+      path = "categories/order";
+      method = "PATCH";
+      body = { ids: action.ids };
+      break;
     case "category/remove":
       path = `custom-categories/${action.id}`;
       method = "DELETE";

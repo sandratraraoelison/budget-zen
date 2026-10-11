@@ -119,3 +119,10 @@ export class CategoryOrderDto {
   @IsString({ each: true })
   ids!: string[];
 }
+
+export class SavingsContributionDto {
+  @ApiProperty({ enum: ["add", "withdraw"] })
+  @IsIn(["add", "withdraw"])
+  direction!: "add" | "withdraw";
+  @ApiProperty() @IsMoney() amount!: number;
+}

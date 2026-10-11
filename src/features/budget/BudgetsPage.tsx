@@ -1,4 +1,5 @@
 "use client";
+import FundingHistory from "./components/FundingHistory";
 import { useState } from "react";
 import { Dialog } from "@headlessui/react";
 import { Pencil, X } from "lucide-react";
@@ -48,6 +49,7 @@ export default function BudgetsPage() {
               </button>
             </div>
             <BudgetsView />
+            <FundingHistory />
           </>
         )}
       </main>

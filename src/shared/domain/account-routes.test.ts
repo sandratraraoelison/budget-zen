@@ -34,3 +34,20 @@ test("base category removal is forwarded without opening arbitrary routes", () =
   );
   assert.equal(isAllowedAccountRoute("budget/summary", "GET"), true);
 });
+
+test("savings contributions forward only the dedicated POST route", () => {
+  assert.equal(
+    isAllowedAccountRoute(
+      "savings-goals/00000000-0000-0000-0000-000000000001/contributions",
+      "POST",
+    ),
+    true,
+  );
+  assert.equal(
+    isAllowedAccountRoute(
+      "savings-goals/00000000-0000-0000-0000-000000000001/contributions",
+      "PATCH",
+    ),
+    false,
+  );
+});

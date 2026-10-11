@@ -14,7 +14,12 @@ import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { CurrentUser } from "../../auth/presentation/current-user";
 import { JwtAuthGuard } from "../../auth/presentation/jwt-auth.guard";
 import { ProjectsService } from "../application/projects.service";
-import { ExpenseDto, ProjectDto, UpdateProjectDto } from "./projects.dto";
+import {
+  ExpenseDto,
+  ProjectDto,
+  UpdateProjectDto,
+  ProjectContributionDto,
+} from "./projects.dto";
 
 @ApiTags("projects")
 @ApiBearerAuth()
@@ -46,6 +51,13 @@ export class ProjectsController {
     @Param("id", ParseUUIDPipe) id: string,
   ) {
     this.service.remove(user, id);
+  }
+  @Post(":id/contributions") contribute(
+    @CurrentUser() user: string,
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() dto: ProjectContributionDto,
+  ) {
+    return this.service.contribute(user, id, dto);
   }
   @Post(":id/expenses") expense(
     @CurrentUser() user: string,

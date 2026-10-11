@@ -134,3 +134,17 @@ Le web et le mobile proposent un crédit bancaire dans la création des crédits
 L'échéancier est une projection amortissable mensuelle au taux actuel, avec arrondis au centime et ajustement de la dernière échéance. Pour le variable et le renouvelable, il suppose un taux constant et aucun nouveau tirage. Il ne constitue pas le calendrier contractuel de la banque ni un TAEG. Les taux futurs, pénalités et reports ne sont pas calculés automatiquement.
 
 Chaque remboursement saisit le capital et, séparément, les intérêts et l'assurance réellement payés. La mensualité estimée peut préremplir ces champs ; ils restent modifiables. Le capital restant ne diminue que du capital remboursé ; le solde disponible reçoit le capital débloqué, puis diminue des frais de dossier et de la totalité des remboursements. Les frais de dossier sont considérés payés au déblocage. Les écritures bancaires utilisent l'API commune ; elles exigent une connexion sur mobile.
+
+### Dates des projets
+
+Les projets disposent d'une date de commencement et d'une date cible facultative (par exemple, des vacances le 15 décembre). Les dates futures sont autorisées et la date cible doit suivre le commencement. Les cartes web/mobile affichent les dates, les jours restants et l'état « À venir ». Le nom, le budget et les dates peuvent être modifiés ; vider la date cible la supprime via `targetDate: null`. Cette date sert à planifier : elle ne clôture pas le projet et ne bloque pas automatiquement les dépenses. La progression affichée correspond au budget utilisé.
+
+### Objectifs d'épargne
+
+Les objectifs sont gérables sur le tableau de bord web et dans Budgets sur mobile : création, modification du nom/montant cible/date, suppression, ajouts et retraits. Les mouvements utilisent `POST /savings-goals/:id/contributions` avec `{ direction: "add" | "withdraw", amount }`. Les mises à jour sont atomiques, propres au compte, et ne permettent pas de retrait supérieur au montant enregistré. Les objectifs suivent les sommes déjà mises de côté ; ils ne créent pas d'écriture de revenu ou de dépense ni de virement bancaire.
+
+La carte affiche l'épargne enregistrée, la progression, le montant restant et le nombre de jours jusqu'à l'échéance. Le rythme mensuel est indicatif : montant restant divisé par des périodes de 30 jours, arrondi au centime supérieur. Les modifications d'épargne exigent une connexion sur mobile.
+
+### Cagnotte des projets
+
+Le montant cible (`initialFund`) est distinct des fonds mis de côté (`savedFund`). Les nouveaux projets du web/mobile démarrent sans financement. Les projets existants conservent les fonds précédemment enregistrés ; le champ « Déjà mis de côté » permet une correction. `POST /projects/:id/contributions` ajoute ou retire des fonds de façon atomique. Un retrait ne peut pas utiliser des sommes déjà dépensées. La progression mesure le financement de la cible ; le disponible dans la cagnotte est le financement moins les dépenses. Ce suivi n'effectue aucun virement bancaire.

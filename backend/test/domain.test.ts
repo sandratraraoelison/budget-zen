@@ -638,3 +638,121 @@ test("revolving credit allows new draws after repayments but enforces the outsta
     }),
   );
 });
+
+test("project target dates support future plans and validate edits atomically", () => {
+  const service = new ProjectsService(
+    new MemoryRepository(emptyProjectsState),
+    runtime(),
+  );
+  const project = service.create("one", {
+    name: "Vacation",
+    initialFund: 1000,
+    startDate: "2026-11-01",
+    targetDate: "2026-12-15",
+  });
+  assert.equal(project.targetDate, "2026-12-15");
+  assert.throws(() =>
+    service.update("one", project.id, { targetDate: "2026-10-15" }),
+  );
+  assert.throws(() =>
+    service.update("one", project.id, { startDate: "2026-12-16" }),
+  );
+  assert.equal(service.get("one", project.id).targetDate, "2026-12-15");
+  assert.equal(
+    service.update("one", project.id, { targetDate: null }).targetDate,
+    null,
+  );
+  assert.throws(() =>
+    service.create("one", {
+      name: "Invalid",
+      initialFund: 0,
+      targetDate: "2026-02-30",
+    }),
+  );
+});
+
+test("savings contributions and withdrawals use current server amounts atomically", () => {
+  const service = new BudgetService(
+    new MemoryRepository(emptyBudgetState),
+    runtime(),
+  );
+  const goal = service.addGoal("one", {
+    name: "Vacation",
+    target: 100,
+    deadline: "2026-12-15",
+  });
+  service.contributeGoal("one", goal.id, { amount: 0.1, direction: "add" });
+  assert.equal(
+    service.contributeGoal("one", goal.id, { amount: 0.2, direction: "add" })
+      .current,
+    0.3,
+  );
+  assert.throws(() =>
+    service.contributeGoal("one", goal.id, {
+      amount: 1,
+      direction: "withdraw",
+    }),
+  );
+  assert.throws(() =>
+    service.contributeGoal("two", goal.id, { amount: 1, direction: "add" }),
+  );
+  assert.equal(
+    service.contributeGoal("one", goal.id, {
+      amount: 0.3,
+      direction: "withdraw",
+    }).current,
+    0,
+  );
+  assert.equal(service.summary("one").balance, 0);
+});
+
+test("project funding starts empty and contributions are separate from expenses and targets", () => {
+  const service = new ProjectsService(
+    new MemoryRepository(emptyProjectsState),
+    runtime(),
+  );
+  const project = service.create("one", {
+    name: "Vacation",
+    initialFund: 1000,
+    savedFund: 0,
+  });
+  assert.equal(project.currentFund, 0);
+  assert.throws(() =>
+    service.addExpense("one", project.id, {
+      description: "Ticket",
+      amount: 10,
+      date: "2026-10-11",
+      category: "transport",
+    }),
+  );
+  assert.equal(
+    service.contribute("one", project.id, { amount: 200, direction: "add" })
+      .savedFund,
+    200,
+  );
+  const spent = service.addExpense("one", project.id, {
+    description: "Ticket",
+    amount: 50,
+    date: "2026-10-11",
+    category: "transport",
+  });
+  assert.equal(spent.savedFund, 200);
+  assert.equal(spent.currentFund, 150);
+  assert.throws(() =>
+    service.contribute("one", project.id, {
+      amount: 151,
+      direction: "withdraw",
+    }),
+  );
+  assert.equal(
+    service.contribute("one", project.id, {
+      amount: 150,
+      direction: "withdraw",
+    }).currentFund,
+    0,
+  );
+  assert.equal(service.get("one", project.id).initialFund, 1000);
+  assert.throws(() =>
+    service.contribute("two", project.id, { amount: 10, direction: "add" }),
+  );
+});
