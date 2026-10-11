@@ -12,6 +12,7 @@ export default function AuthForm({ initialMode = "register" }: { initialMode?: A
   const [mode, setMode] = useState(initialMode);
   const [showPassword, setShowPassword] = useState(false);
   const [pending, setPending] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
   const [error, setError] = useState("");
   const { authenticate } = useAuth();
   const router = useRouter();
@@ -33,11 +34,14 @@ export default function AuthForm({ initialMode = "register" }: { initialMode?: A
         email: String(data.get("email") ?? "").trim(), password,
         ...(registering ? { name: String(data.get("name") ?? "").trim() } : {}),
       });
+      setRedirecting(true);
       router.replace("/dashboard");
       router.refresh();
     } catch (error) {
+      setRedirecting(false);
+      setPending(false);
       setError(error instanceof Error ? error.message : t("Une erreur est survenue. Veuillez réessayer."));
-    } finally { setPending(false); }
+    }
   }
 
   function changeMode(next: AuthMode) {
@@ -50,6 +54,15 @@ export default function AuthForm({ initialMode = "register" }: { initialMode?: A
 
   return (
     <section id="compte" aria-labelledby="auth-heading" className="scroll-mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_20px_70px_-35px_rgba(15,23,42,0.25)] sm:p-8 dark:border-slate-700 dark:bg-slate-900">
+      {redirecting && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/40 px-4 backdrop-blur-sm">
+          <div role="status" aria-live="polite" className="flex w-full max-w-sm flex-col items-center rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-xl dark:border-slate-700 dark:bg-slate-900">
+            <LoaderCircle size={32} className="mb-4 animate-spin text-teal-700 dark:text-teal-300" aria-hidden="true" />
+            <p className="font-semibold text-slate-900 dark:text-slate-100">{t("Ouverture de votre tableau de bord…")}</p>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-300">{t("Votre espace sera prêt dans un instant.")}</p>
+          </div>
+        </div>
+      )}
       <div className="mb-7 flex rounded-xl bg-slate-100 p-1 dark:bg-slate-800" aria-label={t("Choisir une action")}>
         {([ ["register", t("Inscription")], ["login", t("Connexion")] ] as const).map(([value, label]) => (
           <button key={value} type="button" aria-pressed={mode === value} disabled={pending} onClick={() => changeMode(value)}
@@ -89,7 +102,7 @@ export default function AuthForm({ initialMode = "register" }: { initialMode?: A
         </fieldset>
         {error && <p role="alert" className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm leading-6 text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">{t(error)}</p>}
         <button type="submit" disabled={pending} className="flex w-full items-center justify-center gap-2 rounded-xl bg-teal-800 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-teal-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal-700 disabled:cursor-wait disabled:opacity-70">
-          {pending ? <><LoaderCircle size={18} className="animate-spin" aria-hidden="true" />{t("Connexion en cours…")}</> : <>{registering ? t("Créer mon compte") : t("Se connecter")}<ArrowRight size={18} aria-hidden="true" /></>}
+          {pending ? <><LoaderCircle size={18} className="animate-spin" aria-hidden="true" />{redirecting ? t("Ouverture de votre tableau de bord…") : registering ? t("Inscription en cours…") : t("Connexion en cours…")}</> : <>{registering ? t("Créer mon compte") : t("Se connecter")}<ArrowRight size={18} aria-hidden="true" /></>}
         </button>
         <p className="flex items-center justify-center gap-2 pt-1 text-xs text-slate-500 dark:text-slate-300"><LockKeyhole size={13} aria-hidden="true" />{t("Votre espace personnel, en toute simplicité.")}</p>
       </form>

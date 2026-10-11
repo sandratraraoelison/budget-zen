@@ -1,5 +1,9 @@
 // French messages are stable translation keys; user-entered data is never translated.
 export const english: Record<string, string> = {
+  "Inscription en cours…": "Creating your account…",
+  "Ouverture de votre tableau de bord…": "Opening your dashboard…",
+  "Votre espace sera prêt dans un instant.": "Your workspace will be ready in a moment.",
+  "les dépenses": "expenses", "Dépenses masquées": "Expenses hidden",
   "🚨 Budget global dépassé : {spent}/{limit}": "🚨 Overall budget exceeded: {spent}/{limit}",
   "⚠️ Budget global à {percentage}% : {spent}/{limit}": "⚠️ Overall budget at {percentage}%: {spent}/{limit}",
   "Dépassement du budget {category} ({spent}/{limit})": "Budget exceeded for {category} ({spent}/{limit})",

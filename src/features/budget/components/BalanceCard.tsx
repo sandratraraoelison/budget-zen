@@ -2,7 +2,7 @@
 import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useState } from "react";
-import { ArrowDownLeft, ArrowUpRight, Wallet, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { useCurrency } from "@/features/settings/CurrencyProvider";
 import { useBudget } from "../context/BudgetProvider";
 
@@ -12,35 +12,40 @@ export default function BalanceCard() {
   const { totalIncome, totalExpenses, balance } = useBudget();
   const [balanceHidden, setBalanceHidden] = useState(true);
   const [incomeHidden, setIncomeHidden] = useState(true);
+  const [expensesHidden, setExpensesHidden] = useState(true);
   const cards = [
     {
       title: t("Solde disponible"),
       value: balance,
       description: t("Revenus moins dépenses"),
-      icon: Wallet,
       featured: true,
       hidden: balanceHidden,
       toggle: () => setBalanceHidden((hidden) => !hidden),
       amountId: "available-balance",
       amountLabel: t("le solde disponible"),
+      hiddenLabel: t("Solde masqué"),
     },
     {
       title: t("Total des revenus"),
       value: totalIncome,
       description: t("Toutes vos entrées d’argent"),
-      icon: ArrowDownLeft,
       featured: false,
       hidden: incomeHidden,
       toggle: () => setIncomeHidden((hidden) => !hidden),
       amountId: "total-income",
       amountLabel: t("les revenus"),
+      hiddenLabel: t("Revenus masqués"),
     },
     {
       title: t("Total des dépenses"),
       value: totalExpenses,
       description: t("Toutes vos sorties d’argent"),
-      icon: ArrowUpRight,
       featured: false,
+      hidden: expensesHidden,
+      toggle: () => setExpensesHidden((hidden) => !hidden),
+      amountId: "total-expenses",
+      amountLabel: t("les dépenses"),
+      hiddenLabel: t("Dépenses masquées"),
     },
   ];
   return (
@@ -53,12 +58,12 @@ export default function BalanceCard() {
           title,
           value,
           description,
-          icon: Icon,
           featured,
           hidden,
           toggle,
           amountId,
           amountLabel,
+          hiddenLabel,
         }) => (
           <div
             key={title}
@@ -70,7 +75,6 @@ export default function BalanceCard() {
               >
                 {t(title)}
               </p>
-              {toggle ? (
                 <button
                   type="button"
                   onClick={toggle}
@@ -85,24 +89,18 @@ export default function BalanceCard() {
                     <Eye size={20} aria-hidden="true" />
                   )}
                 </button>
-              ) : (
-                <Icon
-                  size={20}
-                  className={featured ? "text-teal-200" : "text-slate-400 dark:text-slate-400"}
-                  aria-hidden="true"
-                />
-              )}
+
             </div>
             <p
               id={amountId}
-              aria-live={toggle ? "polite" : undefined}
+              aria-live="polite"
               className="mt-4 break-words text-xl font-bold tracking-tight tabular-nums sm:text-2xl"
             >
               {hidden ? (
                 <>
                   <span aria-hidden="true">••••••</span>
                   <span className="sr-only">
-                    {featured ? t("Solde masqué") : t("Revenus masqués")}
+                    {hiddenLabel}
                   </span>
                 </>
               ) : (
