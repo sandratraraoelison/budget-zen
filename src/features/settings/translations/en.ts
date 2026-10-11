@@ -1,5 +1,9 @@
 // French messages are stable translation keys; user-entered data is never translated.
 export const english: Record<string, string> = {
+  "Afficher plus": "Show more",
+  Actions: "Actions",
+  Opération: "Operation",
+  "Aucun résultat pour ces filtres.": "No results for these filters.",
   "Évolution des revenus et dépenses": "Revenue and expense trends",
   "Répartition sur la période": "Breakdown for this period",
   "Bénéfice / chiffre d’affaires": "Profit / revenue",
