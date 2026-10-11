@@ -1,5 +1,8 @@
 // French messages are stable translation keys; user-entered data is never translated.
 export const english: Record<string, string> = {
+  "Évolution des revenus et dépenses": "Revenue and expense trends",
+  "Répartition sur la période": "Breakdown for this period",
+  "Bénéfice / chiffre d’affaires": "Profit / revenue",
   "Modifier une opération Business": "Edit Business operation",
   "Supprimer cette opération ?": "Delete this operation?",
   "Tous les types": "All types",

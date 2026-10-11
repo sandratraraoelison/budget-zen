@@ -20,48 +20,51 @@ export default function BusinessChart({
 }: {
   data: BusinessAnalytics["chart"];
 }) {
-  const { t } = useLocale();
-  const { formatMoney, formatNumber, currency } = useCurrency();
+  const { t, locale } = useLocale();
+  const { formatMoney } = useCurrency();
+  const compact = new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 1 });
+  const chartDate = (value: string, detailed = false) => new Intl.DateTimeFormat(locale, value.length === 7 ? { month: "short", year: detailed ? "numeric" : undefined, timeZone: "UTC" } : { day: "numeric", month: "short", year: detailed ? "numeric" : undefined, timeZone: "UTC" }).format(new Date(`${value.length === 7 ? `${value}-01` : value}T00:00:00Z`));
   if (
     !data.length ||
     data.every((point) => point.revenue === 0 && point.expenses === 0)
   )
     return (
-      <EmptyState
+      <div className="flex min-h-80 items-center justify-center"><EmptyState
         title={t("Aucune activité sur cette période")}
         description={t("Ajoutez une transaction pour visualiser les tendances de votre activité.")}
-      />
+      /></div>
     );
   return (
-    <div className="h-64">
+    <div className="h-80 min-w-0">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
           <XAxis
             dataKey="date"
+            tickFormatter={(value: string) => chartDate(value)}
             tick={{ fontSize: 11 }}
             minTickGap={32}
             axisLine={false}
             tickLine={false}
           />
-          <YAxis
-                tickFormatter={formatNumber}
-                width={100}
-            label={{ value: currency, angle: -90, position: "insideLeft" }}
-          />
-          <Tooltip formatter={(value: number) => formatMoney(value)} />
+          <YAxis tickFormatter={(value: number) => compact.format(value)} width={60} axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+          <Tooltip formatter={(value: number) => formatMoney(value)} labelFormatter={(label) => chartDate(String(label), true)} />
           <Line
             type="monotone"
             dataKey="revenue"
-            stroke="#0f766e"
-            strokeWidth={2}
+            stroke="#14b8a6"
+            strokeWidth={2.5}
+            dot={false}
+            activeDot={{ r: 5 }}
             name={t("Chiffre d'affaires")}
           />
           <Line
             type="monotone"
             dataKey="expenses"
-            stroke="#ef4444"
-            strokeWidth={2}
+            stroke="#fb7185"
+            strokeWidth={2.5}
+            dot={false}
+            activeDot={{ r: 5 }}
             name={t("Dépenses")}
           />
         </LineChart>

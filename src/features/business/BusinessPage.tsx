@@ -1,5 +1,7 @@
 "use client";
-import DateInput from "@/components/ui/DateInput";
+import BusinessPeriodFilters, {
+  localToday,
+} from "./components/BusinessPeriodFilters";
 import BusinessInsights from "./components/BusinessInsights";
 import { useLocale } from "@/features/settings/LocaleProvider";
 
@@ -17,9 +19,7 @@ import { useBusiness } from "./hooks/useBusiness";
 
 export default function BusinessPage() {
   const { t } = useLocale();
-  const [anchor, setAnchor] = useState(() =>
-    new Date().toISOString().slice(0, 10),
-  );
+  const [anchor, setAnchor] = useState(localToday);
   const [editing, setEditing] = useState<BusinessTransaction | undefined>();
   const [timeRange, setTimeRange] = useState<TimeRange>("month");
   const {
@@ -59,44 +59,13 @@ export default function BusinessPage() {
           }
         />
 
-        <div className="ui-card mb-6 flex flex-wrap items-end gap-3">
-          <label className="text-sm font-medium">
-            {t("Période des statistiques")}
-            <select
-              className="ui-input mt-1"
-              value={timeRange}
-              onChange={(e) => setTimeRange(e.target.value as TimeRange)}
-            >
-              <option value="month">{t("Mensuel")}</option>
-              <option value="quarter">{t("Trimestriel")}</option>
-              <option value="year">{t("Annuel")}</option>
-            </select>
-          </label>
-          <label className="text-sm font-medium">
-            {t("Date dans la période")}
-            <DateInput
-              value={anchor}
-              onChange={(e) => {
-                if (e.target.value) setAnchor(e.target.value);
-              }}
-              className="ui-input mt-1"
-            />
-          </label>
-          <button
-            className="ui-secondary"
-            onClick={() => setAnchor(new Date().toISOString().slice(0, 10))}
-          >
-            {t("Aujourd’hui")}
-          </button>
-          {analytics && !loading && (
-            <p className="ui-muted pb-2 text-sm">
-              {analytics.from.slice(0, 10)} →{" "}
-              {new Date(Date.parse(analytics.toExclusive) - 86400000)
-                .toISOString()
-                .slice(0, 10)}
-            </p>
-          )}
-        </div>
+        <BusinessPeriodFilters
+          timeRange={timeRange}
+          onTimeRangeChange={setTimeRange}
+          anchor={anchor}
+          onAnchorChange={setAnchor}
+          analytics={loading || error ? null : analytics}
+        />
         {error && (
           <p role="alert" className="mb-4 text-red-600 dark:text-red-300">
             {t(error)}{" "}
@@ -110,43 +79,23 @@ export default function BusinessPage() {
             {t("Chargement des données…")}
           </p>
         )}
-        <div
-          className="grid grid-cols-1 lg:grid-cols-3 gap-6"
-          aria-busy={loading}
-        >
-          <BusinessStats analytics={loading || error ? null : analytics} />
-
-          <div className="lg:col-span-2">
-            <div className="ui-card">
-              <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
-                <h2 className="text-xl font-semibold">
-                  {t("Tendances financières")}
-                </h2>
+        <BusinessStats analytics={loading || error ? null : analytics} loading={loading} />
+        <div className="mt-6 grid items-stretch gap-6 lg:grid-cols-[minmax(0,1.8fr)_minmax(300px,1fr)]" aria-busy={loading}>
+          <section className="ui-card">
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+              <div><h2 className="ui-title">{t("Tendances financières")}</h2><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("Évolution des revenus et dépenses")}</p></div>
+              <div className="flex gap-4 text-xs text-slate-500 dark:text-slate-300">
+                <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-teal-500" />{t("Revenus")}</span>
+                <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-rose-400" />{t("Dépenses")}</span>
               </div>
-              {loading ? (
-                <div
-                  role="status"
-                  aria-label={t("Chargement du graphique")}
-                  className="h-64 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800"
-                />
-              ) : error ? (
-                <p className="py-8 text-sm text-slate-500 dark:text-slate-300">
-                  {t(
-                    "Le graphique sera disponible après le chargement des données.",
-                  )}
-                </p>
-              ) : (
-                <BusinessChart
-                  data={loading || error ? [] : (analytics?.chart ?? [])}
-                />
-              )}
             </div>
-          </div>
+            {loading ? <div role="status" aria-label={t("Chargement du graphique")} className="h-80 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800" />
+              : error ? <p className="py-8 text-sm text-slate-500 dark:text-slate-300">{t("Le graphique sera disponible après le chargement des données.")}</p>
+              : <BusinessChart data={analytics?.chart ?? []} />}
+          </section>
+          {!loading && !error && analytics ? <BusinessInsights analytics={analytics} /> : <div className="ui-card min-h-80" aria-busy={loading}>{loading && <div className="h-full min-h-64 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800" />}</div>}
         </div>
 
-        {!loading && !error && analytics && (
-          <BusinessInsights analytics={analytics} />
-        )}
         <div className="mt-6">
           {!loading && !error && analytics && (
             <BusinessTransactions
