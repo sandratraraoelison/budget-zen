@@ -25,7 +25,7 @@ export default function LoginPage() {
 
         <div className="mt-4 text-center">
           <Link href="/" className="text-primary hover:underline">
-            Retour à l'accueil
+            Retour à l&apos;accueil
           </Link>
         </div>
       </div>

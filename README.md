@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+﻿# BudgetZen
 
-## Getting Started
+Application Next.js 14 / React 18 / TypeScript pour gérer un budget, des crédits et des projets. Les montants sont exprimés en MGA.
 
-First, run the development server:
+## Démarrage
 
-```bash
+```sh
+npm ci
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+L'application est accessible sur http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Architecture
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```text
+src/
+  app/                  Routes Next.js, layout, providers et API
+  components/           Navigation, chargement et UI partagés
+  features/
+    auth/context/       État du mode démo
+    budget/
+      components/       Formulaires, listes, cartes et graphiques
+      context/          Adaptateur React du domaine budgétaire
+      data/             Fabrique de données démo
+      domain/           Reducer, alertes, catégorisation, calculs et tests
+      DashboardPage.tsx Écran du tableau de bord
+      types.ts          Contrats de la fonctionnalité
+    business/           Écran, composants et types business
+    credits/            Écran, composants, types et règles de filtrage
+    projects/           Écran, composants, types et hook de persistance
+  lib/                  Utilitaires partagés
+```
 
-## Learn More
+Les fichiers `app/**/page.tsx` des écrans métier exposent les écrans de `features/`. L'alias `@/` pointe vers `src/`. Tailwind analyse tous les fichiers de `src/`.
 
-To learn more about Next.js, take a look at the following resources:
+## Règles de maintenance
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Ajouter le code métier dans la fonctionnalité concernée. Réserver `components/` aux éléments partagés.
+- Garder le domaine budgétaire indépendant de React. Le reducer applique les mutations et recalcule les alertes à partir du nouvel état.
+- Définir les types une seule fois dans leur fonctionnalité. Les catégories de transactions viennent de `budget/domain/categorization.ts`.
+- Placer les effets navigateur dans les hooks ou providers clients. `useProjects` valide les données sauvegardées et attend leur lecture avant d'écrire dans `localStorage`.
+- Tester les règles métier et les régressions, en particulier les calculs financiers et les transitions d'état.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Vérification
 
-## Deploy on Vercel
+```sh
+npm run check   # ESLint, TypeScript et tests métier
+npm run build   # Compilation et génération des routes de production
+npm start       # Serveur de production après le build
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Les tests utilisent le runner natif Node.js via `tsx`. Les données démo du provider et de `POST /api/demo` proviennent de la même fabrique, qui crée un état neuf à chaque appel.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Stockage et limites actuelles
+
+Les budgets et crédits restent en mémoire et sont réinitialisés au rechargement. Seuls les projets sont sauvegardés dans le navigateur, sous la clé `projects`. Le mode démo ne constitue pas une authentification. Les statistiques et graphiques business affichent encore des données de démonstration ; le sélecteur de période ne les recalcule pas.
+
+Le build utilise `next/font/google` et nécessite l'accès à Google Fonts pour télécharger Inter.
