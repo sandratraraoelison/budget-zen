@@ -1,4 +1,5 @@
 "use client";
+import DateInput from "@/components/ui/DateInput";
 import AmountInput from "@/components/ui/AmountInput";
 import { useLocale } from "@/features/settings/LocaleProvider";
 
@@ -78,8 +79,7 @@ export default function CustomCategoryDetails({
             }
             required
           />
-          <input
-            type="date"
+          <DateInput
             className="p-2 border rounded"
             value={transactionForm.date.toISOString().split("T")[0]}
             onChange={(e) =>

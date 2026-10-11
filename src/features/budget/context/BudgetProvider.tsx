@@ -22,6 +22,7 @@ import {
   getTransactionTotals,
 } from "../domain/selectors";
 
+import { notify } from "@/shared/notifications/notifications";
 import { loadBudget, saveAction } from "../infrastructure/budget-repository";
 import { useAccountResource } from "@/shared/application/useAccountResource";
 
@@ -56,6 +57,7 @@ export const BudgetProvider = ({
     if (isDemo) {
       currentState.current = next;
       setState(next);
+      notify("Modifications enregistrées.");
       return Promise.resolve();
     }
     return remote.mutate(async (previous) => {
@@ -106,6 +108,13 @@ export const BudgetProvider = ({
   return (
     <BudgetContext.Provider
       value={{
+        reorderCategories: ids => dispatch({ type: "category/order", ids }),
+        saveCategory: (category, create = false) =>
+          dispatch({
+            type: create ? "category/add" : "category/update",
+            category,
+          }),
+        removeCategory: (id) => dispatch({ type: "category/remove", id }),
         state,
         error: remote.error,
         loading: remote.loading,

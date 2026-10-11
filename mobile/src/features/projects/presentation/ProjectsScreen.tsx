@@ -1,7 +1,9 @@
-import { useCallback } from "react";
+import NewProjectModal from "./NewProjectModal";
+import { useCallback, useState } from "react";
 import { useServices } from "../../../composition/ServicesProvider";
 import { useResource } from "../../../shared/application/useResource";
 import {
+  Button,
   Card,
   Heading,
   IconButton,
@@ -21,6 +23,7 @@ export default function ProjectsScreen() {
     [projects],
   );
   const resource = useResource(load);
+  const [creating, setCreating] = useState(false);
   return (
     <Screen
       onRefresh={resource.reload}
@@ -36,6 +39,11 @@ export default function ProjectsScreen() {
             onPress={resource.reload}
           />
         }
+      />
+      <Button
+        title={t("newProject")}
+        icon="add-circle-outline"
+        onPress={() => setCreating(true)}
       />
       <ResourceState {...resource} empty={!resource.data?.length} />
       {resource.data?.map((item) => (
@@ -57,6 +65,15 @@ export default function ProjectsScreen() {
           </Label>
         </Card>
       ))}
+      {creating && (
+        <NewProjectModal
+          close={() => setCreating(false)}
+          saved={() => {
+            setCreating(false);
+            resource.reload();
+          }}
+        />
+      )}
     </Screen>
   );
 }

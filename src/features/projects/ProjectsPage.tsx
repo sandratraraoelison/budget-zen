@@ -1,4 +1,5 @@
 "use client";
+import DateInput from "@/components/ui/DateInput";
 import SyncStatus from "@/components/ui/SyncStatus";
 import { useLocale } from "@/features/settings/LocaleProvider";
 
@@ -112,9 +113,8 @@ export default function ProjectsPage() {
 
           <div className="flex items-center gap-4">
             <CalendarIcon className="w-6 h-6 text-gray-600 dark:text-slate-300" />
-            <input
+            <DateInput
               aria-label={t("Filtrer par date de démarrage")}
-              type="date"
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
               className="p-2 border rounded-lg bg-white dark:bg-slate-900"

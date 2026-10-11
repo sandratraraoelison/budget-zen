@@ -8,10 +8,17 @@ export const transactionView = ({
 export const categorySpending = (
   transactions: Transaction[],
   category: string,
+  customCategoryName?: string,
 ) =>
   sumMinor(
     transactions
-      .filter((t) => t.type === "expense" && t.category === category)
+      .filter(
+        (t) =>
+          t.type === "expense" &&
+          t.category === category &&
+          (t.customCategoryName ?? "").toLowerCase() ===
+            (customCategoryName ?? "").toLowerCase(),
+      )
       .map((t) => t.amountMinor),
   );
 
@@ -19,22 +26,34 @@ export function budgetSummary(state: BudgetState) {
   const budgets = state.budgets.map(({ limitMinor, ...budget }) => ({
     ...budget,
     limit: fromMinor(limitMinor),
-    current: fromMinor(categorySpending(state.transactions, budget.category)),
-  }));
-  const customCategories = state.customCategories.map(
-    ({ budgetMinor, transactions, ...category }) => ({
-      ...category,
-      budget: fromMinor(budgetMinor),
-      spent: fromMinor(
-        sumMinor(
-          transactions
-            .filter((t) => t.type === "expense")
-            .map((t) => t.amountMinor),
-        ),
+    current: fromMinor(
+      categorySpending(
+        state.transactions,
+        budget.category,
+        budget.customCategoryName,
       ),
-      transactions: transactions.map(transactionView),
-    }),
-  );
+    ),
+  }));
+  const customCategories = state.customCategories
+    .filter((c) => !c.hidden)
+    .map(({ budgetMinor, transactions: legacyTransactions, ...category }) => {
+      const transactions = [
+        ...legacyTransactions,
+        ...state.transactions.filter((t) => t.customCategoryId === category.id),
+      ];
+      return {
+        ...category,
+        budget: fromMinor(budgetMinor),
+        spent: fromMinor(
+          sumMinor(
+            transactions
+              .filter((t) => t.type === "expense")
+              .map((t) => t.amountMinor),
+          ),
+        ),
+        transactions: transactions.map(transactionView),
+      };
+    });
   const totalIncomeMinor = sumMinor(
     state.transactions
       .filter((t) => t.type === "income")
@@ -47,7 +66,9 @@ export function budgetSummary(state: BudgetState) {
   );
   const limit = sumMinor(state.budgets.map((b) => b.limitMinor));
   const spent = sumMinor(
-    state.budgets.map((b) => categorySpending(state.transactions, b.category)),
+    state.budgets.map((b) =>
+      categorySpending(state.transactions, b.category, b.customCategoryName),
+    ),
   );
   const alerts: string[] = [];
   if (spent > limit)
@@ -59,12 +80,15 @@ export function budgetSummary(state: BudgetState) {
   for (const budget of budgets) {
     if (budget.current > budget.limit)
       alerts.push(
-        `Dépassement du budget ${budget.category} (${budget.current}/${budget.limit})`,
+        `Dépassement du budget ${budget.customCategoryName ?? budget.category} (${budget.current}/${budget.limit})`,
       );
     else if (budget.current >= budget.limit * 0.75)
-      alerts.push(`Attention : 75% du budget ${budget.category} utilisé`);
+      alerts.push(
+        `Attention : 75% du budget ${budget.customCategoryName ?? budget.category} utilisé`,
+      );
   }
   for (const category of customCategories) {
+    if (category.budget <= 0) continue;
     if (category.spent > category.budget)
       alerts.push(
         `Dépassement du projet ${category.name} (${category.spent}/${category.budget})`,
@@ -73,6 +97,10 @@ export function budgetSummary(state: BudgetState) {
       alerts.push(`Attention : 90% du budget ${category.name} utilisé`);
   }
   return {
+    categoryOrder: state.categoryOrder ?? [],
+    hiddenCategories: state.customCategories.flatMap((c) =>
+      c.baseCategory ? [c.baseCategory] : [],
+    ),
     transactions: state.transactions.map(transactionView),
     budgets,
     customCategories,

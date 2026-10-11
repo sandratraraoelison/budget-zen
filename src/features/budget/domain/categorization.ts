@@ -1,3 +1,9 @@
+export const getCustomCategoryLabel = (name: string) => {
+  const normalized = name.trim().toLocaleLowerCase();
+  const icon = /^(animaux|animal|pets?)$/.test(normalized) ? "🐾" : "🏷️";
+  return `${icon} ${name}`;
+};
+
 //categorization.ts
 export const autoCategorize = (description: string): TransactionCategory => {
     const keywords: Partial<Record<TransactionCategory, string[]>> = {

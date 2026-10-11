@@ -1,4 +1,5 @@
 "use client";
+import HydratedIcon from "@/components/ui/HydratedIcon";
 import { useLocale } from "@/features/settings/LocaleProvider";
 
 import Link from "next/link";
@@ -49,7 +50,7 @@ export default function LandingPage({
           className="flex items-center gap-2.5 text-xl font-bold tracking-tight"
         >
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-800 text-white">
-            <Leaf size={22} aria-hidden="true" />
+            <HydratedIcon icon={Leaf} size={22} aria-hidden="true" />
           </span>
           Budget<span className="-ml-2 text-teal-700 dark:text-teal-300">Zen</span>
         </Link>
@@ -59,7 +60,7 @@ export default function LandingPage({
           href="/auth/login"
           className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold transition hover:border-teal-300 hover:text-teal-800 sm:px-5 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-teal-800 dark:hover:text-teal-300"
         >{t("Se connecter")}{" "}
-          <ArrowUpRight size={14} className="ml-1 inline" aria-hidden="true" />
+          <HydratedIcon icon={ArrowUpRight} size={14} className="ml-1 inline" aria-hidden="true" />
         </Link>
         </div>
       </header>
@@ -77,13 +78,13 @@ export default function LandingPage({
             <p className="mt-6 max-w-md text-base leading-7 text-slate-500 sm:text-lg sm:leading-8 dark:text-slate-300">{t("Un espace simple pour organiser votre budget, suivre vos projets et avancer à votre rythme.")}</p>
             <div className="mt-6 flex flex-wrap gap-x-5 gap-y-3 text-sm text-slate-600 dark:text-slate-300">
               <span className="flex items-center gap-2">
-                <CircleCheck
+                <HydratedIcon icon={CircleCheck}
                   size={17}
                   className="text-teal-600 dark:text-teal-300"
                   aria-hidden="true"
                 />{t("Simple à prendre en main")}</span>
               <span className="flex items-center gap-2">
-                <CircleCheck
+                <HydratedIcon icon={CircleCheck}
                   size={17}
                   className="text-teal-600 dark:text-teal-300"
                   aria-hidden="true"
@@ -92,7 +93,7 @@ export default function LandingPage({
             <div className="mt-10 rounded-2xl border border-teal-100 bg-gradient-to-br from-teal-50 to-white p-5 sm:p-6 dark:border-teal-800 dark:from-teal-950 dark:to-slate-900">
               <div className="flex items-start gap-3">
                 <span className="rounded-xl bg-white p-2.5 text-teal-700 shadow-sm dark:bg-slate-900 dark:text-teal-300">
-                  <Leaf size={21} aria-hidden="true" />
+                  <HydratedIcon icon={Leaf} size={21} aria-hidden="true" />
                 </span>
                 <div>
                   <p className="font-semibold text-teal-900 dark:text-teal-300">{t("Un petit pas pour votre budget.")}</p>
@@ -111,7 +112,7 @@ export default function LandingPage({
           {features.map(({ icon: Icon, title, description }) => (
             <article key={title} className="flex gap-3 sm:block">
               <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-teal-700 ring-1 ring-slate-200/80 dark:bg-slate-900 dark:text-teal-300 dark:ring-slate-700/80">
-                <Icon size={20} aria-hidden="true" />
+                <HydratedIcon icon={Icon} size={20} aria-hidden="true" />
               </span>
               <div>
                 <h2 className="font-semibold sm:mt-3">{t(title)}</h2>

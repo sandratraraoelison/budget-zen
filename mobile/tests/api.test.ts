@@ -71,3 +71,63 @@ test("login does not send a previous account token", async () => {
     { accessToken: "new" },
   );
 });
+
+test("queued operations cannot be sent with a different account token", async () => {
+  let sent = false;
+  const tokens: TokenStore = {
+    read: async () => "new-account",
+    write: async () => {},
+    clear: async () => {
+      throw new Error("Must not clear new session");
+    },
+  };
+  const client = createHttpClient(
+    "http://server",
+    tokens,
+    () => {
+      throw new Error("Must not expire new session");
+    },
+    async () => {
+      sent = true;
+      return new Response("{}");
+    },
+  );
+  await assert.rejects(
+    client.request("transactions", {
+      method: "POST",
+      expectedToken: "old-account",
+    }),
+    (e) => e instanceof ApiError && e.status === 401,
+  );
+  assert.equal(sent, false);
+});
+
+test("a delayed 401 from the old account cannot clear a new login", async () => {
+  let token: string | null = "old-account";
+  let expired = false;
+  const tokens: TokenStore = {
+    read: async () => token,
+    write: async (value) => {
+      token = value;
+    },
+    clear: async () => {
+      token = null;
+    },
+  };
+  const client = createHttpClient(
+    "http://server",
+    tokens,
+    () => {
+      expired = true;
+    },
+    async () => {
+      token = "new-account";
+      return new Response(JSON.stringify({ message: "Expired" }), {
+        status: 401,
+      });
+    },
+  );
+  await assert.rejects(client.request("budget/summary"), ApiError);
+  assert.equal(token, "new-account");
+  assert.equal(expired, false);
+});

@@ -47,6 +47,103 @@ const expense = {
   type: "expense",
 } as const;
 
+test("named Other categories are reused without double counting and empty names fall back", () => {
+  const service = new BudgetService(
+    new MemoryRepository(emptyBudgetState),
+    runtime(),
+  );
+  service.addBudget("user", { category: "autres", limit: 1000 });
+  service.addBudget("user", {
+    category: "autres",
+    limit: 1000,
+    customCategoryName: "  Voyage   famille ",
+  });
+  const input = {
+    ...expense,
+    category: "autres" as const,
+    customCategoryName: "voyage famille",
+    clientId: "offline-one",
+  };
+  const saved = service.addTransaction("user", input);
+  assert.equal(saved.customCategoryName, "Voyage famille");
+  assert.equal(service.addTransaction("user", input).id, saved.id);
+  service.addTransaction("user", {
+    ...expense,
+    category: "autres",
+    customCategoryName: "  ",
+  });
+  const summary = service.summary("user");
+  assert.equal(summary.customCategories.length, 1);
+  assert.equal(summary.transactions.length, 2);
+  assert.equal(summary.totalExpenses, 240);
+  assert.deepEqual(
+    summary.budgets.map((b) => b.current),
+    [120, 120],
+  );
+  assert.equal(summary.customCategories[0]!.spent, 120);
+  assert.deepEqual(summary.alerts, []);
+  assert.equal(service.summary("other-user").customCategories.length, 0);
+  assert.throws(
+    () =>
+      service.addTransaction("user", {
+        ...input,
+        customCategoryName: "Animaux",
+      }),
+    DomainError,
+  );
+  assert.throws(
+    () =>
+      service.addBudget("user", {
+        category: "autres",
+        limit: 10,
+        customCategoryName: "VOYAGE FAMILLE",
+      }),
+    DomainError,
+  );
+  service.removeCategoryTransaction("user", saved.customCategoryId!, saved.id);
+  assert.equal(service.summary("user").budgets[1]!.current, 0);
+  assert.equal(service.summary("user").totalExpenses, 120);
+});
+
+test("named category updates preserve ledger links and invalid names leave no partial writes", () => {
+  const service = new BudgetService(
+    new MemoryRepository(emptyBudgetState),
+    runtime(),
+  );
+  const saved = service.addTransaction("user", {
+    ...expense,
+    category: "autres",
+    customCategoryName: "Voyage",
+  });
+  const budget = service.addBudget("user", {
+    category: "autres",
+    limit: 1000,
+    customCategoryName: "Voyage",
+  });
+  service.updateCategory("user", saved.customCategoryId!, { name: "Vacances" });
+  assert.equal(
+    service.summary("user").transactions[0]!.customCategoryName,
+    "Vacances",
+  );
+  assert.equal(service.summary("user").budgets[0]!.current, 120);
+  service.updateTransaction("user", saved.id, { category: "nourriture" });
+  service.updateBudget("user", budget.id, { category: "nourriture" });
+  assert.equal(service.summary("user").budgets[0]!.current, 120);
+  assert.equal(
+    service.summary("user").transactions[0]!.customCategoryName,
+    undefined,
+  );
+  assert.throws(
+    () =>
+      service.addTransaction("user", {
+        ...expense,
+        customCategoryName: "Invalid",
+      }),
+    DomainError,
+  );
+  assert.equal(service.summary("user").transactions.length, 1);
+});
+
 test("money is exact in minor units and rejects excess precision or overflow", () => {
   assert.equal(fromMinor(toMinor(0.1) + toMinor(0.2)), 0.3);
   for (const amount of [0, -1, 0.001, NaN, Infinity, Number.MAX_SAFE_INTEGER]) {
@@ -305,4 +402,113 @@ test("money rejects tiny amounts and aggregate overflow without poisoning persis
     DomainError,
   );
   assert.equal(service.summary("user").transactions.length, 1);
+});
+
+test("offline command receipts are idempotent, scoped per user and survive deletion", () => {
+  const repository = new MemoryRepository(emptyBudgetState);
+  let service = new BudgetService(repository, runtime());
+  const command = { ...expense, clientId: "client-command" };
+  const first = service.addTransaction("one", command);
+  service = new BudgetService(repository, runtime());
+  assert.equal(service.addTransaction("one", command).id, first.id);
+  assert.equal(service.summary("one").transactions.length, 1);
+  assert.throws(
+    () => service.addTransaction("one", { ...command, amount: 999 }),
+    DomainError,
+  );
+  assert.equal(service.summary("one").totalExpenses, expense.amount);
+  service.removeTransaction("one", first.id);
+  assert.equal(service.addTransaction("one", command).id, first.id);
+  assert.equal(service.summary("one").transactions.length, 0);
+  service.addTransaction("two", command);
+  assert.equal(service.summary("two").transactions.length, 1);
+});
+
+test("category deletion moves used transactions to Other without changing totals", () => {
+  const service = new BudgetService(
+    new MemoryRepository(emptyBudgetState),
+    runtime(),
+  );
+  const saved = service.addTransaction("user", {
+    ...expense,
+    category: "autres",
+    customCategoryName: "Animaux",
+  });
+  service.addBudget("user", {
+    category: "autres",
+    customCategoryName: "Animaux",
+    limit: 1000,
+  });
+  service.updateCategory("user", saved.customCategoryId!, {
+    name: "Pets",
+    icon: "paw",
+  });
+  assert.equal(service.summary("user").customCategories[0]!.icon, "paw");
+  service.removeCategory("user", saved.customCategoryId!);
+  const summary = service.summary("user");
+  assert.equal(summary.transactions.length, 1);
+  assert.equal(summary.transactions[0]!.customCategoryName, undefined);
+  assert.equal(summary.transactions[0]!.category, "autres");
+  assert.equal(summary.totalExpenses, 120);
+  assert.equal(summary.budgets.length, 0);
+  assert.equal(summary.customCategories.length, 0);
+});
+test("base category customization preserves transaction identity and deletion hides the choice", () => {
+  const service = new BudgetService(
+    new MemoryRepository(emptyBudgetState),
+    runtime(),
+  );
+  const saved = service.addTransaction("user", expense);
+  const category = service.addCategory("user", {
+    name: "Courses",
+    budget: 0,
+    icon: "food",
+    baseCategory: "nourriture",
+  });
+  assert.equal(service.summary("user").transactions[0]!.id, saved.id);
+  assert.equal(
+    service.summary("user").transactions[0]!.customCategoryId,
+    category.id,
+  );
+  service.removeCategory("user", category.id);
+  assert.ok(service.summary("user").hiddenCategories.includes("nourriture"));
+  assert.equal(service.summary("user").totalExpenses, 120);
+  service.removeCategory("user", "base:loyer");
+  assert.ok(service.summary("user").hiddenCategories.includes("loyer"));
+  assert.throws(
+    () => service.removeCategory("user", "base:autres"),
+    DomainError,
+  );
+});
+
+test("category order persists per account and rejects missing or foreign categories atomically", () => {
+  const service = new BudgetService(
+    new MemoryRepository(emptyBudgetState),
+    runtime(),
+  );
+  const category = service.addCategory("user", {
+    name: "Animaux",
+    budget: 0,
+    icon: "paw",
+  });
+  const ids = [
+    "salaire",
+    "loyer",
+    "nourriture",
+    "transport",
+    "sant\u00e9",
+    "loisirs",
+    "\u00e9ducation",
+    "autres",
+  ].map((c) => `base:${c}`);
+  const order = [category.id, ...ids.reverse()];
+  service.reorderCategories("user", order);
+  assert.deepEqual(service.summary("user").categoryOrder, order);
+  assert.deepEqual(service.summary("another").categoryOrder, []);
+  assert.throws(
+    () => service.reorderCategories("user", order.slice(1)),
+    DomainError,
+  );
+  assert.throws(() => service.reorderCategories("another", order), DomainError);
+  assert.deepEqual(service.summary("user").categoryOrder, order);
 });

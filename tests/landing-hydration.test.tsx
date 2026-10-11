@@ -27,10 +27,12 @@ for (const mode of ["register", "login"] as const) {
     try {
       const container = dom.window.document.getElementById("root")!;
       const iconsBefore = Array.from(container.querySelectorAll("svg"), svg => svg.outerHTML);
-      assert.ok(iconsBefore.length >= 10);
+      assert.equal(iconsBefore.length, 0);
+      assert.ok(container.querySelectorAll("[data-icon-placeholder]").length >= 10);
       await act(async () => { root = hydrateRoot(container, view, { onRecoverableError: error => errors.push(error) }); });
       assert.deepEqual(errors, []);
-      assert.deepEqual(Array.from(container.querySelectorAll("svg"), svg => svg.outerHTML), iconsBefore);
+      assert.ok(container.querySelectorAll("svg").length >= 10);
+      assert.equal(container.querySelectorAll("[data-icon-placeholder]").length, 0);
       const toggle = container.querySelector<HTMLButtonElement>('button[aria-label="Afficher le mot de passe"]')!;
       await act(async () => { toggle.click(); });
       assert.equal(container.querySelector<HTMLInputElement>('[name="password"]')!.type, "text");

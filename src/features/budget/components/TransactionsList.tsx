@@ -5,6 +5,7 @@ import { useState } from "react";
 import { ArrowDownLeft, ArrowUpRight, Search, Trash2 } from "lucide-react";
 import { useCurrency } from "@/features/settings/CurrencyProvider";
 import { useBudget } from "../context/BudgetProvider";
+import { getCategoryLabel } from "../domain/categorization";
 import { CategoryBadge } from "./CategoryBadge";
 import EmptyState from "@/components/ui/EmptyState";
 
@@ -15,7 +16,7 @@ export function TransactionsList() {
   const [search, setSearch] = useState("");
   const transactions = state.transactions
     .filter((t) =>
-      `${t.description} ${t.category}`
+      `${t.description} ${t.category} ${t.customCategoryName ?? ""}`
         .toLowerCase()
         .includes(search.trim().toLowerCase()),
     )
@@ -24,7 +25,8 @@ export function TransactionsList() {
   return (
     <section className="ui-card" aria-labelledby="history-heading">
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <h2 id="history-heading" className="ui-title">{t("Historique des transactions")}{" "}
+        <h2 id="history-heading" className="ui-title">
+          {t("Historique des transactions")}{" "}
           <span className="ml-2 rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-500 dark:bg-slate-800 dark:text-slate-300">
             {state.transactions.length}
           </span>
@@ -46,18 +48,24 @@ export function TransactionsList() {
       </div>
       {transactions.length === 0 ? (
         <EmptyState
-          title={search ? t("Aucun résultat") : t("Votre historique commence ici")}
+          title={
+            search ? t("Aucun résultat") : t("Votre historique commence ici")
+          }
           description={
             search
               ? t("Essayez une autre description ou catégorie.")
-              : t("Ajoutez votre première transaction pour suivre vos finances.")
+              : t(
+                  "Ajoutez votre première transaction pour suivre vos finances.",
+                )
           }
           action={
             search ? (
               <button
                 onClick={() => setSearch("")}
                 className="text-sm font-semibold text-teal-800 dark:text-teal-300"
-              >{t("Effacer la recherche")}</button>
+              >
+                {t("Effacer la recherche")}
+              </button>
             ) : undefined
           }
         />
@@ -79,7 +87,13 @@ export function TransactionsList() {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                     <p className="break-words text-sm font-medium text-slate-800 dark:text-slate-100">
-                      {transaction.description}
+                      {transaction.customCategoryName &&
+                      (!transaction.description.trim() ||
+                        transaction.description ===
+                          getCategoryLabel("autres") ||
+                        transaction.description.toLowerCase() === "autres")
+                        ? transaction.customCategoryName
+                        : transaction.description}
                     </p>
                     <p
                       className={`break-words text-sm font-semibold tabular-nums ${income ? "text-emerald-700" : "text-slate-900 dark:text-slate-100"}`}
@@ -92,7 +106,10 @@ export function TransactionsList() {
                     <span className="text-xs text-slate-500 dark:text-slate-300">
                       {transaction.date.toLocaleDateString(locale)}
                     </span>
-                    <CategoryBadge category={transaction.category} />
+                    <CategoryBadge
+                      name={transaction.customCategoryName}
+                      category={transaction.category}
+                    />
                   </div>
                 </div>
                 <button
@@ -101,7 +118,7 @@ export function TransactionsList() {
                       void removeTransaction(transaction.id).catch(() => {});
                   }}
                   className="ui-icon-button hover:text-red-600 dark:hover:text-red-300"
-                  aria-label={`Supprimer ${transaction.description}`}
+                  aria-label={`Supprimer ${transaction.customCategoryName && (!transaction.description.trim() || transaction.description === getCategoryLabel("autres") || transaction.description.toLowerCase() === "autres") ? transaction.customCategoryName : transaction.description}`}
                 >
                   <Trash2 size={16} aria-hidden="true" />
                 </button>

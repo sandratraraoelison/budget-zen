@@ -1,3 +1,4 @@
+import { isAllowedAccountRoute } from "@/shared/domain/account-routes";
 import { NextRequest, NextResponse } from "next/server";
 import { backendUrl, SESSION_COOKIE } from "@/features/auth/server/session";
 import { isSameOrigin } from "@/features/auth/server/auth-handlers";
@@ -9,40 +10,7 @@ async function forward(
   { params }: { params: { path: string[] } },
 ) {
   const path = params.path.join("/");
-  const methods: Record<string, string[]> = {
-    settings: ["GET", "PATCH"],
-    "budget/summary": ["GET"],
-    ...Object.fromEntries(
-      [
-        "transactions",
-        "budgets",
-        "savings-goals",
-        "custom-categories",
-        "projects",
-        "credits",
-      ].map((path) => [path, ["GET", "POST"]]),
-    ),
-    "business/transactions": ["GET", "POST"],
-    "business/analytics": ["GET"],
-  };
-  const allowed =
-    methods[path] ??
-    (/^(business\/transactions|transactions|budgets|savings-goals|custom-categories|projects|credits)\/[0-9a-f-]{36}$/i.test(
-      path,
-    )
-      ? /^(projects|credits)\//.test(path)
-        ? ["GET", "PATCH", "DELETE"]
-        : ["PATCH", "DELETE"]
-      : /^(projects|credits|custom-categories)\/[0-9a-f-]{36}\/(expenses|payments|transactions)$/i.test(
-            path,
-          )
-        ? ["POST"]
-        : /^(projects|credits|custom-categories)\/[0-9a-f-]{36}\/(expenses|payments|transactions)\/[0-9a-f-]{36}$/i.test(
-              path,
-            )
-          ? ["DELETE"]
-          : []);
-  if (!allowed.includes(request.method))
+  if (!isAllowedAccountRoute(path, request.method))
     return NextResponse.json(
       { message: "Route introuvable." },
       { status: 404 },

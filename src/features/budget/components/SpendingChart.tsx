@@ -1,4 +1,5 @@
 "use client";
+import { sumAmounts } from "@/shared/domain/money";
 import { useLocale } from "@/features/settings/LocaleProvider";
 
 import {
@@ -17,25 +18,32 @@ import EmptyState from "@/components/ui/EmptyState";
 
 export default function SpendingChart() {
   const { t } = useLocale();
-  const { state, getCategorySpending } = useBudget();
+  const { state } = useBudget();
   const { formatMoney, formatNumber, currency } = useCurrency();
-  const categories = Array.from(
-    new Set(
-      state.transactions
-        .filter((t) => t.type === "expense")
-        .map((t) => t.category),
-    ),
-  );
-
-  const data = categories.map((category) => ({
-    category: t(getCategoryLabel(category)),
-    amount: getCategorySpending(category),
-  }));
+  const groups = new Map<string, { category: string; amount: number }>();
+  for (const transaction of state.transactions.filter(
+    (t) => t.type === "expense",
+  )) {
+    const key = JSON.stringify([
+      transaction.category,
+      transaction.customCategoryName?.toLowerCase() ?? "",
+    ]);
+    const group = groups.get(key);
+    groups.set(key, {
+      category:
+        transaction.customCategoryName ??
+        t(getCategoryLabel(transaction.category)),
+      amount: sumAmounts([group?.amount ?? 0, transaction.amount]),
+    });
+  }
+  const data = Array.from(groups.values());
 
   return (
     <section className="ui-card">
       <h2 className="ui-title mb-1">{t("Dépenses par catégorie")}</h2>
-      <p className="mb-5 text-sm text-slate-500 dark:text-slate-300">{t("Comprenez les principaux postes de votre budget.")}</p>
+      <p className="mb-5 text-sm text-slate-500 dark:text-slate-300">
+        {t("Comprenez les principaux postes de votre budget.")}
+      </p>
       {data.length === 0 ? (
         <EmptyState
           title={t("Aucune dépense pour le moment")}

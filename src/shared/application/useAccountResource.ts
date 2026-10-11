@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "../notifications/notifications";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 /** Serialize writes and avoid applying a refresh started before a write. */
@@ -91,11 +92,17 @@ export function useAccountResource<T>(
           setData(result);
         }
       }
-      if (mounted.current) setError("");
+      if (mounted.current) {
+        setError("");
+        notify("Modifications enregistrées.");
+      }
     });
     queue.current = task
       .catch((error) => {
-        if (mounted.current) setError(error.message);
+        if (mounted.current) {
+          setError(error.message);
+          notify(error.message || "Impossible de terminer l’opération.", "error");
+        }
       })
       .finally(() => {
         busy.current--;

@@ -1,8 +1,10 @@
+import NewBusinessTransactionModal from "./NewBusinessTransactionModal";
 import { Text } from "react-native";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useServices } from "../../../composition/ServicesProvider";
 import { useResource } from "../../../shared/application/useResource";
 import {
+  Button,
   Card,
   Heading,
   IconButton,
@@ -21,6 +23,7 @@ export default function BusinessScreen() {
     [business],
   );
   const resource = useResource(load);
+  const [creating, setCreating] = useState(false);
   return (
     <Screen
       onRefresh={resource.reload}
@@ -36,6 +39,11 @@ export default function BusinessScreen() {
             onPress={resource.reload}
           />
         }
+      />
+      <Button
+        title={t("newBusinessTransaction")}
+        icon="add-circle-outline"
+        onPress={() => setCreating(true)}
       />
       <ResourceState {...resource} />
       {resource.data && (
@@ -65,6 +73,15 @@ export default function BusinessScreen() {
             </Text>
           </Card>
         </>
+      )}
+      {creating && (
+        <NewBusinessTransactionModal
+          close={() => setCreating(false)}
+          saved={() => {
+            setCreating(false);
+            resource.reload();
+          }}
+        />
       )}
     </Screen>
   );

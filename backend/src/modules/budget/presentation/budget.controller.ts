@@ -15,6 +15,7 @@ import { CurrentUser } from "../../auth/presentation/current-user";
 import { JwtAuthGuard } from "../../auth/presentation/jwt-auth.guard";
 import { BudgetService } from "../application/budget.service";
 import {
+  CategoryOrderDto,
   BudgetDto,
   CustomCategoryDto,
   GoalDto,
@@ -31,6 +32,12 @@ import {
 @Controller()
 export class BudgetController {
   constructor(private readonly service: BudgetService) {}
+  @Patch("categories/order") reorderCategories(
+    @CurrentUser() user: string,
+    @Body() dto: CategoryOrderDto,
+  ) {
+    return this.service.reorderCategories(user, dto.ids);
+  }
   @Get("budget/summary") summary(@CurrentUser() user: string) {
     return this.service.summary(user);
   }

@@ -1,5 +1,11 @@
 // French messages are stable translation keys; user-entered data is never translated.
 export const english: Record<string, string> = {
+  "Modifier les catégories": "Edit categories",
+  "Nom de catégorie (optionnel)": "Category name (optional)",
+  "Ex. : Voyage, Animaux…": "E.g. Travel, Pets…",
+  "Laissez vide pour utiliser Autres. Sinon, la catégorie sera créée ou réutilisée.": "Leave blank to use Other. Otherwise, the category will be created or reused.",
+  "Gérer les budgets": "Manage budgets",
+  "Suivez vos limites de dépenses par catégorie.": "Track your spending limits by category.",
   "Importer les anciens projets de ce navigateur": "Import previous projects from this browser",
   "Inscription en cours…": "Creating your account…",
   "Ouverture de votre tableau de bord…": "Opening your dashboard…",

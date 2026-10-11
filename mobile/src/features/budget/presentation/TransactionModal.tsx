@@ -1,3 +1,5 @@
+import DateField from "../../../shared/ui/DateField";
+import NotificationHost from "../../../shared/ui/NotificationHost";
 import {
   formatAmountInput,
   normalizeAmountInput,
@@ -16,14 +18,17 @@ import {
 } from "../../../shared/ui/components";
 import { usePreferences } from "../../settings/PreferencesProvider";
 import {
-  categories,
+  orderedCategoryChoices,
+  type BudgetSummary,
   parseAmount,
   type TransactionInput,
 } from "../domain/budget";
 export default function TransactionModal({
   close,
   saved,
+  summary,
 }: {
+  summary?: BudgetSummary | null;
   close(): void;
   saved(): void;
 }) {
@@ -32,6 +37,8 @@ export default function TransactionModal({
   const [type, setType] = useState<TransactionInput["type"]>("expense");
   const [category, setCategory] =
     useState<TransactionInput["category"]>("autres");
+  const [customName, setCustomName] = useState("");
+  const [selectedCustom, setSelectedCustom] = useState(false);
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const today = new Date();
@@ -57,7 +64,13 @@ export default function TransactionModal({
         category,
         amount: value,
         date,
-        description: description.trim() || category,
+        description:
+          description.trim() ||
+          (category === "autres" ? customName.trim() : "") ||
+          category,
+        ...(category === "autres" && customName.trim()
+          ? { customCategoryName: customName.trim().replace(/\s+/g, " ") }
+          : {}),
       });
       saved();
     } catch (error) {
@@ -100,22 +113,47 @@ export default function TransactionModal({
             editable={!pending}
           />
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-            {categories.map((value) => (
+            {orderedCategoryChoices(summary).map((option) => (
               <Choice
-                key={value}
-                title={t(value)}
-                selected={category === value}
+                key={option.id}
+                title={
+                  option.custom
+                    ? option.name
+                    : t(option.name as TransactionInput["category"])
+                }
+                selected={
+                  option.custom
+                    ? selectedCustom && customName === option.name
+                    : category === option.value && !selectedCustom
+                }
                 disabled={pending}
-                onPress={() => setCategory(value)}
+                onPress={() => {
+                  setCategory(
+                    option.custom
+                      ? "autres"
+                      : (option.value as TransactionInput["category"]),
+                  );
+                  setCustomName(option.custom ? option.name : "");
+                  setSelectedCustom(option.custom);
+                }}
               />
             ))}
           </View>
-          <Field
+          {category === "autres" && !selectedCustom && (
+            <Field
+              label={t("categoryNameOptional")}
+              value={customName}
+              onChangeText={setCustomName}
+              editable={!pending}
+              maxLength={100}
+              placeholder={t("categoryNameHint")}
+            />
+          )}
+          <DateField
             label={t("date")}
             value={date}
-            onChangeText={setDate}
-            editable={!pending}
-            maxLength={10}
+            onChange={setDate}
+            disabled={pending}
           />
           <Field
             label={t("description")}
@@ -137,6 +175,7 @@ export default function TransactionModal({
             onPress={close}
           />
         </Screen>
+        <NotificationHost inModal />
       </SafeAreaView>
     </Modal>
   );

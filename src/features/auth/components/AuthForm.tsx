@@ -1,4 +1,5 @@
 "use client";
+import HydratedIcon from "@/components/ui/HydratedIcon";
 import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useState, type FormEvent } from "react";
@@ -57,7 +58,7 @@ export default function AuthForm({ initialMode = "register" }: { initialMode?: A
       {redirecting && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/40 px-4 backdrop-blur-sm">
           <div role="status" aria-live="polite" className="flex w-full max-w-sm flex-col items-center rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-xl dark:border-slate-700 dark:bg-slate-900">
-            <LoaderCircle size={32} className="mb-4 animate-spin text-teal-700 dark:text-teal-300" aria-hidden="true" />
+            <HydratedIcon icon={LoaderCircle} size={32} className="mb-4 animate-spin text-teal-700 dark:text-teal-300" aria-hidden="true" />
             <p className="font-semibold text-slate-900 dark:text-slate-100">{t("Ouverture de votre tableau de bord…")}</p>
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-300">{t("Votre espace sera prêt dans un instant.")}</p>
           </div>
@@ -90,7 +91,7 @@ export default function AuthForm({ initialMode = "register" }: { initialMode?: A
                 required minLength={12} maxLength={128} aria-describedby={registering ? "password-help" : undefined} placeholder={t("Votre mot de passe")} className={`${inputClass} pr-12`} />
               <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? t("Masquer le mot de passe") : t("Afficher le mot de passe")}
                 className="absolute bottom-0 right-0 flex h-12 w-12 items-center justify-center rounded-xl text-slate-400 hover:text-teal-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-600 dark:text-slate-400 dark:hover:text-teal-300">
-                {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+                {showPassword ? <HydratedIcon icon={EyeOff} size={18} aria-hidden="true" /> : <HydratedIcon icon={Eye} size={18} aria-hidden="true" />}
               </button>
             </div>
             {registering && <p id="password-help" className="mt-2 text-xs text-slate-500 dark:text-slate-300">{t("12 caractères minimum.")}</p>}
@@ -102,9 +103,9 @@ export default function AuthForm({ initialMode = "register" }: { initialMode?: A
         </fieldset>
         {error && <p role="alert" className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm leading-6 text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">{t(error)}</p>}
         <button type="submit" disabled={pending} className="flex w-full items-center justify-center gap-2 rounded-xl bg-teal-800 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-teal-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal-700 disabled:cursor-wait disabled:opacity-70">
-          {pending ? <><LoaderCircle size={18} className="animate-spin" aria-hidden="true" />{redirecting ? t("Ouverture de votre tableau de bord…") : registering ? t("Inscription en cours…") : t("Connexion en cours…")}</> : <>{registering ? t("Créer mon compte") : t("Se connecter")}<ArrowRight size={18} aria-hidden="true" /></>}
+          {pending ? <><HydratedIcon icon={LoaderCircle} size={18} className="animate-spin" aria-hidden="true" />{redirecting ? t("Ouverture de votre tableau de bord…") : registering ? t("Inscription en cours…") : t("Connexion en cours…")}</> : <>{registering ? t("Créer mon compte") : t("Se connecter")}<HydratedIcon icon={ArrowRight} size={18} aria-hidden="true" /></>}
         </button>
-        <p className="flex items-center justify-center gap-2 pt-1 text-xs text-slate-500 dark:text-slate-300"><LockKeyhole size={13} aria-hidden="true" />{t("Votre espace personnel, en toute simplicité.")}</p>
+        <p className="flex items-center justify-center gap-2 pt-1 text-xs text-slate-500 dark:text-slate-300"><HydratedIcon icon={LockKeyhole} size={13} aria-hidden="true" />{t("Votre espace personnel, en toute simplicité.")}</p>
       </form>
     </section>
   );

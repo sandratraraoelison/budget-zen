@@ -23,6 +23,68 @@ const initial = (): AppState => ({
   customCategories: [],
 });
 
+test("named Other categories share an identity and have independent budgets", () => {
+  let state = { ...initial(), budgets: [] } as AppState;
+  state = budgetReducer(state, {
+    type: "budget/add",
+    budget: { id: "other", category: "autres", limit: 1000, current: 0 },
+  });
+  state = budgetReducer(state, {
+    type: "budget/add",
+    budget: {
+      id: "named",
+      category: "autres",
+      customCategoryName: " Voyage  famille ",
+      limit: 1000,
+      current: 0,
+    },
+  });
+  state = budgetReducer(state, {
+    type: "transaction/add",
+    transaction: {
+      ...transaction,
+      category: "autres",
+      customCategoryName: "voyage famille",
+    },
+  });
+  state = budgetReducer(state, {
+    type: "transaction/add",
+    transaction: {
+      ...transaction,
+      id: "blank",
+      category: "autres",
+      customCategoryName: "  ",
+    },
+  });
+  assert.equal(state.customCategories.length, 1);
+  assert.equal(state.customCategories[0].spent, 120);
+  assert.deepEqual(
+    state.budgets.map((b) => b.current),
+    [120, 120],
+  );
+  assert.equal(getTransactionTotals(state.transactions).totalExpenses, 240);
+  assert.deepEqual(state.alerts, []);
+  assert.equal(state.transactions[0].customCategoryName, undefined);
+  assert.throws(() =>
+    budgetReducer(state, {
+      type: "budget/add",
+      budget: {
+        id: "duplicate",
+        category: "autres",
+        customCategoryName: "VOYAGE FAMILLE",
+        limit: 1000,
+        current: 0,
+      },
+    }),
+  );
+  state = budgetReducer(state, {
+    type: "transaction/remove",
+    id: transaction.id,
+  });
+  assert.equal(state.customCategories[0].spent, 0);
+  assert.equal(state.budgets[1].current, 0);
+});
+
 test("adding and removing an expense updates both spending and alerts", () => {
   const state = initial();
   const added = budgetReducer(state, { type: "transaction/add", transaction });

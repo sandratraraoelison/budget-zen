@@ -12,6 +12,9 @@ export type Category = (typeof CATEGORIES)[number];
 export type TransactionType = "income" | "expense";
 
 export interface Transaction {
+  customCategoryName?: string;
+  customCategoryId?: string;
+
   id: string;
   amountMinor: number;
   date: string;
@@ -20,6 +23,9 @@ export interface Transaction {
   type: TransactionType;
 }
 export interface Budget {
+  customCategoryName?: string;
+  customCategoryId?: string;
+
   id: string;
   category: Category;
   limitMinor: number;
@@ -32,6 +38,9 @@ export interface SavingsGoal {
   deadline: string;
 }
 export interface CustomCategory {
+  baseCategory?: string;
+  hidden?: boolean;
+  icon?: string;
   id: string;
   name: string;
   budgetMinor: number;
@@ -39,6 +48,7 @@ export interface CustomCategory {
   createdAt: string;
 }
 export interface BudgetState {
+  categoryOrder?: string[];
   syncReceipts?: { clientId: string; transaction: Transaction }[];
   transactions: Transaction[];
   budgets: Budget[];
@@ -53,6 +63,8 @@ export const emptyBudgetState = (): BudgetState => ({
 });
 
 export interface TransactionInput {
+  customCategoryName?: string;
+
   clientId?: string;
   amount: number;
   date: string;
@@ -61,6 +73,8 @@ export interface TransactionInput {
   type: TransactionType;
 }
 export interface BudgetInput {
+  customCategoryName?: string;
+
   category: Category;
   limit: number;
 }
@@ -71,6 +85,8 @@ export interface GoalInput {
   deadline: string;
 }
 export interface CustomCategoryInput {
+  baseCategory?: Category;
+  icon?: string;
   name: string;
   budget: number;
 }

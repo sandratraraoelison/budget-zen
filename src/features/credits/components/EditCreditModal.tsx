@@ -1,4 +1,5 @@
 "use client";
+import DateInput from "@/components/ui/DateInput";
 import AmountInput from "@/components/ui/AmountInput";
 import { useLocale } from "@/features/settings/LocaleProvider";
 
@@ -108,8 +109,7 @@ export default function EditCreditModal({
 
             <div>
               <label>{t("Date de début")}</label>
-              <input
-                type="date"
+              <DateInput
                 value={formData.startDate}
                 onChange={(e) =>
                   setFormData({ ...formData, startDate: e.target.value })
@@ -121,8 +121,7 @@ export default function EditCreditModal({
 
             <div>
               <label>{t("Date de fin (optionnel)")}</label>
-              <input
-                type="date"
+              <DateInput
                 value={formData.endDate || ""}
                 onChange={(e) =>
                   setFormData({ ...formData, endDate: e.target.value })

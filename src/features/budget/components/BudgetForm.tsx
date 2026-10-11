@@ -1,4 +1,6 @@
 "use client";
+import { categoryOptions } from "../domain/category-options";
+import OtherCategoryName from "./OtherCategoryName";
 import AmountInput from "@/components/ui/AmountInput";
 import { useLocale } from "@/features/settings/LocaleProvider";
 
@@ -7,16 +9,14 @@ import { useCurrency } from "@/features/settings/CurrencyProvider";
 import { useState } from "react";
 import { useBudget } from "@/features/budget/context/BudgetProvider";
 import { Budget } from "@/features/budget/types";
-import {
-  TRANSACTION_CATEGORIES,
-  getCategoryLabel,
-} from "../domain/categorization";
+import { getCategoryLabel } from "../domain/categorization";
 
 export default function BudgetForm() {
   const { t } = useLocale();
   const { currency } = useCurrency();
   const { addBudget, state, pending } = useBudget();
   const [error, setError] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [formData, setFormData] = useState<Omit<Budget, "id" | "current">>({
     category: "",
     limit: 0,
@@ -44,6 +44,7 @@ export default function BudgetForm() {
     setError("");
 
     setFormData({ category: "", limit: 0 });
+    setSelectedCategory("");
   };
 
   return (
@@ -54,27 +55,59 @@ export default function BudgetForm() {
             {t(error)}
           </p>
         )}
-        <label htmlFor="budget-category" className="block">{t("Catégorie")}</label>
+        <label htmlFor="budget-category" className="block">
+          {t("Catégorie")}
+        </label>
         <select
           id="budget-category"
           className="w-full p-2 border rounded"
-          value={formData.category}
-          onChange={(e) =>
-            setFormData({ ...formData, category: e.target.value })
-          }
+          value={selectedCategory}
+          onChange={(e) => {
+            const value = e.target.value;
+            setSelectedCategory(value);
+            setFormData({
+              ...formData,
+              category: value.startsWith("custom:") ? "autres" : value,
+              customCategoryName: value.startsWith("custom:")
+                ? value.slice(7)
+                : undefined,
+            });
+          }}
           required
         >
           <option value="">{t("Choisir une catégorie")}</option>
-          {TRANSACTION_CATEGORIES.filter(
-            (category) => !state.budgets.some((b) => b.category === category),
-          ).map((category) => (
-            <option key={category} value={category}>
-              {t(getCategoryLabel(category))}
-            </option>
-          ))}
+          {categoryOptions(state, t)
+            .filter(
+              (option) =>
+                option.value === "autres" ||
+                !state.budgets.some((b) =>
+                  option.value.startsWith("custom:")
+                    ? b.customCategoryName?.toLowerCase() ===
+                      option.value.slice(7).toLowerCase()
+                    : b.category === option.value,
+                ),
+            )
+            .map((option) => (
+              <option key={option.id} value={option.value}>
+                {option.label}
+              </option>
+            ))}
         </select>
 
-        <label htmlFor="budget-limit" className="block">{t("Limite (")}{currency})
+        {formData.category === "autres" &&
+          !selectedCategory.startsWith("custom:") && (
+            <OtherCategoryName
+              id="budget-custom-category"
+              value={formData.customCategoryName ?? ""}
+              onChange={(customCategoryName) =>
+                setFormData({ ...formData, customCategoryName })
+              }
+              disabled={pending}
+            />
+          )}
+        <label htmlFor="budget-limit" className="block">
+          {t("Limite (")}
+          {currency})
         </label>
         <AmountInput
           id="budget-limit"
@@ -89,9 +122,13 @@ export default function BudgetForm() {
           step="0.01"
           required
         />
-        <p className="text-sm text-gray-500 dark:text-slate-300">{t("La limite s’applique aux dépenses cumulées de cette catégorie.")}</p>
+        <p className="text-sm text-gray-500 dark:text-slate-300">
+          {t("La limite s’applique aux dépenses cumulées de cette catégorie.")}
+        </p>
 
-        <button type="submit" disabled={pending} className="ui-primary w-full">{t("Créer le budget")}</button>
+        <button type="submit" disabled={pending} className="ui-primary w-full">
+          {t("Créer le budget")}
+        </button>
       </form>
     </div>
   );

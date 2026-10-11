@@ -1,3 +1,4 @@
+import SyncBanner from "./SyncBanner";
 import { useState, type ReactNode, type ComponentProps } from "react";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import {
@@ -198,6 +199,7 @@ export function Screen({
           alignSelf: "center",
         }}
       >
+        <SyncBanner />
         {children}
       </ScrollView>
     </KeyboardAvoidingView>
@@ -239,9 +241,13 @@ export function IconButton({
   icon,
   label,
   onPress,
+  disabled = false,
+  destructive = false,
 }: {
   icon: ComponentProps<typeof Ionicons>["name"];
   label: string;
+  disabled?: boolean;
+  destructive?: boolean;
   onPress(): void;
 }) {
   const { colors } = usePreferences();
@@ -249,6 +255,8 @@ export function IconButton({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
+      disabled={disabled}
+      accessibilityState={{ disabled }}
       onPress={onPress}
       style={({ pressed }) => ({
         height: 44,
@@ -257,10 +265,14 @@ export function IconButton({
         backgroundColor: colors.soft,
         alignItems: "center",
         justifyContent: "center",
-        opacity: pressed ? 0.6 : 1,
+        opacity: disabled ? 0.4 : pressed ? 0.6 : 1,
       })}
     >
-      <Ionicons name={icon} size={21} color={colors.accent} />
+      <Ionicons
+        name={icon}
+        size={21}
+        color={destructive ? colors.danger : colors.accent}
+      />
     </Pressable>
   );
 }

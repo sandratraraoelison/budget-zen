@@ -124,3 +124,5 @@ Ce test construit les deux applications, les lance sur des ports temporaires ave
 ### Recuperer les anciennes donnees web
 
 Dans Projets, le bouton d’import transfère les projets de ce navigateur vers le serveur, avec leurs dépenses, sans supprimer la sauvegarde locale. Les imports réussis sont marqués pour permettre une reprise après une erreur. Les anciennes transactions et crédits étaient uniquement en mémoire : ils ne peuvent pas être récupérés après fermeture ou rechargement de la page. Les nouveaux enregistrements sont persistés sur le serveur.
+
+Le mobile dispose d’un cache SQLite et d’une file de synchronisation pour les transactions et la devise. Consultez le README mobile pour les conditions d’utilisation hors ligne. Le backend accepte un `clientId` UUID optionnel sur les transactions ; ses recus persistants garantissent qu’un reenvoi identique ne cree pas de doublon.

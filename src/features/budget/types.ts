@@ -10,6 +10,8 @@ export interface SavingsGoal {
 export type { TransactionCategory } from "./domain/categorization";
 
 export interface Transaction {
+  customCategoryName?: string;
+  customCategoryId?: string;
   id: string;
   amount: number;
   date: Date;
@@ -19,6 +21,9 @@ export interface Transaction {
 }
 
 export interface CustomCategory {
+  baseCategory?: string;
+  hidden?: boolean;
+  icon?: string;
   id: string;
   name: string;
   budget: number;
@@ -28,6 +33,8 @@ export interface CustomCategory {
 }
 
 export interface Budget {
+  customCategoryName?: string;
+  customCategoryId?: string;
   id: string;
   category: string;
   limit: number;
@@ -35,6 +42,8 @@ export interface Budget {
 }
 
 export interface AppState {
+  categoryOrder?: string[];
+  hiddenCategories?: string[];
   transactions: Transaction[];
   budgets: Budget[];
   savingsGoals: SavingsGoal[];
@@ -43,6 +52,9 @@ export interface AppState {
 }
 
 export interface BudgetContextType {
+  reorderCategories: (ids: string[]) => Promise<void>;
+  saveCategory: (category: CustomCategory, create?: boolean) => Promise<void>;
+  removeCategory: (id: string) => Promise<void>;
   state: AppState;
   error: string;
   loading: boolean;

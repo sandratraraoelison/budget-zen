@@ -8,7 +8,12 @@ function parseDate(value: unknown): Date {
 function dateString(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
-function transactionBody({ id: _id, date, ...input }: Transaction) {
+function transactionBody({
+  id: _id,
+  customCategoryId: _categoryId,
+  date,
+  ...input
+}: Transaction) {
   return { ...input, date: dateString(date) };
 }
 export async function loadBudget(signal?: AbortSignal): Promise<AppState> {
@@ -48,12 +53,20 @@ export async function saveAction(action: BudgetAction) {
       break;
     case "budget/add":
       path = "budgets";
-      body = { category: action.budget.category, limit: action.budget.limit };
+      body = {
+        category: action.budget.category,
+        limit: action.budget.limit,
+        customCategoryName: action.budget.customCategoryName,
+      };
       break;
     case "budget/update":
       path = `budgets/${action.budget.id}`;
       method = "PATCH";
-      body = { category: action.budget.category, limit: action.budget.limit };
+      body = {
+        category: action.budget.category,
+        limit: action.budget.limit,
+        customCategoryName: action.budget.customCategoryName,
+      };
       break;
     case "budget/remove":
       path = `budgets/${action.id}`;
@@ -68,9 +81,25 @@ export async function saveAction(action: BudgetAction) {
         deadline: dateString(action.goal.deadline),
       };
       break;
+    case "category/order":
+      path = "categories/order"; method = "PATCH"; body = { ids: action.ids }; break;
+    case "category/remove":
+      path = `custom-categories/${action.id}`;
+      method = "DELETE";
+      break;
+    case "category/update":
+      path = `custom-categories/${action.category.id}`;
+      method = "PATCH";
+      body = { name: action.category.name, icon: action.category.icon };
+      break;
     case "category/add":
       path = "custom-categories";
-      body = { name: action.category.name, budget: action.category.budget };
+      body = {
+        name: action.category.name,
+        budget: action.category.budget,
+        icon: action.category.icon,
+        baseCategory: action.category.baseCategory,
+      };
       break;
     case "category/transaction":
       path = `custom-categories/${action.categoryId}/transactions`;

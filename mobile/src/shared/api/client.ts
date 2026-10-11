@@ -16,6 +16,7 @@ export interface RequestOptions {
   body?: unknown;
   signal?: AbortSignal;
   public?: boolean;
+  expectedToken?: string;
 }
 export interface HttpClient {
   request<T>(path: string, options?: RequestOptions): Promise<T>;
@@ -35,6 +36,8 @@ export function createHttpClient(
       const timeout = setTimeout(abort, 15000);
       try {
         const token = opts.public ? null : await tokens.read();
+        if (opts.expectedToken !== undefined && token !== opts.expectedToken)
+          throw new ApiError("La session a change. Reconnectez-vous.", 401);
         const response = await fetcher(
           `${baseUrl.replace(/\/$/, "")}/${path}`,
           {
@@ -49,7 +52,11 @@ export function createHttpClient(
               : {}),
           },
         );
-        if (response.status === 401 && token) {
+        if (
+          response.status === 401 &&
+          token &&
+          (await tokens.read()) === token
+        ) {
           await tokens.clear();
           expired();
         }

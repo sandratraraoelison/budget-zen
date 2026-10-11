@@ -1,4 +1,6 @@
 "use client";
+import { categoryOptions } from "../domain/category-options";
+import OtherCategoryName from "./OtherCategoryName";
 import AmountInput from "@/components/ui/AmountInput";
 import { useLocale } from "@/features/settings/LocaleProvider";
 
@@ -10,10 +12,7 @@ import { fr, enUS } from "date-fns/locale";
 import "react-datepicker/dist/react-datepicker.css";
 import { useBudget } from "@/features/budget/context/BudgetProvider";
 import { Transaction, TransactionCategory } from "@/features/budget/types";
-import {
-  TRANSACTION_CATEGORIES,
-  getCategoryLabel,
-} from "@/features/budget/domain/categorization";
+import { getCategoryLabel } from "@/features/budget/domain/categorization";
 import { subtractAmounts, sumAmounts, toMinor } from "@/shared/domain/money";
 
 export default function TransactionForm({
@@ -26,6 +25,8 @@ export default function TransactionForm({
   const { state, addTransaction, pending } = useBudget();
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [customName, setCustomName] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [formData, setFormData] = useState<Partial<Transaction>>({
     type: "expense",
     date: new Date(),
@@ -48,9 +49,16 @@ export default function TransactionForm({
       id: crypto.randomUUID(),
       amount: Number(formData.amount),
       date: formData.date || new Date(),
-      description: formData.description || getCategoryLabel(formData.category),
+      description:
+        formData.description?.trim() ||
+        (formData.category === "autres" && customName.trim()
+          ? customName.trim()
+          : getCategoryLabel(formData.category)),
       category: formData.category,
       type: formData.type || "expense",
+      ...(formData.category === "autres" && customName.trim()
+        ? { customCategoryName: customName.trim().replace(/\s+/g, " ") }
+        : {}),
     };
     try {
       toMinor(newTransaction.amount);
@@ -62,7 +70,10 @@ export default function TransactionForm({
     // Budget Verificcation
     if (newTransaction.type === "expense") {
       const relatedBudget = state.budgets.find(
-        (b) => b.category === newTransaction.category,
+        (b) =>
+          b.category === newTransaction.category &&
+          (b.customCategoryName ?? "").toLowerCase() ===
+            (newTransaction.customCategoryName ?? "").toLowerCase(),
       );
 
       if (relatedBudget) {
@@ -77,11 +88,20 @@ export default function TransactionForm({
 
         if (projectedTotal > relatedBudget.limit) {
           const confirmMessage = [
-            t("⚠️ Attention : Cette transaction dépasse le budget {category} !", { category: t(getCategoryLabel(relatedBudget.category)) }),
+            t(
+              "⚠️ Attention : Cette transaction dépasse le budget {category} !",
+              { category: t(getCategoryLabel(relatedBudget.category)) },
+            ),
             "",
-            t("Limite actuelle : {amount}", { amount: formatMoney(relatedBudget.limit) }),
-            t("Dépense actuelle : {amount}", { amount: formatMoney(relatedBudget.current) }),
-            t("Nouveau total : {amount}", { amount: formatMoney(projectedTotal) }),
+            t("Limite actuelle : {amount}", {
+              amount: formatMoney(relatedBudget.limit),
+            }),
+            t("Dépense actuelle : {amount}", {
+              amount: formatMoney(relatedBudget.current),
+            }),
+            t("Nouveau total : {amount}", {
+              amount: formatMoney(projectedTotal),
+            }),
             "",
             t("Confirmez-vous cette dépense ?"),
           ].join("\n");
@@ -92,7 +112,10 @@ export default function TransactionForm({
           remainingBudget - newTransaction.amount > 0
         ) {
           alert(
-            t("⚠️ Il restera seulement {amount} dans le budget {category}", { amount: formatMoney(remainingBudget - newTransaction.amount), category: t(getCategoryLabel(relatedBudget.category)) }),
+            t("⚠️ Il restera seulement {amount} dans le budget {category}", {
+              amount: formatMoney(remainingBudget - newTransaction.amount),
+              category: t(getCategoryLabel(relatedBudget.category)),
+            }),
           );
         }
       }
@@ -105,6 +128,8 @@ export default function TransactionForm({
       return;
     }
     setError("");
+    setCustomName("");
+    setSelectedCategory("");
     setSuccess(t("Transaction ajoutée à votre historique."));
 
     // Reset Form
@@ -138,7 +163,9 @@ export default function TransactionForm({
           <label
             htmlFor="transaction-type"
             className="block text-sm font-medium mb-1"
-          >{t("Type")}</label>
+          >
+            {t("Type")}
+          </label>
           <select
             id="transaction-type"
             className="w-full p-2 border rounded"
@@ -159,8 +186,16 @@ export default function TransactionForm({
           <label
             htmlFor="transaction-date"
             className="block text-sm font-medium mb-1"
-          >{t("Date")}</label>
+          >
+            {t("Date")}
+          </label>
           <DatePicker
+            popperClassName="budgetzen-datepicker"
+            popperProps={{ strategy: "fixed" }}
+            showMonthDropdown
+            showYearDropdown
+            dropdownMode="select"
+            strictParsing
             locale={language === "fr" ? fr : enUS}
             id="transaction-date"
             selected={formData.date}
@@ -178,23 +213,30 @@ export default function TransactionForm({
           <label
             htmlFor="transaction-category"
             className="block text-sm font-medium mb-1"
-          >{t("Catégorie")}</label>
+          >
+            {t("Catégorie")}
+          </label>
           <select
             id="transaction-category"
             className="w-full p-2 border rounded"
-            value={formData.category || ""}
-            onChange={(e) =>
+            value={selectedCategory}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSelectedCategory(value);
+              setCustomName(value.startsWith("custom:") ? value.slice(7) : "");
               setFormData({
                 ...formData,
-                category: e.target.value as TransactionCategory,
-              })
-            }
+                category: (value.startsWith("custom:")
+                  ? "autres"
+                  : value) as TransactionCategory,
+              });
+            }}
             required
           >
             <option value="">{t("Sélectionnez une catégorie")}</option>
-            {TRANSACTION_CATEGORIES.map((category) => (
-              <option key={category} value={category}>
-                {t(getCategoryLabel(category))}
+            {categoryOptions(state, t).map((option) => (
+              <option key={option.id} value={option.value}>
+                {option.label}
               </option>
             ))}
           </select>
@@ -204,7 +246,9 @@ export default function TransactionForm({
           <label
             htmlFor="transaction-amount"
             className="block text-sm font-medium mb-1"
-          >{t("Montant (")}{currency})
+          >
+            {t("Montant (")}
+            {currency})
           </label>
           <AmountInput
             id="transaction-amount"
@@ -224,11 +268,24 @@ export default function TransactionForm({
         </div>
       </div>
 
+      {formData.category === "autres" &&
+        !selectedCategory.startsWith("custom:") && (
+          <div className="mb-4">
+            <OtherCategoryName
+              id="transaction-custom-category"
+              value={customName}
+              onChange={setCustomName}
+              disabled={pending}
+            />
+          </div>
+        )}
       <div className="mb-4">
         <label
           htmlFor="transaction-description"
           className="block text-sm font-medium mb-1"
-        >{t("Description (optionnel)")}</label>
+        >
+          {t("Description (optionnel)")}
+        </label>
         <input
           id="transaction-description"
           type="text"
@@ -244,7 +301,9 @@ export default function TransactionForm({
         />
       </div>
 
-      <button type="submit" disabled={pending} className="ui-primary w-full">{t("Ajouter la transaction")}</button>
+      <button type="submit" disabled={pending} className="ui-primary w-full">
+        {t("Ajouter la transaction")}
+      </button>
     </form>
   );
 }

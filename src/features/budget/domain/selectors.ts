@@ -4,12 +4,16 @@ import { sumAmounts, subtractAmounts } from "../../../shared/domain/money";
 export function getCategorySpending(
   transactions: Transaction[],
   category: string,
+  customCategoryName?: string,
 ) {
   return sumAmounts(
     transactions
       .filter(
         (transaction) =>
-          transaction.type === "expense" && transaction.category === category,
+          transaction.type === "expense" &&
+          transaction.category === category &&
+          (transaction.customCategoryName ?? "").toLowerCase() ===
+            (customCategoryName ?? "").toLowerCase(),
       )
       .map((transaction) => transaction.amount),
   );

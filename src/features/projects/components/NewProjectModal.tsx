@@ -1,4 +1,5 @@
 "use client";
+import DateInput from "@/components/ui/DateInput";
 import AmountInput from "@/components/ui/AmountInput";
 import { useLocale } from "@/features/settings/LocaleProvider";
 
@@ -91,8 +92,7 @@ export default function NewProjectModal({ isOpen, onClose, onSave }: Props) {
 
             <div>
               <label className="block mb-1">{t("Date de commencement")}</label>
-              <input
-                type="date"
+              <DateInput
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 className="w-full p-2 border rounded"

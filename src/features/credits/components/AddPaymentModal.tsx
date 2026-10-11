@@ -1,4 +1,5 @@
 "use client";
+import DateInput from "@/components/ui/DateInput";
 import AmountInput from "@/components/ui/AmountInput";
 import { useLocale } from "@/features/settings/LocaleProvider";
 
@@ -79,8 +80,7 @@ export default function AddPaymentModal({
             </div>
             <div>
               <label>{t("Date")}</label>
-              <input
-                type="date"
+              <DateInput
                 min={minDate}
                 value={date}
                 onChange={(e) => setDate(e.target.value)}

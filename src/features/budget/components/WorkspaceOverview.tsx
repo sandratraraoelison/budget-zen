@@ -44,7 +44,7 @@ export default function WorkspaceOverview() {
   const cards = [
     {
       title: t("Budgets"),
-      href: "#budget-summary",
+      href: "/budgets",
       icon: Wallet,
       metric: `${state.budgets.length} budget${state.budgets.length > 1 ? "s" : ""}`,
       detail: budgetLimit

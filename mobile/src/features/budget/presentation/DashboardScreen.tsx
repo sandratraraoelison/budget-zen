@@ -218,13 +218,22 @@ export default function DashboardScreen() {
       {data && (
         <>
           <Card>
-            <Heading title={t("budgets")} />
+            <Heading
+              title={t("budgets")}
+              action={
+                <IconButton
+                  icon="arrow-forward-outline"
+                  label={t("budgets")}
+                  onPress={() => router.navigate("/(workspace)/budgets")}
+                />
+              }
+            />
             {!data.budgets.length && (
               <EmptyState title={t("noBudgets")} icon="pie-chart-outline" />
             )}
             {data.budgets.map((item) => (
               <View key={item.id} style={{ gap: 10, paddingVertical: 8 }}>
-                <Label>{item.category}</Label>
+                <Label>{item.customCategoryName ?? t(item.category)}</Label>
                 <ProgressBar
                   value={item.limit > 0 ? item.current / item.limit : 0}
                 />
@@ -281,7 +290,21 @@ export default function DashboardScreen() {
                     />
                   </View>
                   <View style={{ flex: 1, gap: 2 }}>
-                    <Label>{item.description}</Label>
+                    <Label>
+                      {item.customCategoryName &&
+                      (!item.description.trim() ||
+                        /^(?:\u2754\s*)?autres$/i.test(item.description))
+                        ? item.customCategoryName
+                        : item.description}
+                    </Label>
+                    {item.customCategoryName && (
+                      <Label muted>{item.customCategoryName}</Label>
+                    )}
+                    {item.syncStatus === "pending" && (
+                      <Text style={{ color: colors.accent, fontSize: 12 }}>
+                        {t("pendingTransaction")}
+                      </Text>
+                    )}
                     <Label muted>
                       {new Date(`${item.date}T00:00:00`).toLocaleDateString(
                         locale,
@@ -308,6 +331,7 @@ export default function DashboardScreen() {
       )}
       {modal && (
         <TransactionModal
+          summary={data}
           close={() => setModal(false)}
           saved={() => {
             setModal(false);

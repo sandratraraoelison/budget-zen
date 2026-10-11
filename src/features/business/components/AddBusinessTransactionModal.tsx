@@ -1,4 +1,5 @@
 "use client";
+import DateInput from "@/components/ui/DateInput";
 import AmountInput from "@/components/ui/AmountInput";
 import { useLocale } from "@/features/settings/LocaleProvider";
 
@@ -120,8 +121,7 @@ export default function AddBusinessTransactionModal({
 
             <div>
               <label>{t("Date")}</label>
-              <input
-                type="date"
+              <DateInput
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 className="w-full p-2 border rounded mt-1"

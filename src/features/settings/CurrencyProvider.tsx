@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { notify } from "@/shared/notifications/notifications";
 import { accountRequest } from "@/shared/api/client";
 import { useLocale } from "./LocaleProvider";
 
@@ -85,9 +86,11 @@ export function CurrencyProvider({
         body: JSON.stringify({ currency: next }),
       });
       setCurrency(saved.currency);
+      notify("Devise mise à jour.");
       setError("");
     } catch (error) {
       setError((error as Error).message);
+      notify((error as Error).message, "error");
     } finally {
       setPending(false);
     }

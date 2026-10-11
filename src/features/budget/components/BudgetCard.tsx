@@ -54,7 +54,7 @@ export default function BudgetCard() {
             >
               <div className="flex flex-wrap justify-between items-center gap-2">
                 <h3 className="text-sm font-medium capitalize">
-                  {t(getCategoryLabel(budget.category))}
+                  {budget.customCategoryName ?? t(getCategoryLabel(budget.category))}
                 </h3>
                 <div className="flex flex-wrap items-center gap-2">
                   <span

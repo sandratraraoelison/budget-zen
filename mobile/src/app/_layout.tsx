@@ -1,3 +1,5 @@
+import NotificationHost from "../shared/ui/NotificationHost";
+import { NotificationProvider } from "../shared/ui/NotificationProvider";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { ServicesProvider, useServices } from "../composition/ServicesProvider";
@@ -37,9 +39,12 @@ function Navigation() {
 export default function RootLayout() {
   return (
     <PreferencesProvider>
-      <ServicesProvider>
-        <Navigation />
-      </ServicesProvider>
+      <NotificationProvider>
+        <ServicesProvider>
+          <Navigation />
+          <NotificationHost />
+        </ServicesProvider>
+      </NotificationProvider>
     </PreferencesProvider>
   );
 }

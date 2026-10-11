@@ -11,12 +11,12 @@ export default function BudgetsView() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div className="bg-white rounded-lg shadow p-6 dark:bg-slate-900">
+      <div className="ui-card">
         <h2 className="text-2xl font-bold mb-6">{t("Nouveau Budget")}</h2>
         <BudgetForm />
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 dark:bg-slate-900">
+      <div className="ui-card">
         <h2 className="text-2xl font-bold mb-6">{t("Budgets Existants")}</h2>
         <div className="space-y-4">
           {state.budgets.length === 0 ? (

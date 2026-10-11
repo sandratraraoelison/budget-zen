@@ -10,6 +10,7 @@ import AppearanceControls from "@/features/settings/AppearanceControls";
 
 const links = [
   { href: "/dashboard", label: "Tableau de bord" },
+  { href: "/budgets", label: "Budgets" },
   { href: "/projets", label: "Projets" },
   { href: "/business", label: "Business" },
   { href: "/credit", label: "Cr\u00e9dits" },

@@ -689,3 +689,69 @@ test("login attempts are rate limited", async () => {
     429,
   );
 });
+
+test("offline client IDs are validated and repeated POSTs persist a single transaction", async () => {
+  const clientId = "2d3b0d2e-56bc-4f46-bb1f-2c903ad63939";
+  const body = {
+    clientId,
+    amount: 5.75,
+    date: "2026-10-11",
+    category: "autres",
+    type: "expense",
+    description: "Offline replay",
+  };
+  const first = await request<Transaction>(
+    "transactions",
+    "POST",
+    body,
+    one.accessToken,
+    201,
+  );
+  const replay = await request<Transaction>(
+    "transactions",
+    "POST",
+    body,
+    one.accessToken,
+    201,
+  );
+  assert.equal(first.id, replay.id);
+  const summary = await request<Summary>(
+    "budget/summary",
+    "GET",
+    undefined,
+    one.accessToken,
+  );
+  assert.equal(summary.transactions.filter((t) => t.id === first.id).length, 1);
+  await request(
+    "transactions",
+    "POST",
+    { ...body, amount: 6 },
+    one.accessToken,
+    409,
+  );
+  await request(
+    "transactions",
+    "POST",
+    { ...body, clientId: "invalid" },
+    one.accessToken,
+    400,
+  );
+  await request(
+    `transactions/${first.id}`,
+    "DELETE",
+    undefined,
+    one.accessToken,
+    204,
+  );
+  await request("transactions", "POST", body, one.accessToken, 201);
+  const afterDeletion = await request<Summary>(
+    "budget/summary",
+    "GET",
+    undefined,
+    one.accessToken,
+  );
+  assert.equal(
+    afterDeletion.transactions.some((t) => t.id === first.id),
+    false,
+  );
+});

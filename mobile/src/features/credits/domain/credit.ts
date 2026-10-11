@@ -1,3 +1,10 @@
+export type CreditInput = {
+  contact: string;
+  initialAmount: number;
+  type: "borrowed" | "lent";
+  startDate: string;
+  endDate?: string;
+};
 export interface Credit {
   id: string;
   contact: string;
@@ -6,5 +13,6 @@ export interface Credit {
   remainingAmount: number;
 }
 export interface CreditRepository {
+  create(input: CreditInput): Promise<unknown>;
   list(signal?: AbortSignal): Promise<Credit[]>;
 }

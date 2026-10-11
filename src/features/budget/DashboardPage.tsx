@@ -7,7 +7,7 @@ import { useState } from "react";
 import TransactionModal from "./components/TransactionModal";
 import SpendingChart from "./components/SpendingChart";
 import BudgetCard from "./components/BudgetCard";
-import BudgetForm from "./components/BudgetForm";
+import Link from "next/link";
 import AlertsCard from "./components/AlertsCard";
 import SavingsGoalCard from "./components/SavingsGoalCard";
 import Navigation from "@/components/Navigation";
@@ -68,15 +68,7 @@ export default function Dashboard() {
               aria-label={t("Vos budgets")}
             >
               <BudgetCard />
-              <details
-                className="mt-5 border-t border-slate-100 pt-4 dark:border-slate-700"
-                open={state.budgets.length === 0}
-              >
-                <summary className="cursor-pointer rounded-lg py-2 text-sm font-semibold text-teal-800 dark:text-teal-300">{t("Ajouter un budget")}</summary>
-                <div className="mt-3">
-                  <BudgetForm />
-                </div>
-              </details>
+              <Link href="/budgets" className="mt-4 inline-flex text-sm font-semibold text-teal-700 dark:text-teal-300">{t("Gérer les budgets")}</Link>
             </section>
             <section className="ui-card" aria-labelledby="savings-heading">
               <h2 id="savings-heading" className="ui-title mb-4">{t("Objectifs d’épargne")}</h2>

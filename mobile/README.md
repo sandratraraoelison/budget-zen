@@ -53,7 +53,7 @@ Chaque fonctionnalité sépare `domain` (modèles, contrats et validation sans R
 - Thèmes clair/sombre et FR/EN conservés sur l’appareil. Les messages métier renvoyés par NestJS restent dans la langue du serveur.
 - Devise sauvegardée par compte via `/settings`, sans conversion des montants.
 
-Le mobile utilise directement `/api/v1` avec Bearer JWT. Il ne passe pas par les routes BFF de Next.js. Budgets, transactions, projets, crédits et business utilisent les mêmes données serveur que le web. Connectez-vous au même compte et configurez le même serveur NestJS. Une actualisation toutes les 15 secondes en premier plan et au retour dans l’application récupère les changements web. Pas de mode hors ligne ni de refresh token.
+Le mobile utilise directement `/api/v1` avec Bearer JWT. Il ne passe pas par les routes BFF de Next.js. Budgets, transactions, projets, crédits et business utilisent les mêmes données serveur que le web. Connectez-vous au même compte et configurez le même serveur NestJS. Une actualisation toutes les 15 secondes en premier plan et au retour dans l’application récupère les changements web. Les donnees consultees sont mises en cache dans SQLite par compte et par serveur. Les transactions et changements de devise sont enregistres localement puis envoyes automatiquement au retour du reseau, toutes les 15 secondes en premier plan et lors du retour dans l’application. Pas de refresh token.
 
 ## Vérifier
 
@@ -64,3 +64,13 @@ npm run export
 ```
 
 `export` compile les bundles Android et iOS dans `dist/`. Cela ne produit pas d’APK/IPA signé et ne remplace pas un test sur appareil. Le projet cible Android/iOS ; aucun stockage de session web n’est configuré.
+
+## Utilisation hors ligne
+
+Connectez-vous une premiere fois avec une connexion et ouvrez les ecrans pour les mettre en cache. Ensuite, vous pouvez rouvrir une session conservee et consulter ces donnees sans reseau, saisir des transactions et modifier la devise. La file d’attente SQLite survit a la fermeture de l’application. Les montants du dashboard incluent les transactions locales en attente.
+
+Le bandeau indique le mode hors ligne et les changements en attente. Au retour d’une connexion au serveur, l’application envoie les commandes puis recharge les donnees. Le champ `clientId` des transactions empeche les doublons, meme si une reponse se perd ou si le serveur redemarre. Les erreurs temporaires sont retentees ; les refus metier restent visibles et peuvent etre retentes ou supprimes avec confirmation.
+
+La premiere connexion et l’inscription exigent le serveur. Les ecrans jamais charges ne sont pas disponibles hors ligne. La synchronisation s’execute lorsque l’application est ouverte ; elle reprend a son retour au premier plan. Un jeton refuse par le serveur exige une reconnexion et conserve les commandes en attente pour le meme compte. La deconnexion conserve le cache et la file du compte, sans les exposer a un autre utilisateur. Les fonctions projets, credits et business restent en consultation sur mobile.
+
+Modules natifs ajoutes : `expo-sqlite`, `expo-network` et `expo-crypto`. Si vous utilisez un build de developpement installe, reconstruisez-le pour inclure ces modules. Dans Expo Go compatible SDK 57, rechargez le projet.

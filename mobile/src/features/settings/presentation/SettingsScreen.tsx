@@ -1,5 +1,5 @@
 import { View, Text } from "react-native";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useServices } from "../../../composition/ServicesProvider";
 import {
   Button,
@@ -7,14 +7,22 @@ import {
   Choice,
   Heading,
   ErrorMessage,
-  Field,
   Label,
   Screen,
 } from "../../../shared/ui/components";
+import CurrencyPicker from "./CurrencyPicker";
+import CategoryManager from "../../budget/presentation/CategoryManager";
+import { useResource } from "../../../shared/application/useResource";
+import ResourceState from "../../../shared/ui/ResourceState";
 import { useCurrency } from "../CurrencyProvider";
 import { usePreferences } from "../PreferencesProvider";
 export default function SettingsScreen() {
-  const { session } = useServices();
+  const { session, budget } = useServices();
+  const loadCategories = useCallback(
+    (signal: AbortSignal) => budget.summary(signal),
+    [budget],
+  );
+  const categories = useResource(loadCategories);
   const prefs = usePreferences();
   const { t } = prefs;
   const currency = useCurrency();
@@ -102,13 +110,10 @@ export default function SettingsScreen() {
         </View>
       </Card>
       <Card>
-        <Field
-          label={`${t("currency")} · ISO 4217`}
+        <CurrencyPicker
           value={code ?? currency.currency}
-          onChangeText={setCode}
-          autoCapitalize="characters"
-          maxLength={3}
-          editable={!pending}
+          onChange={setCode}
+          disabled={pending || currency.loading}
         />
         <Label muted>{t("currencyWarning")}</Label>
         <ErrorMessage message={currency.error} />
@@ -119,6 +124,14 @@ export default function SettingsScreen() {
           onPress={() => void save()}
         />
       </Card>
+      <ResourceState
+        loading={categories.loading && !categories.data}
+        error={categories.error}
+        reload={categories.reload}
+      />
+      {categories.data && (
+        <CategoryManager summary={categories.data} reload={categories.reload} />
+      )}
       <ErrorMessage message={error} />
       <Button
         icon="log-out-outline"

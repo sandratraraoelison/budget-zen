@@ -1,5 +1,8 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
 import {
+  IsArray,
+  ArrayMaxSize,
+  ArrayUnique,
   IsIn,
   IsUUID,
   IsISO8601,
@@ -16,6 +19,12 @@ import {
 } from "../domain/models";
 
 export class TransactionDto {
+  @ApiPropertyOptional({ example: "Voyage" })
+  @ValidateIf((_o, value) => value !== undefined)
+  @IsString()
+  @MaxLength(100)
+  customCategoryName?: string;
+
   @ApiPropertyOptional()
   @ValidateIf((_o, value) => value !== undefined)
   @IsUUID()
@@ -39,6 +48,12 @@ export class UpdateTransactionDto extends PartialType(TransactionDto, {
 }) {}
 
 export class BudgetDto {
+  @ApiPropertyOptional({ example: "Voyage" })
+  @ValidateIf((_o, value) => value !== undefined)
+  @IsString()
+  @MaxLength(100)
+  customCategoryName?: string;
+
   @ApiProperty({ enum: CATEGORIES }) @IsIn(CATEGORIES) category!: Category;
   @ApiProperty({ example: 500 }) @IsMoney() limit!: number;
 }
@@ -66,13 +81,41 @@ export class UpdateGoalDto extends PartialType(GoalDto, {
 }) {}
 
 export class CustomCategoryDto {
+  @ApiPropertyOptional()
+  @ValidateIf((_o, value) => value !== undefined)
+  @IsIn(CATEGORIES.filter((c) => c !== "autres"))
+  baseCategory?: Category;
+  @ApiPropertyOptional()
+  @ValidateIf((_o, value) => value !== undefined)
+  @IsIn([
+    "tag",
+    "paw",
+    "home",
+    "food",
+    "car",
+    "heart",
+    "book",
+    "gift",
+    "wallet",
+    "plane",
+  ])
+  icon?: string;
   @ApiProperty({ example: "Voyage" })
   @IsString()
   @Matches(/\S/)
   @MaxLength(100)
   name!: string;
-  @ApiProperty({ example: 1000 }) @IsMoney() budget!: number;
+  @ApiProperty({ example: 1000 }) @IsMoney(true) budget!: number;
 }
 export class UpdateCustomCategoryDto extends PartialType(CustomCategoryDto, {
   skipNullProperties: false,
 }) {}
+
+export class CategoryOrderDto {
+  @ApiProperty({ type: [String] })
+  @IsArray()
+  @ArrayMaxSize(500)
+  @ArrayUnique()
+  @IsString({ each: true })
+  ids!: string[];
+}
