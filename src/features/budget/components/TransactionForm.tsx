@@ -1,5 +1,7 @@
 "use client";
 
+import { useCurrency } from "@/features/settings/CurrencyProvider";
+
 import { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -9,9 +11,12 @@ import {
   TRANSACTION_CATEGORIES,
   getCategoryLabel,
 } from "@/features/budget/domain/categorization";
+import { subtractAmounts, sumAmounts, toMinor } from "@/shared/domain/money";
 
 export default function TransactionForm() {
+  const { currency, formatMoney } = useCurrency();
   const { state, addTransaction } = useBudget();
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState<Partial<Transaction>>({
     type: "expense",
     date: new Date(),
@@ -29,47 +34,63 @@ export default function TransactionForm() {
     }
 
     const newTransaction: Transaction = {
-      id: Math.random().toString(),
+      id: crypto.randomUUID(),
       amount: Number(formData.amount),
       date: formData.date || new Date(),
       description: formData.description || getCategoryLabel(formData.category),
       category: formData.category,
       type: formData.type || "expense",
     };
+    try {
+      toMinor(newTransaction.amount);
+    } catch (error) {
+      setError((error as Error).message);
+      return;
+    }
 
     // Budget Verificcation
     if (newTransaction.type === "expense") {
       const relatedBudget = state.budgets.find(
-        (b) => b.category === newTransaction.category
+        (b) => b.category === newTransaction.category,
       );
 
       if (relatedBudget) {
-        const projectedTotal = relatedBudget.current + newTransaction.amount;
-        const remainingBudget = relatedBudget.limit - relatedBudget.current;
+        const projectedTotal = sumAmounts([
+          relatedBudget.current,
+          newTransaction.amount,
+        ]);
+        const remainingBudget = subtractAmounts(
+          relatedBudget.limit,
+          relatedBudget.current,
+        );
 
         if (projectedTotal > relatedBudget.limit) {
           const confirmMessage =
             `⚠️ Attention : Cette transaction dépasse le budget ${relatedBudget.category} !\n\n` +
-            `Limite actuelle : ${relatedBudget.limit.toFixed(2)}MGA\n` +
-            `Dépense actuelle : ${relatedBudget.current.toFixed(2)}MGA\n` +
-            `Nouveau total : ${projectedTotal.toFixed(2)}MGA\n\n` +
+            `Limite actuelle : ${formatMoney(relatedBudget.limit)}\n` +
+            `Dépense actuelle : ${formatMoney(relatedBudget.current)}\n` +
+            `Nouveau total : ${formatMoney(projectedTotal)}\n\n` +
             `Confirmez-vous cette dépense ?`;
 
           if (!confirm(confirmMessage)) return;
         } else if (
-          remainingBudget - newTransaction.amount < 50 &&
+          remainingBudget - newTransaction.amount < relatedBudget.limit * 0.1 &&
           remainingBudget - newTransaction.amount > 0
         ) {
           alert(
-            `⚠️ Il restera seulement ${(
-              remainingBudget - newTransaction.amount
-            ).toFixed(2)}MGA dans le budget ${relatedBudget.category}`
+            `⚠️ Il restera seulement ${formatMoney(remainingBudget - newTransaction.amount)} dans le budget ${relatedBudget.category}`,
           );
         }
       }
     }
 
-    addTransaction(newTransaction);
+    try {
+      addTransaction(newTransaction);
+    } catch (error) {
+      setError((error as Error).message);
+      return;
+    }
+    setError("");
 
     // Reset Form
     setFormData({
@@ -83,6 +104,11 @@ export default function TransactionForm() {
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md">
+      {error && (
+        <p role="alert" className="text-red-600 mb-4">
+          {error}
+        </p>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium mb-1">Type</label>
@@ -139,7 +165,7 @@ export default function TransactionForm() {
 
         <div>
           <label className="block text-sm font-medium mb-1">
-            Montant (MGA)
+            Montant ({currency})
           </label>
           <input
             type="number"

@@ -1,5 +1,7 @@
 "use client";
 
+import { useCurrency } from "@/features/settings/CurrencyProvider";
+
 import { Dialog } from "@headlessui/react";
 import { useState } from "react";
 
@@ -8,24 +10,37 @@ export default function AddPaymentModal({
   onClose,
   onSave,
   maxAmount,
+  minDate,
 }: {
   isOpen: boolean;
   onClose: () => void;
   onSave: (payment: { amount: number; date: string; note: string }) => void;
   maxAmount: number;
+  minDate: string;
 }) {
+  const { formatMoney } = useCurrency();
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [note, setNote] = useState("");
+  const [error, setError] = useState("");
 
   const handleSubmit = () => {
     const amountNum = parseFloat(amount);
     if (amountNum > 0 && amountNum <= maxAmount) {
-      onSave({ amount: amountNum, date, note });
+      try {
+        onSave({ amount: amountNum, date, note });
+      } catch (error) {
+        setError((error as Error).message);
+        return;
+      }
+      setError("");
       setAmount("");
       setNote("");
       onClose();
-    }
+    } else
+      setError(
+        "Saisissez un montant positif inférieur ou égal au solde restant.",
+      );
   };
 
   return (
@@ -38,8 +53,13 @@ export default function AddPaymentModal({
           </Dialog.Title>
 
           <div className="space-y-4">
+            {error && (
+              <p role="alert" className="text-red-600">
+                {error}
+              </p>
+            )}
             <div>
-              <label>Montant (max {maxAmount.toFixed(2)}MGA)</label>
+              <label>Montant (max {formatMoney(maxAmount)})</label>
               <input
                 type="number"
                 value={amount}
@@ -54,6 +74,7 @@ export default function AddPaymentModal({
               <label>Date</label>
               <input
                 type="date"
+                min={minDate}
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 className="w-full p-2 border rounded"

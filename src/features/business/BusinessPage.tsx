@@ -8,26 +8,22 @@ import AddBusinessTransactionModal from "@/features/business/components/AddBusin
 import { PlusCircleIcon } from "@heroicons/react/24/solid";
 import Navigation from "@/components/Navigation";
 
-import type { BusinessTransaction as Transaction, TimeRange } from "@/features/business/types";
+import type { TimeRange } from "@/features/business/types";
+import { useBusiness } from "./hooks/useBusiness";
 
 export default function BusinessPage() {
-  const [timeRange, setTimeRange] = useState<TimeRange>(
-    "month"
-  );
-  const [customTransactions, setCustomTransactions] = useState<Transaction[]>(
-    []
-  );
+  const [timeRange, setTimeRange] = useState<TimeRange>("month");
+  const {
+    transactions,
+    analytics,
+    loading,
+    error,
+    pending,
+    reload,
+    addTransaction,
+    removeTransaction,
+  } = useBusiness(timeRange);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const handleAddTransaction = (newTransaction: Omit<Transaction, "id">) => {
-    setCustomTransactions((prev) => [
-      {
-        ...newTransaction,
-        id: Math.random().toString(),
-      },
-      ...prev,
-    ]);
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -36,6 +32,7 @@ export default function BusinessPage() {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Analytiques Business</h1>
           <button
+            disabled={pending || loading}
             onClick={() => setIsModalOpen(true)}
             className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-secondary flex items-center gap-2"
           >
@@ -44,8 +41,24 @@ export default function BusinessPage() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <BusinessStats timeRange={timeRange} />
+        {error && (
+          <p role="alert" className="mb-4 text-red-600">
+            {error}{" "}
+            <button onClick={reload} className="underline">
+              Réessayer
+            </button>
+          </p>
+        )}
+        {loading && (
+          <p role="status" className="mb-4 text-gray-500">
+            Chargement des données…
+          </p>
+        )}
+        <div
+          className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+          aria-busy={loading}
+        >
+          <BusinessStats analytics={loading || error ? null : analytics} />
 
           <div className="lg:col-span-2">
             <div className="bg-white p-6 rounded-xl shadow-md">
@@ -61,19 +74,31 @@ export default function BusinessPage() {
                   <option value="year">Annuel</option>
                 </select>
               </div>
-              <BusinessChart timeRange={timeRange} />
+              <BusinessChart
+                data={loading || error ? [] : (analytics?.chart ?? [])}
+              />
             </div>
           </div>
         </div>
 
         <div className="mt-6">
-          <BusinessTransactions transactions={customTransactions} />
+          {!loading && !error && analytics && (
+            <BusinessTransactions
+              pending={pending}
+              onDelete={removeTransaction}
+              transactions={transactions.filter(
+                (t) =>
+                  Date.parse(t.date) >= Date.parse(analytics.from) &&
+                  Date.parse(t.date) < Date.parse(analytics.toExclusive),
+              )}
+            />
+          )}
         </div>
 
         <AddBusinessTransactionModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          onSave={handleAddTransaction}
+          onSave={addTransaction}
         />
       </div>
     </div>

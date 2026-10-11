@@ -1,10 +1,13 @@
 "use client";
 
+import { useCurrency } from "@/features/settings/CurrencyProvider";
+
 import { useBudget } from "@/features/budget/context/BudgetProvider";
 import { CategoryBadge } from "@/features/budget/components/CategoryBadge";
 import { format } from "date-fns";
 
 export function TransactionsList() {
+  const { formatMoney } = useCurrency();
   const { state, removeTransaction } = useBudget();
 
   return (
@@ -28,7 +31,7 @@ export function TransactionsList() {
                       : "text-red-600"
                   }`}
                 >
-                  {transaction.amount} MGA
+                  {formatMoney(transaction.amount)}
                 </div>
                 <div>
                   <p className="font-medium">{transaction.description}</p>

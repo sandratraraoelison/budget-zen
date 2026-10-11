@@ -10,6 +10,7 @@ export default function CustomCategoryDetails({
   categoryId: string;
 }) {
   const { state, addCustomTransaction } = useBudget();
+  const [error, setError] = useState("");
   const [transactionForm, setTransactionForm] = useState({
     amount: 0,
     description: "",
@@ -25,17 +26,30 @@ export default function CustomCategoryDetails({
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          addCustomTransaction(categoryId, {
-            ...transactionForm,
-            type: "expense",
-            category: category.name.toLowerCase() as TransactionCategory,
-          });
+          try {
+            addCustomTransaction(categoryId, {
+              ...transactionForm,
+              type: "expense",
+              category: "autres" as TransactionCategory,
+            });
+          } catch (error) {
+            setError((error as Error).message);
+            return;
+          }
+          setError("");
           setTransactionForm({ amount: 0, description: "", date: new Date() });
         }}
       >
+        {error && (
+          <p role="alert" className="text-red-600">
+            {error}
+          </p>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <input
             type="number"
+            min="0.01"
+            step="0.01"
             placeholder="Montant"
             className="p-2 border rounded"
             value={transactionForm.amount || ""}
@@ -67,7 +81,9 @@ export default function CustomCategoryDetails({
             onChange={(e) =>
               setTransactionForm({
                 ...transactionForm,
-                date: new Date(e.target.value),
+                date: e.target.value
+                  ? new Date(e.target.value)
+                  : transactionForm.date,
               })
             }
             required

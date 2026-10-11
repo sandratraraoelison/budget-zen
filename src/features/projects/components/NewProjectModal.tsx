@@ -1,5 +1,7 @@
 "use client";
 
+import { useCurrency } from "@/features/settings/CurrencyProvider";
+
 import { Dialog } from "@headlessui/react";
 import { useState } from "react";
 
@@ -14,17 +16,25 @@ type Props = {
 };
 
 export default function NewProjectModal({ isOpen, onClose, onSave }: Props) {
+  const { currency } = useCurrency();
   const [name, setName] = useState("");
   const [initialFund, setInitialFund] = useState("");
   const [startDate, setStartDate] = useState("");
+  const [error, setError] = useState("");
 
   const handleSubmit = () => {
     if (name && initialFund) {
-      onSave({
-        name,
-        initialFund: parseFloat(initialFund),
-        startDate: startDate || undefined,
-      });
+      try {
+        onSave({
+          name,
+          initialFund: Number(initialFund),
+          startDate: startDate || undefined,
+        });
+      } catch (error) {
+        setError((error as Error).message);
+        return;
+      }
+      setError("");
       setName("");
       setInitialFund("");
       setStartDate("");
@@ -42,6 +52,11 @@ export default function NewProjectModal({ isOpen, onClose, onSave }: Props) {
           </Dialog.Title>
 
           <div className="space-y-4">
+            {error && (
+              <p role="alert" className="text-red-600">
+                {error}
+              </p>
+            )}
             <div>
               <label className="block mb-1">Nom du projet *</label>
               <input
@@ -54,14 +69,16 @@ export default function NewProjectModal({ isOpen, onClose, onSave }: Props) {
             </div>
 
             <div>
-              <label className="block mb-1">Budget initial (MGA) *</label>
+              <label className="block mb-1">
+                Budget initial ({currency}) *
+              </label>
               <input
                 type="number"
                 value={initialFund}
                 onChange={(e) => setInitialFund(e.target.value)}
                 className="w-full p-2 border rounded"
                 min="0"
-                step="1000"
+                step="0.01"
                 required
               />
             </div>

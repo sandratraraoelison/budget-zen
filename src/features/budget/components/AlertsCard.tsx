@@ -2,9 +2,13 @@
 
 import { AlertTriangle } from "lucide-react";
 import { useBudget } from "@/features/budget/context/BudgetProvider";
+import { useCurrency } from "@/features/settings/CurrencyProvider";
+import { generateAlerts } from "../domain/alerts";
 
 export default function AlertsCard() {
   const { state } = useBudget();
+  const { formatMoney } = useCurrency();
+  const alerts = generateAlerts(state, formatMoney);
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
@@ -13,11 +17,11 @@ export default function AlertsCard() {
         Alertes
       </h2>
 
-      {state.alerts.length === 0 ? (
+      {alerts.length === 0 ? (
         <p className="text-gray-500">Aucune alerte pour le moment</p>
       ) : (
         <ul className="space-y-2">
-          {state.alerts.map((alert, index) => (
+          {alerts.map((alert, index) => (
             <li key={index} className="text-danger text-sm">
               • {alert}
             </li>

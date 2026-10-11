@@ -9,6 +9,7 @@ import { BudgetModule } from "./modules/budget/budget.module";
 import { CreditsModule } from "./modules/credits/credits.module";
 import { ProjectsModule } from "./modules/projects/projects.module";
 import { BusinessModule } from "./modules/business/business.module";
+import { SettingsModule } from "./modules/settings/settings.module";
 
 @ApiTags("health")
 @Controller("health")
@@ -31,6 +32,7 @@ export class AppModule {
         CreditsModule,
         ProjectsModule,
         BusinessModule,
+        SettingsModule,
       ],
       controllers: [HealthController],
       providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

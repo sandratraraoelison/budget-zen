@@ -1,15 +1,17 @@
 import type { Credit, CreditStatus } from "../types";
+import { getCreditStatus } from "./credit";
 
-export function filterCredits(credits: Credit[], search: string, status: CreditStatus | "all", today = new Date()) {
-  return credits.filter(credit => {
-    if (!credit.contact.toLowerCase().includes(search.toLowerCase())) return false;
+export function filterCredits(
+  credits: Credit[],
+  search: string,
+  status: CreditStatus | "all",
+  today = new Date(),
+) {
+  return credits.filter((credit) => {
+    if (!credit.contact.toLowerCase().includes(search.trim().toLowerCase()))
+      return false;
     if (status === "all") return true;
-    if (status === "paid") return credit.remainingAmount === 0;
     if (status === "unpaid") return credit.remainingAmount > 0;
-    if (!credit.endDate) return false;
-    const endDate = new Date(credit.endDate);
-    if (status === "expired") return endDate < today;
-    const days = Math.ceil((endDate.getTime() - today.getTime()) / 86400000);
-    return days >= 0 && days <= 7;
+    return getCreditStatus(credit, today) === status;
   });
 }

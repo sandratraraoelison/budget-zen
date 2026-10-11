@@ -1,11 +1,14 @@
 "use client";
 
+import { useCurrency } from "@/features/settings/CurrencyProvider";
+
 import { useState } from "react";
 import { useBudget } from "@/features/budget/context/BudgetProvider";
 import { cn } from "@/lib/utils";
 import BudgetEditForm from "@/features/budget/components/BudgetEditForm";
 
 export default function BudgetCard() {
+  const { formatMoney } = useCurrency();
   const { state, removeBudget } = useBudget();
   const [editingBudgetId, setEditingBudgetId] = useState<string | null>(null);
 
@@ -37,8 +40,8 @@ export default function BudgetCard() {
                 isOverLimit || isAtLimit
                   ? "border-red-500 bg-red-50"
                   : isWarning
-                  ? "border-orange-500 bg-orange-50"
-                  : "border-green-500 bg-green-50"
+                    ? "border-orange-500 bg-orange-50"
+                    : "border-green-500 bg-green-50",
               )}
             >
               <div className="flex justify-between items-center">
@@ -50,12 +53,11 @@ export default function BudgetCard() {
                       isOverLimit || isAtLimit
                         ? "text-red-600"
                         : isWarning
-                        ? "text-orange-600"
-                        : "text-green-600"
+                          ? "text-orange-600"
+                          : "text-green-600",
                     )}
                   >
-                    {budget.current.toFixed(2)}MGA / {budget.limit.toFixed(2)}
-                    MGA
+                    {formatMoney(budget.current)} / {formatMoney(budget.limit)}
                   </span>
                   <button
                     onClick={() => setEditingBudgetId(budget.id)}
@@ -88,8 +90,8 @@ export default function BudgetCard() {
                     isOverLimit || isAtLimit
                       ? "bg-red-500"
                       : isWarning
-                      ? "bg-orange-400"
-                      : "bg-green-500"
+                        ? "bg-orange-400"
+                        : "bg-green-500",
                   )}
                   style={{ width: `${Math.min(percentage, 100)}%` }}
                 />
@@ -99,9 +101,7 @@ export default function BudgetCard() {
                 <p className="text-red-600 text-sm mt-2">
                   {isAtLimit
                     ? "Budget atteint à 100%"
-                    : `Budget dépassé de ${(
-                        budget.current - budget.limit
-                      ).toFixed(2)}MGA`}
+                    : `Budget dépassé de ${formatMoney(budget.current - budget.limit)}`}
                 </p>
               )}
 

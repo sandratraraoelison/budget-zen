@@ -38,7 +38,7 @@ export async function createApplication(
       .setTitle("BudgetZen API")
       .setVersion("1.0")
       .setDescription(
-        "API de gestion budgétaire. Montants en MGA, dates ISO 8601, authentification Bearer JWT.",
+        "API de gestion budgétaire. Montants dans la devise du compte (settings), dates ISO 8601, authentification Bearer JWT.",
       )
       .addBearerAuth()
       .build();

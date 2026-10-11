@@ -100,6 +100,36 @@ after(async () => {
   rmSync(directory, { recursive: true, force: true });
 });
 
+test("account currency is validated, persisted and isolated by user", async () => {
+  await request("settings", "GET", undefined, undefined, 401);
+  assert.equal(
+    (await request("settings", "GET", undefined, one.accessToken)).currency,
+    "MGA",
+  );
+  await request("settings", "PATCH", { currency: "EUR" }, one.accessToken);
+  assert.equal(
+    (await request("settings", "GET", undefined, one.accessToken)).currency,
+    "EUR",
+  );
+  assert.equal(
+    (await request("settings", "GET", undefined, two.accessToken)).currency,
+    "MGA",
+  );
+  for (const currency of ["XXX", "eur", "", null, 42])
+    await request("settings", "PATCH", { currency }, one.accessToken, 400);
+  await request(
+    "settings",
+    "PATCH",
+    { currency: "USD", ignored: true },
+    one.accessToken,
+    400,
+  );
+  assert.equal(
+    (await request("settings", "GET", undefined, one.accessToken)).currency,
+    "EUR",
+  );
+});
+
 test("authentication verifies passwords and never returns password hashes", async () => {
   assert.equal(one.user.passwordHash, undefined);
   const login = await request<Session>("auth/login", "POST", {
@@ -562,6 +592,10 @@ test("data and authentication survive closing and reopening the server", async (
   app = await createApplication(environment, false);
   await app.listen(0, "127.0.0.1");
   base = await app.getUrl();
+  assert.equal(
+    (await request("settings", "GET", undefined, one.accessToken)).currency,
+    "EUR",
+  );
   assert.equal(
     (
       await request<Credit>(

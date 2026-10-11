@@ -7,6 +7,7 @@ import { Credit, CreditStatus } from "@/features/credits/types";
 import Navigation from "@/components/Navigation";
 import { filterCredits } from "./domain/filterCredits";
 import SearchFilter from "@/features/credits/components/SearchFilter";
+import { reconcileCredit } from "./domain/credit";
 
 export default function CreditPage() {
   const [credits, setCredits] = useState<Credit[]>([]);
@@ -16,17 +17,15 @@ export default function CreditPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const addCredit = (
-    newCredit: Omit<Credit, "id" | "payments" | "remainingAmount">
+    newCredit: Omit<Credit, "id" | "payments" | "remainingAmount">,
   ) => {
-    setCredits((prev) => [
-      ...prev,
-      {
-        ...newCredit,
-        id: Math.random().toString(),
-        remainingAmount: newCredit.initialAmount,
-        payments: [],
-      },
-    ]);
+    const credit = reconcileCredit({
+      ...newCredit,
+      id: crypto.randomUUID(),
+      remainingAmount: newCredit.initialAmount,
+      payments: [],
+    });
+    setCredits((prev) => [...prev, credit]);
   };
 
   return (
@@ -43,7 +42,12 @@ export default function CreditPage() {
           </button>
         </div>
 
-        <SearchFilter searchTerm={searchTerm} statusFilter={statusFilter} onSearchChange={setSearchTerm} onStatusChange={setStatusFilter} />
+        <SearchFilter
+          searchTerm={searchTerm}
+          statusFilter={statusFilter}
+          onSearchChange={setSearchTerm}
+          onStatusChange={setStatusFilter}
+        />
 
         <CreditList credits={filteredCredits} setCredits={setCredits} />
 

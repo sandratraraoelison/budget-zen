@@ -1,5 +1,7 @@
 "use client";
 
+import { useCurrency } from "@/features/settings/CurrencyProvider";
+
 import { Dialog } from "@headlessui/react";
 import { Credit } from "@/features/credits/types";
 import { useEffect, useState } from "react";
@@ -15,14 +17,22 @@ export default function EditCreditModal({
   credit: Credit;
   onSave: (updated: Credit) => void;
 }) {
+  const { currency } = useCurrency();
   const [formData, setFormData] = useState<Credit>(credit);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     setFormData(credit);
   }, [credit]);
 
   const handleSubmit = () => {
-    onSave(formData);
+    try {
+      onSave(formData);
+    } catch (error) {
+      setError((error as Error).message);
+      return;
+    }
+    setError("");
     onClose();
   };
 
@@ -36,6 +46,11 @@ export default function EditCreditModal({
           </Dialog.Title>
 
           <div className="space-y-4">
+            {error && (
+              <p role="alert" className="text-red-600">
+                {error}
+              </p>
+            )}
             <div>
               <label>Contact</label>
               <input
@@ -67,7 +82,7 @@ export default function EditCreditModal({
             </div>
 
             <div>
-              <label>Montant initial (MGA)</label>
+              <label>Montant initial ({currency})</label>
               <input
                 type="number"
                 value={formData.initialAmount}

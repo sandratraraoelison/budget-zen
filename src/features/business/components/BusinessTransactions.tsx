@@ -1,48 +1,34 @@
 "use client";
 
+import { useState } from "react";
+import { useCurrency } from "@/features/settings/CurrencyProvider";
+
 import type { BusinessTransaction as Transaction } from "@/features/business/types";
 
 export default function BusinessTransactions({
   transactions,
+  onDelete,
+  pending,
 }: {
   transactions: Transaction[];
+  onDelete: (id: string) => Promise<void>;
+  pending: boolean;
 }) {
-  // Initial static transactions
-  const staticTransactions: Transaction[] = [
-    {
-      id: "1",
-      type: "income",
-      amount: 1500,
-      date: "2024-03-15",
-      category: "Vente produit",
-      description: "lorem ipsum dolor sit amet",
-    },
-    {
-      id: "2",
-      type: "expense",
-      amount: 450,
-      date: "2024-03-14",
-      category: "Fournitures",
-      description: "lorem ipsum dolor sit amet",
-    },
-    {
-      id: "3",
-      type: "income",
-      amount: 2300,
-      date: "2024-03-13",
-      category: "Service client",
-      description: "lorem ipsum dolor sit amet",
-    },
-  ];
-
-  // Merging static and dynamic transactions
-  const allTransactions = [...transactions, ...staticTransactions];
-
+  const { formatMoney } = useCurrency();
+  const [error, setError] = useState("");
   return (
     <div className="bg-white p-6 rounded-xl shadow-md">
       <h2 className="text-xl font-semibold mb-4">Transactions récentes</h2>
+      {error && (
+        <p role="alert" className="text-red-600">
+          {error}
+        </p>
+      )}
+      {transactions.length === 0 && (
+        <p className="text-gray-500">Aucune transaction pour cette période.</p>
+      )}
       <div className="space-y-3">
-        {allTransactions.map((transaction) => (
+        {transactions.map((transaction) => (
           <div
             key={transaction.id}
             className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
@@ -62,7 +48,21 @@ export default function BusinessTransactions({
               }`}
             >
               {transaction.type === "income" ? "+" : "-"}
-              {transaction.amount.toFixed(2)}MGA
+              {formatMoney(transaction.amount)}
+              <button
+                disabled={pending}
+                className="ml-3 text-sm text-red-600 disabled:opacity-50"
+                onClick={async () => {
+                  try {
+                    await onDelete(transaction.id);
+                    setError("");
+                  } catch (error) {
+                    setError((error as Error).message);
+                  }
+                }}
+              >
+                Supprimer
+              </button>
             </div>
           </div>
         ))}

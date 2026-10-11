@@ -11,9 +11,10 @@ import NewProjectModal from "@/features/projects/components/NewProjectModal";
 import ProjectCard from "@/features/projects/components/ProjectCard";
 import { useProjects } from "./hooks/useProjects";
 import Navigation from "@/components/Navigation";
+import { reconcileProject } from "./domain/project";
 
 export default function ProjectsPage() {
-  const { projects, setProjects } = useProjects();
+  const { projects, setProjects, error } = useProjects();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState("tous");
   const [searchQuery, setSearchQuery] = useState("");
@@ -35,17 +36,14 @@ export default function ProjectsPage() {
     initialFund: number;
     startDate?: string;
   }) => {
-    setProjects((prev) => [
-      ...prev,
-      {
-        ...newProject,
-        id: Math.random().toString(),
-        currentFund: newProject.initialFund,
-        expenses: [],
-        status: "en-cours",
-        startDate: newProject.startDate || undefined,
-      },
-    ]);
+    const project = reconcileProject({
+      ...newProject,
+      id: crypto.randomUUID(),
+      currentFund: newProject.initialFund,
+      expenses: [],
+      status: "en-cours",
+    });
+    setProjects((prev) => [...prev, project]);
   };
 
   const deleteProject = (projectId: string) => {
@@ -56,9 +54,15 @@ export default function ProjectsPage() {
     <div className="min-h-screen bg-gray-50">
       <Navigation />
       <div className="container mx-auto p-6">
+        {error && (
+          <p role="alert" className="mb-4 text-red-600">
+            {error}
+          </p>
+        )}
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Gestion des Projets</h1>
           <button
+            disabled={!!error}
             onClick={() => setIsModalOpen(true)}
             className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-secondary flex items-center gap-2"
           >

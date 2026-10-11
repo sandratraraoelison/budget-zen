@@ -54,7 +54,7 @@ Les tests utilisent le runner natif Node.js via `tsx`. Les données démo du pro
 
 ## Stockage et limites actuelles
 
-Les budgets et crédits du frontend restent en mémoire et sont réinitialisés au rechargement. Les projets sont sauvegardés dans le navigateur, avec une clé propre à chaque utilisateur (`budgetzen:projects:<id>`). Les nouveaux comptes démarrent avec un budget vide. Les statistiques et graphiques business affichent encore des données de démonstration ; le sélecteur de période ne les recalcule pas.
+Les budgets et crédits du frontend restent en mémoire et sont réinitialisés au rechargement. Les projets sont sauvegardés dans le navigateur, avec une clé propre à chaque utilisateur (`budgetzen:projects:<id>`). Les nouveaux comptes démarrent avec un budget vide. Les transactions business et la devise du compte sont sauvegardées dans SQLite via l’API NestJS ; les statistiques et graphiques business utilisent les transactions réelles de la période sélectionnée.
 
 Le build utilise `next/font/google` et nécessite l'accès à Google Fonts pour télécharger Inter.
 
@@ -70,7 +70,23 @@ npm run dev:backend
 
 API : http://127.0.0.1:3001/api/v1 — Swagger : http://127.0.0.1:3001/api/docs.
 
-Le backend nécessite Node.js 24 ou supérieur. Le frontend utilise l'API pour l'authentification ; les fonctionnalités de gestion utilisent encore leur état local. La documentation du backend détaille les routes, les règles métier et le stockage SQLite.
+Le backend nécessite Node.js 24 ou supérieur. Le frontend utilise l’API pour l’authentification, le business et les préférences du compte. Les budgets personnels, crédits et projets utilisent encore leur état local. La documentation du backend détaille les routes, les règles métier et le stockage SQLite.
+
+## Règles métier et devise
+
+Le sélecteur « Devise du compte » dans la navigation propose les devises ISO 4217 prises en charge par `Intl`. MGA est la valeur initiale. Le choix est enregistré par utilisateur et retrouvé après connexion, y compris depuis un autre navigateur. Les montants, formulaires, alertes et infobulles des graphiques utilisent le même format monétaire.
+
+Le compte utilise une seule devise à la fois. Changer la devise conserve les valeurs numériques existantes ; une confirmation rappelle qu’aucune conversion de change n’est effectuée. Les montants gardent une précision de deux décimales pour toutes les devises, avec stockage/calculs en centièmes. Le mélange de devises par transaction et les taux de change ne sont pas implémentés.
+
+Les règles sont isolées dans `src/shared/domain` et les dossiers `features/*/domain` :
+
+- Les dépenses des budgets et les soldes de crédits/projets sont recalculés depuis les transactions. Les revenus ne consomment pas les budgets.
+- Les catégories de budget sont normalisées, avec une seule limite par catégorie. La limite porte sur les dépenses cumulées, comme dans l’API ; aucun renouvellement mensuel automatique n’est effectué.
+- Un crédit soldé ne produit plus d’alerte de retard. Les échéances sont évaluées par jour calendaire UTC. Les remboursements excessifs et les modifications sous le montant déjà payé sont refusés.
+- Les projets refusent les dépenses au-delà des fonds, avant leur démarrage ou après leur clôture. Les sauvegardes locales incohérentes sont conservées et signalées plutôt qu’écrasées.
+- Les statistiques business suivent les mois, trimestres et années calendaires UTC. Les transactions affichées correspondent à la période choisie ; une période vide affiche zéro, sans données fictives.
+
+Les routes Next.js `/api/account/*` transmettent uniquement les opérations business et préférences autorisées. Elles gardent le JWT côté serveur, vérifient l’origine des mutations et affichent les erreurs de validation ou d’indisponibilité dans les formulaires.
 
 ## Accueil et authentification
 
@@ -91,4 +107,4 @@ La confirmation du mot de passe est vérifiée dans le formulaire. Les conflits 
 npm run test:auth
 ```
 
-Ce test construit les deux applications, les lance sur des ports temporaires avec une base isolée et vérifie inscription, connexion, cookie de session, protection des pages, déconnexion et indisponibilité du backend. Il ne modifie pas la base de développement. `NEXT_BUILD_DIR=.next-validation` permet de construire le frontend dans un dossier distinct pendant qu'un serveur de développement utilise `.next`.
+Ce test construit les deux applications, les lance sur des ports temporaires avec une base isolée et vérifie l’authentification, la protection des pages, la devise sauvegardée et les opérations/statistiques business à travers les routes Next.js. Il ne modifie pas la base de développement. `NEXT_BUILD_DIR=.next-validation` permet de construire le frontend dans un dossier distinct pendant qu'un serveur de développement utilise `.next`.

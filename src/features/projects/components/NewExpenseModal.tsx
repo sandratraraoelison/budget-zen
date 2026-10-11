@@ -1,5 +1,7 @@
 "use client";
 
+import { useCurrency } from "@/features/settings/CurrencyProvider";
+
 import { useState } from "react";
 import { Dialog } from "@headlessui/react";
 import { categories } from "@/features/projects/domain/categories";
@@ -20,19 +22,27 @@ export default function NewExpenseModal({
   onClose,
   onSave,
 }: NewExpenseModalProps) {
+  const { currency } = useCurrency();
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [error, setError] = useState("");
 
   const handleSubmit = () => {
     if (description && amount && category) {
-      onSave({
-        description,
-        amount: parseFloat(amount),
-        category,
-        date,
-      });
+      try {
+        onSave({
+          description,
+          amount: Number(amount),
+          category,
+          date,
+        });
+      } catch (error) {
+        setError((error as Error).message);
+        return;
+      }
+      setError("");
       setDescription("");
       setAmount("");
       setCategory("");
@@ -50,6 +60,11 @@ export default function NewExpenseModal({
           </Dialog.Title>
 
           <div className="space-y-4">
+            {error && (
+              <p role="alert" className="text-red-600">
+                {error}
+              </p>
+            )}
             <div>
               <label className="block mb-1">Description</label>
               <input
@@ -62,7 +77,7 @@ export default function NewExpenseModal({
             </div>
 
             <div>
-              <label className="block mb-1">Montant (MGA)</label>
+              <label className="block mb-1">Montant ({currency})</label>
               <input
                 type="number"
                 value={amount}

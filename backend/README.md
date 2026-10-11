@@ -21,7 +21,7 @@ npm run dev:backend
 - OpenAPI JSON : http://127.0.0.1:3001/api/docs-json
 - Santé : http://127.0.0.1:3001/api/v1/health
 
-Le frontend utilise cette API pour l'inscription, la connexion et la validation de session, via ses propres routes serveur Next.js. Le jeton est conservé dans un cookie HttpOnly. Les fonctionnalités de gestion utilisent encore leur état local ; leurs providers et hooks restent à connecter aux API métier. Les configurations TypeScript et ESLint des deux applications sont indépendantes.
+Le frontend utilise cette API pour l’inscription, la connexion, la validation de session, les transactions/statistiques business et la devise du compte, via ses propres routes serveur Next.js. Le jeton est conservé dans un cookie HttpOnly. Les budgets personnels, crédits et projets utilisent encore leur état local ; leurs providers et hooks restent à connecter aux API métier. Les configurations TypeScript et ESLint des deux applications sont indépendantes.
 
 ## Architecture et dépendances
 
@@ -95,17 +95,19 @@ Toutes les routes ci-dessous sont préfixées par `/api/v1`. Seules `health`, `a
 | Dépenses de projet | `POST projects/:id/expenses`, `DELETE projects/:id/expenses/:expenseId` |
 | Business | `GET/POST business/transactions`, `PATCH/DELETE business/transactions/:id` |
 | Statistiques | `GET business/analytics?timeRange=month&date=2026-10-11` |
+| Préférences du compte | `GET settings`, `PATCH settings` avec `{ "currency": "EUR" }` |
 
 Swagger détaille les champs des requêtes. Les identifiants sont des UUID générés par le serveur. Les créations renvoient `201`, la connexion `200` et les suppressions `204`. Une ressource appartenant à un autre utilisateur est traitée comme introuvable (`404`).
 
 ## Contrats et règles métier
 
-- Les dates utilisent ISO 8601. Les montants JSON sont en MGA, avec deux décimales maximum ; le stockage et les calculs utilisent des entiers en centièmes de MGA.
+- Les dates utilisent ISO 8601. Les montants JSON sont dans la devise du compte (`GET settings`, MGA par défaut), avec deux décimales maximum ; le stockage et les calculs utilisent des entiers en centièmes. Ce choix de précision reste identique pour toutes les devises.
+- La devise est une préférence ISO 4217 persistante, isolée par utilisateur. `PATCH settings` valide les codes pris en charge par `Intl.supportedValuesOf("currency")`. Changer la devise ne modifie pas les valeurs des transactions et n’effectue aucune conversion de change. Le frontend confirme ce comportement avant de sauvegarder le choix.
 - Les montants doivent être positifs. Les fonds initiaux d'un projet et l'épargne actuelle peuvent être nuls.
 - Le serveur refuse les champs inconnus et les valeurs `null`. Les PATCH ne modifient que les champs fournis. `current`, `remainingAmount`, `currentFund`, `spent`, `alerts` et `status` d'un crédit sont calculés : ne pas les envoyer.
 - Les budgets portent sur toutes les transactions personnelles enregistrées, sans découpage mensuel dans cette version. Une seule limite est autorisée par catégorie. Les transactions de projet et business restent séparées des transactions personnelles.
 - Les catégories personnelles sont `salaire`, `loyer`, `nourriture`, `transport`, `santé`, `loisirs`, `éducation`, `autres`.
-- Un paiement ne peut ni dépasser le solde d'un crédit ni précéder sa date de début. Les ?ch?ances sont ?valu?es par jour calendaire UTC. Une modification du montant initial ne peut pas le réduire sous le total déjà payé.
+- Un paiement ne peut ni dépasser le solde d'un crédit ni précéder sa date de début. Les échéances sont évaluées par jour calendaire UTC. Une modification du montant initial ne peut pas le réduire sous le total déjà payé.
 - Une dépense de projet ne peut ni dépasser les fonds disponibles ni précéder la date de début. Un projet achevé doit être rouvert avant une nouvelle dépense. Modifier les fonds conserve les dépenses déjà enregistrées.
 - Les statistiques business utilisent les périodes calendaires UTC : mois, trimestre ou année. `date` choisit la période ; à défaut, celle du jour. Les bornes sont inclusives au début et exclusives à la fin. Le changement en pourcentage vaut `null` si la période précédente est nulle et la période courante non nulle.
 

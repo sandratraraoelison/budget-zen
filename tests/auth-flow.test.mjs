@@ -97,6 +97,43 @@ test("landing, registration, secure session, login, protected pages and logout w
     const home = await fetch(base, { headers: { Cookie: cookie }, redirect: "manual" });
     await home.text();
     assert.equal(home.headers.get("location"), "/dashboard");
+    const account = (path, method = "GET", body, session = cookie, origin = base) => fetch(`${base}/api/account/${path}`, {
+      method, headers: { "Content-Type": "application/json", Origin: origin, ...(session ? { Cookie: session } : {}) },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+    const settings = await account("settings");
+    assert.equal(settings.status, 200);
+    assert.equal((await settings.json()).currency, "MGA");
+    const currencyChange = await account("settings", "PATCH", { currency: "EUR" });
+    assert.equal(currencyChange.status, 200);
+    assert.equal((await currencyChange.json()).currency, "EUR");
+    assert.equal((await (await account("settings")).json()).currency, "EUR");
+    const euroDashboard = await (await fetch(`${base}/dashboard`, { headers: { Cookie: cookie } })).text();
+    assert.ok(euroDashboard.includes('value="EUR" selected=""'));
+    const denied = await account("settings", "PATCH", { currency: "USD" }, cookie, "https://other.example.com");
+    assert.equal(denied.status, 403); await denied.text();
+    const anonymous = await account("settings", "GET", undefined, "");
+    assert.equal(anonymous.status, 401); await anonymous.text();
+    const invalidCurrency = await account("settings", "PATCH", { currency: "XXX" });
+    assert.equal(invalidCurrency.status, 400); await invalidCurrency.text();
+    const transaction = await account("business/transactions", "POST", {
+      type: "income", amount: 0.3, date: "2026-10-11", category: "Vente produit", description: "Test réel",
+    });
+    assert.equal(transaction.status, 201);
+    const saved = await transaction.json();
+    assert.equal(saved.amount, 0.3);
+    const listed = await (await account("business/transactions")).json();
+    assert.equal(listed.length, 1); assert.equal(listed[0].id, saved.id);
+    const analytics = await (await account("business/analytics?timeRange=month&date=2026-10-11")).json();
+    assert.equal(analytics.totals.revenue, 0.3); assert.equal(analytics.totals.profit, 0.3);
+    assert.equal(analytics.chart.length, 31);
+    const invalidAmount = await account("business/transactions", "POST", { ...listed[0], id: undefined, amount: -1 });
+    assert.equal(invalidAmount.status, 400); await invalidAmount.text();
+    const removed = await account(`business/transactions/${saved.id}`, "DELETE");
+    assert.equal(removed.status, 204);
+    assert.deepEqual(await (await account("business/transactions")).json(), []);
+    const escape = await account("auth/me");
+    assert.equal(escape.status, 404); await escape.text();
     const duplicate = await post("register", input);
     assert.equal(duplicate.status, 409);
     await duplicate.text();
@@ -106,6 +143,8 @@ test("landing, registration, secure session, login, protected pages and logout w
     const login = await post("login", { email: input.email, password: input.password });
     assert.equal(login.status, 200);
     await login.text();
+    const loginCookie = login.headers.get("set-cookie").split(";")[0];
+    assert.equal((await (await account("settings", "GET", undefined, loginCookie)).json()).currency, "EUR");
     const logout = await post("logout", undefined, cookie);
     assert.equal(logout.status, 204);
     assert.ok(logout.headers.get("set-cookie").includes("Max-Age=0"));

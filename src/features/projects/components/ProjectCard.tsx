@@ -1,9 +1,12 @@
 "use client";
 
+import { useCurrency } from "@/features/settings/CurrencyProvider";
+
 import { useState } from "react";
 import { PencilIcon, TrashIcon, CheckIcon } from "@heroicons/react/24/outline";
 import ExpenseList from "./ExpenseList";
 import { Project } from "@/features/projects/types";
+import { projectProgress, reconcileProject } from "../domain/project";
 
 type ProjectCardProps = {
   project: Project;
@@ -16,35 +19,41 @@ export default function ProjectCard({
   setProjects,
   onDelete,
 }: ProjectCardProps) {
+  const { formatMoney } = useCurrency();
   const [isEditing, setIsEditing] = useState(false);
   const [fund, setFund] = useState(project.initialFund.toString());
+  const [error, setError] = useState("");
 
   const updateFund = () => {
-    const newFund = parseFloat(fund);
-    if (!isNaN(newFund) && newFund >= 0) {
+    try {
+      if (!fund.trim()) throw new Error("Saisissez le budget du projet.");
+      const updated = reconcileProject({
+        ...project,
+        initialFund: Number(fund),
+      });
       setProjects((prev) =>
-        prev.map((p) =>
-          p.id === project.id
-            ? {
-                ...p,
-                initialFund: newFund,
-                currentFund: p.currentFund + (newFund - p.initialFund),
-              }
-            : p
-        )
+        prev.map((p) => (p.id === project.id ? updated : p)),
       );
       setIsEditing(false);
+      setError("");
+    } catch (error) {
+      setError((error as Error).message);
     }
   };
 
   const updateStatus = (newStatus: "en-cours" | "achevée") => {
     setProjects((prev) =>
-      prev.map((p) => (p.id === project.id ? { ...p, status: newStatus } : p))
+      prev.map((p) => (p.id === project.id ? { ...p, status: newStatus } : p)),
     );
   };
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-md">
+      {error && (
+        <p role="alert" className="text-red-600">
+          {error}
+        </p>
+      )}
       <div className="flex justify-between items-start mb-4">
         <div>
           <h3 className="text-xl font-semibold">{project.name}</h3>
@@ -88,21 +97,15 @@ export default function ProjectCard({
           <div
             className="bg-primary h-2 rounded-full transition-all duration-300"
             style={{
-              width: `${Math.min(
-                ((project.initialFund - project.currentFund) /
-                  project.initialFund) *
-                  100,
-                100
-              )}%`,
+              width: `${projectProgress(project)}%`,
             }}
           />
         </div>
         <div className="flex justify-between text-sm text-gray-600">
           <span>
-            Utilisé : {(project.initialFund - project.currentFund).toFixed(2)}
-            MGA
+            Utilisé : {formatMoney(project.initialFund - project.currentFund)}
           </span>
-          <span>Restant : {project.currentFund.toFixed(2)}MGA</span>
+          <span>Restant : {formatMoney(project.currentFund)}</span>
         </div>
       </div>
 
@@ -110,6 +113,8 @@ export default function ProjectCard({
         <div className="flex items-center gap-2 mb-4">
           <input
             type="number"
+            min="0"
+            step="0.01"
             value={fund}
             onChange={(e) => setFund(e.target.value)}
             className="p-2 border rounded w-32"

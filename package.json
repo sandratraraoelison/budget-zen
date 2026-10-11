@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test src/features/budget/domain/*.test.ts",
+    "test": "tsx --test src/features/*/domain/*.test.ts src/shared/domain/*.test.ts",
     "check": "npm run lint && npm run typecheck && npm test",
     "dev:backend": "npm --prefix backend run dev",
     "build:backend": "npm --prefix backend run build",

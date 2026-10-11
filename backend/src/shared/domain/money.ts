@@ -1,6 +1,6 @@
 import { DomainError } from "./errors";
 
-// Store minor units (hundredths of MGA). Never accumulate floating point amounts.
+// Store monetary hundredths in the account currency. Never accumulate floating point amounts.
 export function toMinor(amount: number, allowZero = false): number {
   const scaled = Math.round(amount * 100);
   if (

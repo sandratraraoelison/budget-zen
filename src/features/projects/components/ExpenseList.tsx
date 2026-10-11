@@ -1,9 +1,12 @@
 "use client";
 
+import { useCurrency } from "@/features/settings/CurrencyProvider";
+
 import { useState } from "react";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import NewExpenseModal from "./NewExpenseModal";
 import { Project, Expense } from "@/features/projects/types";
+import { recordExpense } from "../domain/project";
 
 type ExpenseListProps = {
   project: Project;
@@ -14,23 +17,15 @@ export default function ExpenseList({
   project,
   setProjects,
 }: ExpenseListProps) {
+  const { formatMoney } = useCurrency();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const addExpense = (expense: Omit<Expense, "id">) => {
-    setProjects((prev) =>
-      prev.map((p) =>
-        p.id === project.id
-          ? {
-              ...p,
-              currentFund: p.currentFund - expense.amount,
-              expenses: [
-                ...p.expenses,
-                { ...expense, id: Math.random().toString() },
-              ],
-            }
-          : p
-      )
-    );
+    const updated = recordExpense(project, {
+      ...expense,
+      id: crypto.randomUUID(),
+    });
+    setProjects((prev) => prev.map((p) => (p.id === project.id ? updated : p)));
   };
 
   return (
@@ -38,6 +33,7 @@ export default function ExpenseList({
       <div className="flex justify-between items-center mb-4">
         <h4 className="font-semibold">Dépenses</h4>
         <button
+          disabled={project.status !== "en-cours" || project.currentFund === 0}
           onClick={() => setIsModalOpen(true)}
           className="flex items-center gap-1 text-primary hover:text-secondary"
         >
@@ -57,7 +53,7 @@ export default function ExpenseList({
               <p className="text-sm text-gray-500">{expense.date}</p>
             </div>
             <div className="text-right">
-              <p className="text-red-600">-{expense.amount.toFixed(2)}MGA</p>
+              <p className="text-red-600">-{formatMoney(expense.amount)}</p>
               <p className="text-sm text-gray-500">{expense.category}</p>
             </div>
           </div>

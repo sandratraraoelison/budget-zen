@@ -1,11 +1,18 @@
 "use client";
 
+import { useCurrency } from "@/features/settings/CurrencyProvider";
+
 import { Credit, Payment } from "@/features/credits/types";
 import { PencilIcon, TrashIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/solid";
 import AddPaymentModal from "./AddPaymentModal";
 import EditCreditModal from "./EditCreditModal";
 import { useState, useEffect } from "react";
+import {
+  getCreditStatus,
+  reconcileCredit,
+  recordPayment,
+} from "../domain/credit";
 
 export default function CreditItem({
   credit,
@@ -16,6 +23,7 @@ export default function CreditItem({
   onUpdate: (updated: Credit) => void;
   onDelete: (id: string) => void;
 }) {
+  const { formatMoney } = useCurrency();
   const [isEditing, setIsEditing] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [localCredit, setLocalCredit] = useState<Credit>(credit);
@@ -25,34 +33,33 @@ export default function CreditItem({
   }, [credit]);
 
   const addPayment = (payment: Omit<Payment, "id">) => {
-    const newPayment = { ...payment, id: Math.random().toString() };
-    const updated = {
-      ...localCredit,
-      remainingAmount: localCredit.remainingAmount - payment.amount,
-      payments: [...localCredit.payments, newPayment],
-    };
+    const updated = recordPayment(localCredit, {
+      ...payment,
+      id: crypto.randomUUID(),
+    });
     onUpdate(updated);
   };
 
   const handleSave = (updatedCredit: Credit) => {
-    const difference = updatedCredit.initialAmount - localCredit.initialAmount;
-    const updated = {
+    const updated = reconcileCredit({
       ...updatedCredit,
-      remainingAmount: localCredit.remainingAmount + difference,
-    };
+      payments: localCredit.payments,
+    });
     onUpdate(updated);
     setIsEditing(false);
   };
 
   const getDateStatus = () => {
-    if (!localCredit.endDate) return null;
+    const status = getCreditStatus(localCredit);
+    if (status === "paid" || status === "unpaid" || !localCredit.endDate)
+      return null;
 
-    const today = new Date();
+    const today = new Date(new Date().toISOString().slice(0, 10));
     const endDate = new Date(localCredit.endDate);
     const diffTime = endDate.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (endDate < today) {
+    if (status === "expired") {
       return { status: "expired", message: "Échéance dépassée !" };
     }
     if (diffDays <= 7) {
@@ -120,7 +127,7 @@ export default function CreditItem({
             <p className="text-gray-600">
               Initial:{" "}
               <span className="font-medium">
-                {localCredit.initialAmount.toFixed(2)}MGA
+                {formatMoney(localCredit.initialAmount)}
               </span>
             </p>
             <p
@@ -130,14 +137,14 @@ export default function CreditItem({
                   : "text-green-600"
               }`}
             >
-              Restant: {localCredit.remainingAmount.toFixed(2)}MGA
+              Restant: {formatMoney(localCredit.remainingAmount)}
             </p>
             <p className="text-sm text-gray-500">
               Début:{" "}
               {new Date(localCredit.startDate).toLocaleDateString("fr-FR")}
               {localCredit.endDate &&
                 ` • Fin: ${new Date(localCredit.endDate).toLocaleDateString(
-                  "fr-FR"
+                  "fr-FR",
                 )}`}
             </p>
           </div>
@@ -146,6 +153,7 @@ export default function CreditItem({
         <div className="flex gap-2">
           <button
             onClick={() => setIsPaymentModalOpen(true)}
+            disabled={isPaid}
             className="text-green-600 hover:text-green-700"
             title="Ajouter un paiement"
           >
@@ -180,6 +188,7 @@ export default function CreditItem({
         onClose={() => setIsPaymentModalOpen(false)}
         onSave={addPayment}
         maxAmount={localCredit.remainingAmount}
+        minDate={localCredit.startDate}
       />
 
       {localCredit.payments.length > 0 && (
@@ -193,7 +202,7 @@ export default function CreditItem({
               >
                 <div>
                   <p className="font-medium text-gray-800">
-                    - {payment.amount.toFixed(2)}MGA
+                    - {formatMoney(payment.amount)}
                   </p>
                   <p className="text-sm text-gray-500 mt-1">
                     {new Date(payment.date).toLocaleDateString("fr-FR")}

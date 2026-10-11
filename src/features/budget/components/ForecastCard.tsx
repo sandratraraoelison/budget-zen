@@ -1,7 +1,9 @@
 "use client";
 
 import { useBudget } from "@/features/budget/context/BudgetProvider";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
+import { spendingForecast } from "../domain/forecast";
+import { useCurrency } from "@/features/settings/CurrencyProvider";
 import {
   LineChart,
   Line,
@@ -13,46 +15,33 @@ import {
 
 export default function ForecastCard() {
   const { state } = useBudget();
-  const [forecastData, setForecastData] = useState<
-    Array<{ month: string; amount: number }>
-  >([]);
-
-  useEffect(() => {
-    //Calculation of average monthly expenses
-    const monthlySpending = state.transactions.reduce((acc, transaction) => {
-      if (transaction.type === "expense") {
-        const month = new Date(transaction.date).toLocaleString("fr-FR", {
-          month: "short",
-        });
-        acc[month] = (acc[month] || 0) + transaction.amount;
-      }
-      return acc;
-    }, {} as Record<string, number>);
-
-    const average =
-      Object.values(monthlySpending).reduce((sum, val) => sum + val, 0) /
-        Object.keys(monthlySpending).length || 0;
-
-    // Forecast generation
-    const forecast = Array.from({ length: 6 }).map((_, i) => ({
-      month: new Date(Date.now() + i * 2629800000).toLocaleString("fr-FR", {
-        month: "short",
-      }),
-      amount: average * (1 + i * 0.1), // Increase of 10% per month
-    }));
-
-    setForecastData(forecast);
-  }, [state.transactions]);
+  const { formatMoney, currency } = useCurrency();
+  const forecastData = useMemo(
+    () => spendingForecast(state.transactions),
+    [state.transactions],
+  );
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
       <h2 className="text-xl font-semibold mb-4">Prévisions de dépenses</h2>
+      <p className="mb-4 text-sm text-gray-500">
+        Estimation basée sur la moyenne des mois terminés, sans hypothèse de
+        croissance.
+      </p>
+      {forecastData.length === 0 && (
+        <p className="text-gray-500">
+          Enregistrez des dépenses sur un mois terminé pour obtenir une
+          estimation.
+        </p>
+      )}
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={forecastData}>
             <XAxis dataKey="month" />
-            <YAxis />
-            <Tooltip />
+            <YAxis
+              label={{ value: currency, angle: -90, position: "insideLeft" }}
+            />
+            <Tooltip formatter={(value: number) => formatMoney(value)} />
             <Line
               type="monotone"
               dataKey="amount"

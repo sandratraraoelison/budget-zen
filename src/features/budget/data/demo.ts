@@ -24,7 +24,7 @@ export const createDemoState = (): AppState => ({
       id: "1",
       category: "nourriture",
       limit: 500,
-      current: 450,
+      current: 0,
     },
     {
       id: "2",
@@ -45,4 +45,3 @@ export const createDemoState = (): AppState => ({
   alerts: [],
   customCategories: [],
 });
-

@@ -52,14 +52,14 @@ export function budgetSummary(state: BudgetState) {
   const alerts: string[] = [];
   if (spent > limit)
     alerts.push(
-      `Budget global dépassé : ${fromMinor(spent)}MGA/${fromMinor(limit)}MGA`,
+      `Budget global dépassé : ${fromMinor(spent)}/${fromMinor(limit)}`,
     );
   else if (limit > 0 && spent / limit >= 0.9)
     alerts.push(`Attention : 90% du budget global utilisé`);
   for (const budget of budgets) {
     if (budget.current > budget.limit)
       alerts.push(
-        `Dépassement du budget ${budget.category} (${budget.current}MGA/${budget.limit}MGA)`,
+        `Dépassement du budget ${budget.category} (${budget.current}/${budget.limit})`,
       );
     else if (budget.current >= budget.limit * 0.75)
       alerts.push(`Attention : 75% du budget ${budget.category} utilisé`);
@@ -67,7 +67,7 @@ export function budgetSummary(state: BudgetState) {
   for (const category of customCategories) {
     if (category.spent > category.budget)
       alerts.push(
-        `Dépassement du projet ${category.name} (${category.spent}MGA/${category.budget}MGA)`,
+        `Dépassement du projet ${category.name} (${category.spent}/${category.budget})`,
       );
     else if (category.spent >= category.budget * 0.9)
       alerts.push(`Attention : 90% du budget ${category.name} utilisé`);

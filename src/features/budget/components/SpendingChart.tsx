@@ -10,10 +10,18 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useBudget } from "@/features/budget/context/BudgetProvider";
+import { useCurrency } from "@/features/settings/CurrencyProvider";
 
 export default function SpendingChart() {
   const { state, getCategorySpending } = useBudget();
-  const categories = Array.from(new Set(state.budgets.map((b) => b.category)));
+  const { formatMoney, currency } = useCurrency();
+  const categories = Array.from(
+    new Set(
+      state.transactions
+        .filter((t) => t.type === "expense")
+        .map((t) => t.category),
+    ),
+  );
 
   const data = categories.map((category) => ({
     category,
@@ -27,8 +35,10 @@ export default function SpendingChart() {
         <BarChart data={data}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="category" />
-          <YAxis />
-          <Tooltip />
+          <YAxis
+            label={{ value: currency, angle: -90, position: "insideLeft" }}
+          />
+          <Tooltip formatter={(value: number) => formatMoney(value)} />
           <Bar dataKey="amount" fill="#3b82f6" />
         </BarChart>
       </ResponsiveContainer>

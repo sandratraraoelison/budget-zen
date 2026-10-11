@@ -1,5 +1,8 @@
 "use client";
 
+import { useCurrency } from "@/features/settings/CurrencyProvider";
+import type { BusinessAnalytics } from "../types";
+
 import {
   LineChart,
   Line,
@@ -10,22 +13,22 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const data = [
-  { month: "Jan", revenue: 4000, expenses: 2400 },
-  { month: "Fév", revenue: 3000, expenses: 1398 },
-  { month: "Mar", revenue: 9800, expenses: 4000 },
-  { month: "Avr", revenue: 6780, expenses: 2500 },
-];
-
-export default function BusinessChart({ timeRange }: { timeRange: string }) {
+export default function BusinessChart({
+  data,
+}: {
+  data: BusinessAnalytics["chart"];
+}) {
+  const { formatMoney, currency } = useCurrency();
   return (
     <div className="h-64">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="month" />
-          <YAxis />
-          <Tooltip />
+          <XAxis dataKey="date" />
+          <YAxis
+            label={{ value: currency, angle: -90, position: "insideLeft" }}
+          />
+          <Tooltip formatter={(value: number) => formatMoney(value)} />
           <Line
             type="monotone"
             dataKey="revenue"

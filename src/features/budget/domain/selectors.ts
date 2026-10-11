@@ -1,16 +1,30 @@
 import type { Transaction } from "../types";
+import { sumAmounts, subtractAmounts } from "../../../shared/domain/money";
 
-export function getCategorySpending(transactions: Transaction[], category: string) {
-  return transactions.reduce((sum, transaction) =>
-    transaction.type === "expense" && transaction.category === category
-      ? sum + transaction.amount : sum, 0);
+export function getCategorySpending(
+  transactions: Transaction[],
+  category: string,
+) {
+  return sumAmounts(
+    transactions
+      .filter(
+        (transaction) =>
+          transaction.type === "expense" && transaction.category === category,
+      )
+      .map((transaction) => transaction.amount),
+  );
 }
 
 export function getTransactionTotals(transactions: Transaction[]) {
-  const totals = transactions.reduce((result, transaction) => {
-    if (transaction.type === "income") result.totalIncome += transaction.amount;
-    else result.totalExpenses += transaction.amount;
-    return result;
-  }, { totalIncome: 0, totalExpenses: 0 });
-  return { ...totals, balance: totals.totalIncome - totals.totalExpenses };
+  const totalIncome = sumAmounts(
+    transactions.filter((t) => t.type === "income").map((t) => t.amount),
+  );
+  const totalExpenses = sumAmounts(
+    transactions.filter((t) => t.type === "expense").map((t) => t.amount),
+  );
+  return {
+    totalIncome,
+    totalExpenses,
+    balance: subtractAmounts(totalIncome, totalExpenses),
+  };
 }

@@ -12,12 +12,18 @@ export default function BudgetEditForm({
   onClose: () => void;
 }) {
   const { updateBudget } = useBudget();
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState<Budget>(budget);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.limit > 0) {
-      updateBudget(formData);
+      try {
+        updateBudget(formData);
+      } catch (error) {
+        setError((error as Error).message);
+        return;
+      }
       onClose();
     }
   };
@@ -25,6 +31,11 @@ export default function BudgetEditForm({
   return (
     <div className="p-4 bg-gray-50 rounded-lg mt-2">
       <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+        {error && (
+          <p role="alert" className="text-red-600">
+            {error}
+          </p>
+        )}
         <div className="flex items-center gap-2">
           <label className="text-sm">Nouvelle limite :</label>
           <input
@@ -34,8 +45,8 @@ export default function BudgetEditForm({
               setFormData({ ...formData, limit: Number(e.target.value) })
             }
             className="p-1 border rounded w-32"
-            min="1"
-            step="1"
+            min="0.01"
+            step="0.01"
           />
         </div>
         <div className="flex gap-2 justify-end">

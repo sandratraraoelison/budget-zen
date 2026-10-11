@@ -1,5 +1,7 @@
 "use client";
 
+import { useCurrency } from "@/features/settings/CurrencyProvider";
+
 import { Dialog } from "@headlessui/react";
 import { useState } from "react";
 
@@ -20,24 +22,35 @@ export default function AddCreditModal({
   onClose: () => void;
   onSave: (credit: CreditInput) => void;
 }) {
+  const { currency } = useCurrency();
   const [contact, setContact] = useState("");
   const [amount, setAmount] = useState("");
   const [type, setType] = useState<"borrowed" | "lent">("borrowed");
   const [startDate, setStartDate] = useState(
-    new Date().toISOString().split("T")[0]
+    new Date().toISOString().split("T")[0],
   );
   const [endDate, setEndDate] = useState("");
+  const [error, setError] = useState("");
 
   const handleSubmit = () => {
-    if (!contact || !amount || !startDate) return;
+    if (!contact || !amount || !startDate) {
+      setError("Complétez les champs obligatoires.");
+      return;
+    }
 
-    onSave({
-      contact,
-      initialAmount: parseFloat(amount),
-      type,
-      startDate,
-      endDate: endDate || undefined,
-    });
+    try {
+      onSave({
+        contact,
+        initialAmount: parseFloat(amount),
+        type,
+        startDate,
+        endDate: endDate || undefined,
+      });
+    } catch (error) {
+      setError((error as Error).message);
+      return;
+    }
+    setError("");
 
     // Reset Form
     setContact("");
@@ -58,6 +71,11 @@ export default function AddCreditModal({
           </Dialog.Title>
 
           <div className="space-y-4">
+            {error && (
+              <p role="alert" className="text-red-600">
+                {error}
+              </p>
+            )}
             <div>
               <label>Contact</label>
               <input
@@ -82,7 +100,7 @@ export default function AddCreditModal({
             </div>
 
             <div>
-              <label>Montant initial (MGA)</label>
+              <label>Montant initial ({currency})</label>
               <input
                 type="number"
                 value={amount}
