@@ -29,7 +29,7 @@ export default function CustomCategoryForm() {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
+    <div className="ui-card">
       <h2 className="text-xl font-semibold mb-4">Nouveau Projet</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (

@@ -46,7 +46,7 @@ export default function NewProjectModal({ isOpen, onClose, onSave }: Props) {
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <Dialog.Panel className="bg-white rounded-xl p-6 w-full max-w-md">
+        <Dialog.Panel className="ui-dialog bg-white p-6 w-full max-w-md">
           <Dialog.Title className="text-xl font-bold mb-4">
             Nouveau Projet
           </Dialog.Title>
@@ -104,7 +104,7 @@ export default function NewProjectModal({ isOpen, onClose, onSave }: Props) {
             </button>
             <button
               onClick={handleSubmit}
-              className="bg-primary text-white px-4 py-2 rounded hover:bg-secondary disabled:opacity-50"
+              className="ui-primary disabled:opacity-50"
               disabled={!name || !initialFund}
             >
               Créer le projet

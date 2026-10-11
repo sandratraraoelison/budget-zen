@@ -93,7 +93,9 @@ test("landing, registration, secure session, login, protected pages and logout w
     const cookie = setCookie.split(";")[0];
     const dashboard = await fetch(`${base}/dashboard`, { headers: { Cookie: cookie } });
     assert.equal(dashboard.status, 200);
-    assert.ok((await dashboard.text()).includes("Nouvelle Transaction"));
+    const dashboardHtml = await dashboard.text();
+    assert.ok(dashboardHtml.includes("Ajouter une transaction"));
+    assert.ok(!dashboardHtml.includes('id="transaction-amount"'));
     const home = await fetch(base, { headers: { Cookie: cookie }, redirect: "manual" });
     await home.text();
     assert.equal(home.headers.get("location"), "/dashboard");
@@ -109,7 +111,7 @@ test("landing, registration, secure session, login, protected pages and logout w
     assert.equal((await currencyChange.json()).currency, "EUR");
     assert.equal((await (await account("settings")).json()).currency, "EUR");
     const euroDashboard = await (await fetch(`${base}/dashboard`, { headers: { Cookie: cookie } })).text();
-    assert.ok(euroDashboard.includes('value="EUR" selected=""'));
+    assert.ok(euroDashboard.includes('aria-label="Devise du compte : EUR"'));
     const denied = await account("settings", "PATCH", { currency: "USD" }, cookie, "https://other.example.com");
     assert.equal(denied.status, 403); await denied.text();
     const anonymous = await account("settings", "GET", undefined, "");

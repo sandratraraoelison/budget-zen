@@ -48,7 +48,7 @@ export default function ProjectCard({
   };
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-md">
+    <div className="ui-card">
       {error && (
         <p role="alert" className="text-red-600">
           {error}

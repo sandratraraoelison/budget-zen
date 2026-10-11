@@ -6,6 +6,8 @@ import { useState } from "react";
 import { useBudget } from "@/features/budget/context/BudgetProvider";
 import { cn } from "@/lib/utils";
 import BudgetEditForm from "@/features/budget/components/BudgetEditForm";
+import EmptyState from "@/components/ui/EmptyState";
+import { Pencil, Trash2 } from "lucide-react";
 
 export default function BudgetCard() {
   const { formatMoney } = useCurrency();
@@ -14,16 +16,19 @@ export default function BudgetCard() {
 
   if (state.budgets.length === 0) {
     return (
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold mb-4">Budgets</h2>
-        <p className="text-gray-500">Aucun budget défini</p>
+      <div>
+        <h2 className="ui-title mb-4">Vos budgets</h2>
+        <EmptyState
+          title="Donnez un cap à vos dépenses"
+          description="Définissez une limite par catégorie avec le formulaire ci-dessous."
+        />
       </div>
     );
   }
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-xl font-semibold mb-4">Budgets</h2>
+    <div>
+      <h2 className="ui-title mb-4">Vos budgets</h2>
 
       <div className="space-y-4">
         {state.budgets.map((budget) => {
@@ -44,12 +49,14 @@ export default function BudgetCard() {
                     : "border-green-500 bg-green-50",
               )}
             >
-              <div className="flex justify-between items-center">
-                <h3 className="font-medium">{budget.category}</h3>
-                <div className="flex items-center gap-2">
+              <div className="flex flex-wrap justify-between items-center gap-2">
+                <h3 className="text-sm font-medium capitalize">
+                  {budget.category}
+                </h3>
+                <div className="flex flex-wrap items-center gap-2">
                   <span
                     className={cn(
-                      "font-semibold",
+                      "text-xs font-semibold tabular-nums break-words",
                       isOverLimit || isAtLimit
                         ? "text-red-600"
                         : isWarning
@@ -61,17 +68,17 @@ export default function BudgetCard() {
                   </span>
                   <button
                     onClick={() => setEditingBudgetId(budget.id)}
-                    className="text-sm text-blue-500 hover:text-blue-700"
+                    className="ui-icon-button"
                     aria-label="Modifier le budget"
                   >
-                    ✏️
+                    <Pencil size={15} aria-hidden="true" />
                   </button>
                   <button
                     onClick={() => removeBudget(budget.id)}
-                    className="text-sm text-red-500 hover:text-red-700"
+                    className="ui-icon-button hover:text-red-600"
                     aria-label="Supprimer le budget"
                   >
-                    🗑
+                    <Trash2 size={15} aria-hidden="true" />
                   </button>
                 </div>
               </div>

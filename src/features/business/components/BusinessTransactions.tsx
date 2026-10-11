@@ -17,7 +17,7 @@ export default function BusinessTransactions({
   const { formatMoney } = useCurrency();
   const [error, setError] = useState("");
   return (
-    <div className="bg-white p-6 rounded-xl shadow-md">
+    <div className="ui-card">
       <h2 className="text-xl font-semibold mb-4">Transactions récentes</h2>
       {error && (
         <p role="alert" className="text-red-600">

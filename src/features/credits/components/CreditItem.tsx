@@ -77,7 +77,7 @@ export default function CreditItem({
   return (
     <div
       className={`
-      bg-white p-6 rounded-lg shadow-md relative
+      ui-card relative
       ${
         localCredit.type === "borrowed"
           ? "border-l-4 border-red-500"

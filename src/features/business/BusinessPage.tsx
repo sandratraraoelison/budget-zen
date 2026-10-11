@@ -6,6 +6,7 @@ import BusinessChart from "@/features/business/components/BusinessChart";
 import BusinessTransactions from "@/features/business/components/BusinessTransactions";
 import AddBusinessTransactionModal from "@/features/business/components/AddBusinessTransactionModal";
 import { PlusCircleIcon } from "@heroicons/react/24/solid";
+import PageHeader from "@/components/ui/PageHeader";
 import Navigation from "@/components/Navigation";
 
 import type { TimeRange } from "@/features/business/types";
@@ -26,20 +27,23 @@ export default function BusinessPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="workspace">
       <Navigation />
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Analytiques Business</h1>
-          <button
-            disabled={pending || loading}
-            onClick={() => setIsModalOpen(true)}
-            className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-secondary flex items-center gap-2"
-          >
-            <PlusCircleIcon className="w-5 h-5" />
-            Ajouter Transaction
-          </button>
-        </div>
+      <main id="main-content" className="workspace-main" tabIndex={-1}>
+        <PageHeader
+          title="Business"
+          description="Suivez votre activité et les tendances de vos revenus."
+          action={
+            <button
+              disabled={pending || loading}
+              onClick={() => setIsModalOpen(true)}
+              className="ui-primary flex items-center gap-2"
+            >
+              <PlusCircleIcon className="w-5 h-5" />
+              Ajouter Transaction
+            </button>
+          }
+        />
 
         {error && (
           <p role="alert" className="mb-4 text-red-600">
@@ -61,10 +65,11 @@ export default function BusinessPage() {
           <BusinessStats analytics={loading || error ? null : analytics} />
 
           <div className="lg:col-span-2">
-            <div className="bg-white p-6 rounded-xl shadow-md">
-              <div className="flex justify-between items-center mb-4">
+            <div className="ui-card">
+              <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
                 <h2 className="text-xl font-semibold">Tendances financières</h2>
                 <select
+                  aria-label="Période des statistiques"
                   value={timeRange}
                   onChange={(e) => setTimeRange(e.target.value as TimeRange)}
                   className="p-2 border rounded-lg"
@@ -74,9 +79,21 @@ export default function BusinessPage() {
                   <option value="year">Annuel</option>
                 </select>
               </div>
-              <BusinessChart
-                data={loading || error ? [] : (analytics?.chart ?? [])}
-              />
+              {loading ? (
+                <div
+                  role="status"
+                  aria-label="Chargement du graphique"
+                  className="h-64 animate-pulse rounded-xl bg-slate-100"
+                />
+              ) : error ? (
+                <p className="py-8 text-sm text-slate-500">
+                  Le graphique sera disponible après le chargement des données.
+                </p>
+              ) : (
+                <BusinessChart
+                  data={loading || error ? [] : (analytics?.chart ?? [])}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -100,7 +117,7 @@ export default function BusinessPage() {
           onClose={() => setIsModalOpen(false)}
           onSave={addTransaction}
         />
-      </div>
+      </main>
     </div>
   );
 }

@@ -78,7 +78,7 @@ export default function AddBusinessTransactionModal({
     >
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <Dialog.Panel className="bg-white rounded-xl p-6 w-full max-w-md">
+        <Dialog.Panel className="ui-dialog bg-white p-6 w-full max-w-md">
           <Dialog.Title className="text-xl font-bold mb-4 flex items-center gap-2">
             <PlusCircleIcon className="w-6 h-6 text-primary" />
             Nouvelle Transaction Business
@@ -167,7 +167,7 @@ export default function AddBusinessTransactionModal({
             <button
               disabled={pending}
               onClick={handleSubmit}
-              className="bg-primary text-white px-4 py-2 rounded hover:bg-secondary"
+              className="ui-primary"
             >
               Enregistrer
             </button>

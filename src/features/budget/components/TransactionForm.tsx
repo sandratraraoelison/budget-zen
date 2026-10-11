@@ -13,10 +13,15 @@ import {
 } from "@/features/budget/domain/categorization";
 import { subtractAmounts, sumAmounts, toMinor } from "@/shared/domain/money";
 
-export default function TransactionForm() {
+export default function TransactionForm({
+  onSuccess,
+}: {
+  onSuccess?: () => void;
+}) {
   const { currency, formatMoney } = useCurrency();
   const { state, addTransaction } = useBudget();
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [formData, setFormData] = useState<Partial<Transaction>>({
     type: "expense",
     date: new Date(),
@@ -27,9 +32,10 @@ export default function TransactionForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setSuccess("");
 
     if (!formData.category || !formData.amount) {
-      alert("Veuillez sélectionner une catégorie et saisir un montant");
+      setError("Veuillez sélectionner une catégorie et saisir un montant");
       return;
     }
 
@@ -91,6 +97,7 @@ export default function TransactionForm() {
       return;
     }
     setError("");
+    setSuccess("Transaction ajoutée à votre historique.");
 
     // Reset Form
     setFormData({
@@ -100,10 +107,19 @@ export default function TransactionForm() {
       category: undefined,
       description: "",
     });
+    onSuccess?.();
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md">
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {success && (
+        <p
+          role="status"
+          className="rounded-lg bg-teal-50 px-4 py-3 text-sm text-teal-800"
+        >
+          {success}
+        </p>
+      )}
       {error && (
         <p role="alert" className="text-red-600 mb-4">
           {error}
@@ -111,8 +127,14 @@ export default function TransactionForm() {
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
-          <label className="block text-sm font-medium mb-1">Type</label>
+          <label
+            htmlFor="transaction-type"
+            className="block text-sm font-medium mb-1"
+          >
+            Type
+          </label>
           <select
+            id="transaction-type"
             className="w-full p-2 border rounded"
             value={formData.type}
             onChange={(e) =>
@@ -128,8 +150,14 @@ export default function TransactionForm() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Date</label>
+          <label
+            htmlFor="transaction-date"
+            className="block text-sm font-medium mb-1"
+          >
+            Date
+          </label>
           <DatePicker
+            id="transaction-date"
             selected={formData.date}
             onChange={(date) =>
               setFormData({ ...formData, date: date || new Date() })
@@ -142,8 +170,14 @@ export default function TransactionForm() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
-          <label className="block text-sm font-medium mb-1">Catégorie</label>
+          <label
+            htmlFor="transaction-category"
+            className="block text-sm font-medium mb-1"
+          >
+            Catégorie
+          </label>
           <select
+            id="transaction-category"
             className="w-full p-2 border rounded"
             value={formData.category || ""}
             onChange={(e) =>
@@ -164,10 +198,14 @@ export default function TransactionForm() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">
+          <label
+            htmlFor="transaction-amount"
+            className="block text-sm font-medium mb-1"
+          >
             Montant ({currency})
           </label>
           <input
+            id="transaction-amount"
             type="number"
             className="w-full p-2 border rounded"
             value={formData.amount || ""}
@@ -185,10 +223,14 @@ export default function TransactionForm() {
       </div>
 
       <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">
+        <label
+          htmlFor="transaction-description"
+          className="block text-sm font-medium mb-1"
+        >
           Description (optionnel)
         </label>
         <input
+          id="transaction-description"
           type="text"
           className="w-full p-2 border rounded"
           placeholder="Ajouter une description..."
@@ -202,10 +244,7 @@ export default function TransactionForm() {
         />
       </div>
 
-      <button
-        type="submit"
-        className="w-full bg-primary text-white py-2 px-4 rounded hover:bg-secondary transition-colors"
-      >
+      <button type="submit" className="ui-primary w-full">
         Ajouter la transaction
       </button>
     </form>

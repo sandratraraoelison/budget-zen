@@ -4,6 +4,8 @@ import { useState } from "react";
 import CreditList from "@/features/credits/components/CreditList";
 import AddCreditModal from "@/features/credits/components/AddCreditModal";
 import { Credit, CreditStatus } from "@/features/credits/types";
+import PageHeader from "@/components/ui/PageHeader";
+import EmptyState from "@/components/ui/EmptyState";
 import Navigation from "@/components/Navigation";
 import { filterCredits } from "./domain/filterCredits";
 import SearchFilter from "@/features/credits/components/SearchFilter";
@@ -29,18 +31,18 @@ export default function CreditPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 ">
+    <div className="workspace">
       <Navigation />
-      <div className="max-w-6xl mx-auto p-4">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Gestion des Crédits</h1>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-secondary"
-          >
-            + Nouveau Crédit
-          </button>
-        </div>
+      <main id="main-content" className="workspace-main" tabIndex={-1}>
+        <PageHeader
+          title="Crédits"
+          description="Gardez une vue claire sur vos prêts, emprunts et remboursements."
+          action={
+            <button onClick={() => setIsModalOpen(true)} className="ui-primary">
+              + Nouveau Crédit
+            </button>
+          }
+        />
 
         <SearchFilter
           searchTerm={searchTerm}
@@ -49,6 +51,38 @@ export default function CreditPage() {
           onStatusChange={setStatusFilter}
         />
 
+        {filteredCredits.length === 0 && (
+          <EmptyState
+            title={
+              credits.length
+                ? "Aucun crédit trouvé"
+                : "Votre suivi des crédits commence ici"
+            }
+            description={
+              credits.length
+                ? "Modifiez les filtres pour retrouver vos crédits."
+                : "Ajoutez un prêt ou un emprunt pour suivre son remboursement."
+            }
+            action={
+              <button
+                onClick={() => {
+                  if (!credits.length) {
+                    setIsModalOpen(true);
+                    return;
+                  }
+                  setSearchTerm("");
+                  setStatusFilter("all");
+                }}
+                className="ui-primary"
+              >
+                {credits.length
+                  ? "Réinitialiser les filtres"
+                  : "Ajouter un crédit"}
+              </button>
+            }
+          />
+        )}
+
         <CreditList credits={filteredCredits} setCredits={setCredits} />
 
         <AddCreditModal
@@ -56,7 +90,7 @@ export default function CreditPage() {
           onClose={() => setIsModalOpen(false)}
           onSave={addCredit}
         />
-      </div>
+      </main>
     </div>
   );
 }

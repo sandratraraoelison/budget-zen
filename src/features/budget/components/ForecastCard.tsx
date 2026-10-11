@@ -22,7 +22,7 @@ export default function ForecastCard() {
   );
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
+    <div className="ui-card">
       <h2 className="text-xl font-semibold mb-4">Prévisions de dépenses</h2>
       <p className="mb-4 text-sm text-gray-500">
         Estimation basée sur la moyenne des mois terminés, sans hypothèse de

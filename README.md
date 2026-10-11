@@ -52,7 +52,11 @@ npm start       # Serveur de production après le build
 
 Les tests utilisent le runner natif Node.js via `tsx`. Les données démo du provider et de `POST /api/demo` proviennent de la même fabrique, qui crée un état neuf à chaque appel.
 
+`npm run test:hydration` vérifie les modes inscription et connexion de l’accueil : rendu serveur, hydratation dans un DOM simulé, stabilité des SVG et interactions du formulaire. Ce contrôle est inclus dans `npm run check`. La landing page possède une frontière client explicite tout en conservant son HTML rendu côté serveur.
+
 ## Stockage et limites actuelles
+
+Les pages de gestion partagent les composants `PageHeader` et `EmptyState`, ainsi que les classes `workspace`, `workspace-main`, `ui-card`, `ui-primary` et `ui-dialog` définies dans `src/app/globals.css`. Le tableau de bord présente les indicateurs financiers en tête, puis les transactions et le suivi des budgets. Le bouton œil masque le solde disponible pendant la consultation. Le formulaire de transaction s’ouvre dans une modale depuis « Ajouter une transaction » ; après un ajout réussi, la modale se ferme et une confirmation apparaît sur le tableau de bord. Les formulaires restent distincts des cartes pour éviter les conteneurs imbriqués. Les graphiques vides, recherches sans résultat et chargements disposent d’un affichage dédié.
 
 Les budgets et crédits du frontend restent en mémoire et sont réinitialisés au rechargement. Les projets sont sauvegardés dans le navigateur, avec une clé propre à chaque utilisateur (`budgetzen:projects:<id>`). Les nouveaux comptes démarrent avec un budget vide. Les transactions business et la devise du compte sont sauvegardées dans SQLite via l’API NestJS ; les statistiques et graphiques business utilisent les transactions réelles de la période sélectionnée.
 

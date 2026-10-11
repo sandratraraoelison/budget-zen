@@ -21,7 +21,7 @@ export default function BusinessStats({
         const favorable =
           change == null || (key === "expenses" ? change <= 0 : change >= 0);
         return (
-          <div key={key} className="bg-white p-6 rounded-xl shadow-md">
+          <div key={key} className="ui-card">
             <p className="text-gray-500 text-sm">{title}</p>
             <p className="text-2xl font-bold mt-2">
               {analytics ? formatMoney(analytics.totals[key]) : "—"}

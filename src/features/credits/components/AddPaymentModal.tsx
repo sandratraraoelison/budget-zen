@@ -47,7 +47,7 @@ export default function AddPaymentModal({
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <Dialog.Panel className="bg-white rounded-lg p-6 w-full max-w-md">
+        <Dialog.Panel className="ui-dialog bg-white p-6 w-full max-w-md">
           <Dialog.Title className="text-xl font-bold mb-4">
             Ajouter un paiement
           </Dialog.Title>
@@ -94,10 +94,7 @@ export default function AddPaymentModal({
             <button onClick={onClose} className="px-4 py-2 text-gray-500">
               Annuler
             </button>
-            <button
-              onClick={handleSubmit}
-              className="bg-primary text-white px-4 py-2 rounded hover:bg-secondary"
-            >
+            <button onClick={handleSubmit} className="ui-primary">
               Enregistrer
             </button>
           </div>

@@ -22,7 +22,7 @@ export default function CustomCategoryDetails({
   if (!category) return null;
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
+    <div className="ui-card">
       <form
         onSubmit={(e) => {
           e.preventDefault();

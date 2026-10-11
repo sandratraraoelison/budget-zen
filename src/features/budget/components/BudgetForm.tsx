@@ -23,7 +23,7 @@ export default function BudgetForm() {
     e.preventDefault();
 
     if (!formData.category || formData.limit <= 0) {
-      alert("Veuillez remplir tous les champs correctement");
+      setError("Choisissez une catégorie et saisissez une limite positive.");
       return;
     }
 
@@ -43,15 +43,18 @@ export default function BudgetForm() {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-4">Nouveau Budget</h2>
+    <div>
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
           <p role="alert" className="text-red-600">
             {error}
           </p>
         )}
+        <label htmlFor="budget-category" className="block">
+          Catégorie
+        </label>
         <select
+          id="budget-category"
           className="w-full p-2 border rounded"
           value={formData.category}
           onChange={(e) =>
@@ -69,7 +72,11 @@ export default function BudgetForm() {
           ))}
         </select>
 
+        <label htmlFor="budget-limit" className="block">
+          Limite ({currency})
+        </label>
         <input
+          id="budget-limit"
           type="number"
           placeholder={`Limite du budget (${currency})`}
           className="w-full p-2 border rounded"
@@ -85,11 +92,8 @@ export default function BudgetForm() {
           La limite s’applique aux dépenses cumulées de cette catégorie.
         </p>
 
-        <button
-          type="submit"
-          className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
-        >
-          Créer Budget
+        <button type="submit" className="ui-primary w-full">
+          Créer le budget
         </button>
       </form>
     </div>

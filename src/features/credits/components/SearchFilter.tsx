@@ -17,6 +17,7 @@ export default function SearchFilter({
     <div className="mb-6 space-y-4">
       <div className="flex flex-col sm:flex-row gap-4">
         <input
+          aria-label="Rechercher un crédit par contact"
           type="text"
           placeholder="Rechercher par contact..."
           className="p-2 border rounded-lg flex-grow"
@@ -25,6 +26,7 @@ export default function SearchFilter({
         />
 
         <select
+          aria-label="Filtrer les crédits par statut"
           className="p-2 border rounded-lg bg-white"
           value={statusFilter}
           onChange={(e) =>
