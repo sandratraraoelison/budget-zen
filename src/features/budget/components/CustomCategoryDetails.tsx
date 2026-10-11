@@ -1,4 +1,5 @@
 "use client";
+import AmountInput from "@/components/ui/AmountInput";
 import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useBudget } from "@/features/budget/context/BudgetProvider";
@@ -11,7 +12,7 @@ export default function CustomCategoryDetails({
   categoryId: string;
 }) {
   const { t } = useLocale();
-  const { state, addCustomTransaction } = useBudget();
+  const { state, addCustomTransaction, pending } = useBudget();
   const [error, setError] = useState("");
   const [transactionForm, setTransactionForm] = useState({
     amount: 0,
@@ -26,10 +27,11 @@ export default function CustomCategoryDetails({
   return (
     <div className="ui-card">
       <form
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
+    if (pending) return;
           try {
-            addCustomTransaction(categoryId, {
+            await addCustomTransaction(categoryId, {
               ...transactionForm,
               type: "expense",
               category: "autres" as TransactionCategory,
@@ -48,7 +50,7 @@ export default function CustomCategoryDetails({
           </p>
         )}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <input
+          <AmountInput
             type="number"
             min="0.01"
             step="0.01"
@@ -92,7 +94,7 @@ export default function CustomCategoryDetails({
           />
         </div>
         <button
-          type="submit"
+          type="submit" disabled={pending}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >{t("Ajouter Dépense")}</button>
       </form>

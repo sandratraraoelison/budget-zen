@@ -98,7 +98,7 @@ export function TransactionsList() {
                 <button
                   onClick={() => {
                     if (window.confirm(t("Supprimer cette transaction ?")))
-                      removeTransaction(transaction.id);
+                      void removeTransaction(transaction.id).catch(() => {});
                   }}
                   className="ui-icon-button hover:text-red-600 dark:hover:text-red-300"
                   aria-label={`Supprimer ${transaction.description}`}

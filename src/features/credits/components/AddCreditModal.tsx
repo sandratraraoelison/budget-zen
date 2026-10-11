@@ -1,4 +1,5 @@
 "use client";
+import AmountInput from "@/components/ui/AmountInput";
 import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useCurrency } from "@/features/settings/CurrencyProvider";
@@ -21,7 +22,7 @@ export default function AddCreditModal({
 }: {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (credit: CreditInput) => void;
+  onSave: (credit: CreditInput) => Promise<void>;
 }) {
   const { t } = useLocale();
   const { currency } = useCurrency();
@@ -32,16 +33,17 @@ export default function AddCreditModal({
     new Date().toISOString().split("T")[0],
   );
   const [endDate, setEndDate] = useState("");
+  const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = () => {
+  const saveForm = async () => {
     if (!contact || !amount || !startDate) {
       setError(t("Complétez les champs obligatoires."));
       return;
     }
 
     try {
-      onSave({
+      await onSave({
         contact,
         initialAmount: parseFloat(amount),
         type,
@@ -63,6 +65,11 @@ export default function AddCreditModal({
     onClose();
   };
 
+  const handleSubmit = async () => {
+    if (pending) return;
+    setPending(true);
+    try { await saveForm(); } finally { setPending(false); }
+  };
   return (
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
@@ -101,7 +108,7 @@ export default function AddCreditModal({
 
             <div>
               <label>{t("Montant initial (")}{currency})</label>
-              <input
+              <AmountInput
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
@@ -140,7 +147,7 @@ export default function AddCreditModal({
               onClick={onClose}
               className="px-4 py-2 text-gray-500 hover:text-gray-700 dark:text-slate-300 dark:hover:text-slate-100"
             >{t("Annuler")}</button>
-            <button onClick={handleSubmit} className="ui-primary">{t("Enregistrer")}</button>
+            <button disabled={pending} onClick={handleSubmit} className="ui-primary">{t("Enregistrer")}</button>
           </div>
         </Dialog.Panel>
       </div>

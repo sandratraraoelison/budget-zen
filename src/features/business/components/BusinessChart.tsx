@@ -21,7 +21,7 @@ export default function BusinessChart({
   data: BusinessAnalytics["chart"];
 }) {
   const { t } = useLocale();
-  const { formatMoney, currency } = useCurrency();
+  const { formatMoney, formatNumber, currency } = useCurrency();
   if (
     !data.length ||
     data.every((point) => point.revenue === 0 && point.expenses === 0)
@@ -45,6 +45,8 @@ export default function BusinessChart({
             tickLine={false}
           />
           <YAxis
+                tickFormatter={formatNumber}
+                width={100}
             label={{ value: currency, angle: -90, position: "insideLeft" }}
           />
           <Tooltip formatter={(value: number) => formatMoney(value)} />

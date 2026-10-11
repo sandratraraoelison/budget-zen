@@ -21,7 +21,7 @@ export default function CreditItem({
   onDelete,
 }: {
   credit: Credit;
-  onUpdate: (updated: Credit) => void;
+  onUpdate: (updated: Credit) => Promise<void>;
   onDelete: (id: string) => void;
 }) {
   const { t, locale } = useLocale();
@@ -34,20 +34,20 @@ export default function CreditItem({
     setLocalCredit(credit);
   }, [credit]);
 
-  const addPayment = (payment: Omit<Payment, "id">) => {
+  const addPayment = async (payment: Omit<Payment, "id">) => {
     const updated = recordPayment(localCredit, {
       ...payment,
       id: crypto.randomUUID(),
     });
-    onUpdate(updated);
+    await onUpdate(updated);
   };
 
-  const handleSave = (updatedCredit: Credit) => {
+  const handleSave = async (updatedCredit: Credit) => {
     const updated = reconcileCredit({
       ...updatedCredit,
       payments: localCredit.payments,
     });
-    onUpdate(updated);
+    await onUpdate(updated);
     setIsEditing(false);
   };
 

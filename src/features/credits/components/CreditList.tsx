@@ -6,14 +6,14 @@ import CreditItem from "./CreditItem";
 
 interface CreditListProps {
   credits: Credit[];
-  setCredits: React.Dispatch<React.SetStateAction<Credit[]>>;
+  setCredits: (update: React.SetStateAction<Credit[]>) => Promise<void>;
 }
 
 export default function CreditList({ credits, setCredits }: CreditListProps) {
   const { t } = useLocale();
   const deleteCredit = (id: string) => {
     if (window.confirm(t("Êtes-vous sûr de vouloir supprimer ce crédit ?"))) {
-      setCredits((prev) => prev.filter((credit) => credit.id !== id));
+      void setCredits((prev) => prev.filter((credit) => credit.id !== id)).catch(() => {});
     }
   };
 

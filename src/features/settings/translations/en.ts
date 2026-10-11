@@ -1,5 +1,6 @@
 // French messages are stable translation keys; user-entered data is never translated.
 export const english: Record<string, string> = {
+  "Importer les anciens projets de ce navigateur": "Import previous projects from this browser",
   "Inscription en cours…": "Creating your account…",
   "Ouverture de votre tableau de bord…": "Opening your dashboard…",
   "Votre espace sera prêt dans un instant.": "Your workspace will be ready in a moment.",

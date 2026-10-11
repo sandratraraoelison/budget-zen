@@ -77,7 +77,7 @@ export default function BudgetCard() {
                     <Pencil size={15} aria-hidden="true" />
                   </button>
                   <button
-                    onClick={() => removeBudget(budget.id)}
+                    onClick={() => void removeBudget(budget.id).catch(() => {})}
                     className="ui-icon-button hover:text-red-600 dark:hover:text-red-300"
                     aria-label={t("Supprimer le budget")}
                   >

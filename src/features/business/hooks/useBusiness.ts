@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback } from "react";
+import { useAccountResource } from "@/shared/application/useAccountResource";
 import { accountRequest } from "@/shared/api/client";
 import type {
   BusinessAnalytics,
@@ -9,51 +10,29 @@ import type {
 } from "../types";
 
 export function useBusiness(timeRange: TimeRange) {
-  const [transactions, setTransactions] = useState<BusinessTransaction[]>([]);
-  const [analytics, setAnalytics] = useState<BusinessAnalytics | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [revision, setRevision] = useState(0);
-  const [pending, setPending] = useState(false);
-  const busy = useRef(false);
-  useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    setError("");
-    Promise.all([
-      accountRequest<BusinessTransaction[]>("business/transactions", {
-        signal: controller.signal,
-      }),
-      accountRequest<BusinessAnalytics>(
-        `business/analytics?timeRange=${timeRange}`,
-        { signal: controller.signal },
-      ),
-    ])
-      .then(([transactions, analytics]) => {
-        if (!controller.signal.aborted) {
-          setTransactions(transactions);
-          setAnalytics(analytics);
-        }
-      })
-      .catch((error) => {
-        if (!controller.signal.aborted) setError(error.message);
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
-    return () => controller.abort();
-  }, [timeRange, revision]);
+  const load = useCallback(
+    async (signal?: AbortSignal) => {
+      const [transactions, analytics] = await Promise.all([
+        accountRequest<BusinessTransaction[]>("business/transactions", {
+          signal,
+        }),
+        accountRequest<BusinessAnalytics>(
+          `business/analytics?timeRange=${timeRange}`,
+          { signal },
+        ),
+      ]);
+      return { transactions, analytics };
+    },
+    [timeRange],
+  );
+  const resource = useAccountResource(load);
+  const transactions = resource.data?.transactions ?? [];
+  const analytics = resource.data?.analytics ?? null;
+  const { loading, error, pending } = resource;
   const mutate = async (path: string, init: RequestInit) => {
-    if (busy.current) throw new Error("Une opération est déjà en cours.");
-    busy.current = true;
-    setPending(true);
-    try {
+    await resource.mutate(async () => {
       await accountRequest(path, init);
-      setRevision((r) => r + 1);
-    } finally {
-      busy.current = false;
-      setPending(false);
-    }
+    });
   };
   return {
     transactions,
@@ -61,7 +40,7 @@ export function useBusiness(timeRange: TimeRange) {
     loading,
     error,
     pending,
-    reload: () => setRevision((r) => r + 1),
+    reload: resource.reload,
     addTransaction: (transaction: Omit<BusinessTransaction, "id">) =>
       mutate("business/transactions", {
         method: "POST",

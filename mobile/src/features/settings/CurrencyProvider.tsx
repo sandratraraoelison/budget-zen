@@ -1,4 +1,10 @@
-import { createContext, useCallback, useContext, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  type ReactNode,
+} from "react";
 import { useServices } from "../../composition/ServicesProvider";
 import { useResource } from "../../shared/application/useResource";
 import { usePreferences } from "./PreferencesProvider";
@@ -19,14 +25,19 @@ function useCurrencyState() {
     });
     resource.reload();
   }
-  const formatMoney = (value: number) =>
-    new Intl.NumberFormat(locale, {
-      style: "currency",
-      currency,
-      currencyDisplay: "code",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(value);
+  const formatter = useMemo(
+    () =>
+      new Intl.NumberFormat(locale, {
+        style: "currency",
+        currency,
+        currencyDisplay: "code",
+        useGrouping: true,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }),
+    [locale, currency],
+  );
+  const formatMoney = (value: number) => formatter.format(value);
   return { ...resource, currency, changeCurrency, formatMoney };
 }
 const Context = createContext<ReturnType<typeof useCurrencyState> | null>(null);

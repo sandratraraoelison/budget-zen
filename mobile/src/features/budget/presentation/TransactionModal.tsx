@@ -1,12 +1,17 @@
+import {
+  formatAmountInput,
+  normalizeAmountInput,
+} from "../../../shared/ui/amount-input";
 import { useState } from "react";
 import { Modal, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useServices } from "../../../composition/ServicesProvider";
 import {
   Button,
+  Choice,
+  Heading,
   ErrorMessage,
   Field,
-  Label,
   Screen,
 } from "../../../shared/ui/components";
 import { usePreferences } from "../../settings/PreferencesProvider";
@@ -23,7 +28,7 @@ export default function TransactionModal({
   saved(): void;
 }) {
   const { budget } = useServices();
-  const { colors, t } = usePreferences();
+  const { colors, t, locale } = usePreferences();
   const [type, setType] = useState<TransactionInput["type"]>("expense");
   const [category, setCategory] =
     useState<TransactionInput["category"]>("autres");
@@ -71,7 +76,7 @@ export default function TransactionModal({
     >
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
         <Screen>
-          <Label>{t("transaction")}</Label>
+          <Heading title={t("transaction")} subtitle={t("transactionHint")} />
           <View style={{ flexDirection: "row", gap: 8 }}>
             {(["expense", "income"] as const).map((value) => (
               <View key={value} style={{ flex: 1 }}>
@@ -86,17 +91,20 @@ export default function TransactionModal({
           </View>
           <Field
             label={t("amount")}
-            value={amount}
-            onChangeText={setAmount}
+            value={formatAmountInput(amount, locale)}
+            onChangeText={(text) => {
+              const raw = normalizeAmountInput(text);
+              if (/^\d*(\.\d*)?$/.test(raw)) setAmount(raw);
+            }}
             keyboardType="decimal-pad"
             editable={!pending}
           />
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
             {categories.map((value) => (
-              <Button
+              <Choice
                 key={value}
                 title={t(value)}
-                secondary={category !== value}
+                selected={category === value}
                 disabled={pending}
                 onPress={() => setCategory(value)}
               />

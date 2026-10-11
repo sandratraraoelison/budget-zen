@@ -1,4 +1,5 @@
 "use client";
+import SyncStatus from "@/components/ui/SyncStatus";
 import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useState } from "react";
@@ -15,13 +16,13 @@ import { useCredits } from "./context/CreditsProvider";
 
 export default function CreditPage() {
   const { t } = useLocale();
-  const { credits, setCredits } = useCredits();
+  const { credits, setCredits, error, loading, pending } = useCredits();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<CreditStatus | "all">("all");
   const filteredCredits = filterCredits(credits, searchTerm, statusFilter);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const addCredit = (
+  const addCredit = async (
     newCredit: Omit<Credit, "id" | "payments" | "remainingAmount">,
   ) => {
     const credit = reconcileCredit({
@@ -30,18 +31,19 @@ export default function CreditPage() {
       remainingAmount: newCredit.initialAmount,
       payments: [],
     });
-    setCredits((prev) => [...prev, credit]);
+    await setCredits((prev) => [...prev, credit]);
   };
 
   return (
     <div className="workspace">
       <Navigation />
       <main id="main-content" className="workspace-main" tabIndex={-1}>
+        <SyncStatus loading={loading} pending={pending} error={error} />
         <PageHeader
           title={t("Crédits")}
           description={t("Gardez une vue claire sur vos prêts, emprunts et remboursements.")}
           action={
-            <button onClick={() => setIsModalOpen(true)} className="ui-primary">{t("+ Nouveau Crédit")}</button>
+            <button disabled={loading || pending} onClick={() => setIsModalOpen(true)} className="ui-primary">{t("+ Nouveau Crédit")}</button>
           }
         />
 

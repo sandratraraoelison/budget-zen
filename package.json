@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test src/features/*/domain/*.test.ts src/shared/domain/*.test.ts",
-    "test:hydration": "tsx --tsconfig tests/tsconfig.json --test tests/landing-hydration.test.tsx",
+    "test:hydration": "tsx --tsconfig tests/tsconfig.json --test tests/landing-hydration.test.tsx tests/account-sync.test.tsx",
     "check": "npm run lint && npm run typecheck && npm test && npm run test:hydration",
     "dev:backend": "npm --prefix backend run dev",
     "build:backend": "npm --prefix backend run build",

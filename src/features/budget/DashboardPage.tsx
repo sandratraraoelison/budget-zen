@@ -1,4 +1,5 @@
 "use client";
+import SyncStatus from "@/components/ui/SyncStatus";
 import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useBudget } from "./context/BudgetProvider";
@@ -18,18 +19,20 @@ import WorkspaceOverview from "./components/WorkspaceOverview";
 
 export default function Dashboard() {
   const { t } = useLocale();
-  const { state } = useBudget();
+  const { state, error, loading, pending } = useBudget();
   const [transactionModalOpen, setTransactionModalOpen] = useState(false);
   const [notice, setNotice] = useState("");
   return (
     <div className="workspace">
       <Navigation />
       <main id="main-content" className="workspace-main" tabIndex={-1}>
+        <SyncStatus loading={loading} pending={pending} error={error} />
         <PageHeader
           title={t("Tableau de bord")}
           description={t("Une vue claire de vos finances, pour savoir où vous en êtes et préparer la suite.")}
           action={
             <button
+              disabled={loading || pending}
               type="button"
               onClick={() => {
                 setNotice("");

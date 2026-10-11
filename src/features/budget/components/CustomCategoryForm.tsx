@@ -1,4 +1,5 @@
 "use client";
+import AmountInput from "@/components/ui/AmountInput";
 import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useCurrency } from "@/features/settings/CurrencyProvider";
@@ -9,18 +10,19 @@ import { useBudget } from "@/features/budget/context/BudgetProvider";
 export default function CustomCategoryForm() {
   const { t } = useLocale();
   const { currency } = useCurrency();
-  const { addCustomCategory } = useBudget();
+  const { addCustomCategory, pending } = useBudget();
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     budget: 0,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (pending) return;
     if (formData.name && formData.budget > 0) {
       try {
-        addCustomCategory(formData.name.trim(), formData.budget);
+        await addCustomCategory(formData.name.trim(), formData.budget);
       } catch (error) {
         setError((error as Error).message);
         return;
@@ -47,7 +49,7 @@ export default function CustomCategoryForm() {
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           required
         />
-        <input
+        <AmountInput
           type="number"
           placeholder={`Budget total (${currency})`}
           className="w-full p-2 border rounded"
@@ -60,7 +62,7 @@ export default function CustomCategoryForm() {
           required
         />
         <button
-          type="submit"
+          type="submit" disabled={pending}
           className="w-full bg-primary text-white py-2 px-4 rounded hover:bg-secondary"
         >{t("Créer le Projet")}</button>
       </form>

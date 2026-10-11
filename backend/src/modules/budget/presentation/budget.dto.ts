@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
 import {
   IsIn,
+  IsUUID,
   IsISO8601,
   IsString,
   Matches,
@@ -15,6 +16,10 @@ import {
 } from "../domain/models";
 
 export class TransactionDto {
+  @ApiPropertyOptional()
+  @ValidateIf((_o, value) => value !== undefined)
+  @IsUUID()
+  clientId?: string;
   @ApiProperty({ example: 120.5 }) @IsMoney() amount!: number;
   @ApiProperty({ example: "2026-10-11" })
   @IsISO8601({ strict: true })

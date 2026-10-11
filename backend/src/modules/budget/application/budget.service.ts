@@ -28,6 +28,16 @@ export class BudgetService {
   addTransaction(userId: string, input: TransactionInput) {
     const transaction = this.transaction(input);
     return this.repository.mutate(userId, (state) => {
+      if (input.clientId) {
+        const receipt = state.syncReceipts?.find(r => r.clientId === input.clientId);
+        if (receipt) {
+          const { id: _old, ...oldBody } = receipt.transaction;
+          const { id: _new, ...newBody } = transaction;
+          if (JSON.stringify(oldBody) !== JSON.stringify(newBody)) throw new DomainError("CONFLICT", "Identifiant de synchronisation deja utilise.");
+          return transactionView(receipt.transaction);
+        }
+        (state.syncReceipts ??= []).push({ clientId: input.clientId, transaction });
+      }
       state.transactions.unshift(transaction);
       budgetSummary(state);
       return transactionView(transaction);

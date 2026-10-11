@@ -1,4 +1,5 @@
 "use client";
+import AmountInput from "@/components/ui/AmountInput";
 import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useState } from "react";
@@ -13,15 +14,16 @@ export default function BudgetEditForm({
   onClose: () => void;
 }) {
   const { t } = useLocale();
-  const { updateBudget } = useBudget();
+  const { updateBudget, pending } = useBudget();
   const [error, setError] = useState("");
   const [formData, setFormData] = useState<Budget>(budget);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (pending) return;
     if (formData.limit > 0) {
       try {
-        updateBudget(formData);
+        await updateBudget(formData);
       } catch (error) {
         setError((error as Error).message);
         return;
@@ -40,7 +42,7 @@ export default function BudgetEditForm({
         )}
         <div className="flex items-center gap-2">
           <label className="text-sm">{t("Nouvelle limite :")}</label>
-          <input
+          <AmountInput
             type="number"
             value={formData.limit}
             onChange={(e) =>
@@ -53,7 +55,7 @@ export default function BudgetEditForm({
         </div>
         <div className="flex gap-2 justify-end">
           <button
-            type="submit"
+            type="submit" disabled={pending}
             className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
           >{t("Valider")}</button>
           <button

@@ -18,7 +18,7 @@ import EmptyState from "@/components/ui/EmptyState";
 export default function SpendingChart() {
   const { t } = useLocale();
   const { state, getCategorySpending } = useBudget();
-  const { formatMoney, currency } = useCurrency();
+  const { formatMoney, formatNumber, currency } = useCurrency();
   const categories = Array.from(
     new Set(
       state.transactions
@@ -53,6 +53,8 @@ export default function SpendingChart() {
                 tickLine={false}
               />
               <YAxis
+                tickFormatter={formatNumber}
+                width={100}
                 label={{ value: currency, angle: -90, position: "insideLeft" }}
               />
               <Tooltip formatter={(value: number) => formatMoney(value)} />

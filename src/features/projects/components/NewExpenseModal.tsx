@@ -1,4 +1,5 @@
 "use client";
+import AmountInput from "@/components/ui/AmountInput";
 import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useCurrency } from "@/features/settings/CurrencyProvider";
@@ -15,7 +16,7 @@ interface NewExpenseModalProps {
     amount: number;
     category: string;
     date: string;
-  }) => void;
+  }) => Promise<void>;
 }
 
 export default function NewExpenseModal({
@@ -29,12 +30,13 @@ export default function NewExpenseModal({
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = () => {
+  const saveForm = async () => {
     if (description && amount && category) {
       try {
-        onSave({
+        await onSave({
           description,
           amount: Number(amount),
           category,
@@ -52,6 +54,11 @@ export default function NewExpenseModal({
     }
   };
 
+  const handleSubmit = async () => {
+    if (pending) return;
+    setPending(true);
+    try { await saveForm(); } finally { setPending(false); }
+  };
   return (
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
@@ -78,7 +85,7 @@ export default function NewExpenseModal({
 
             <div>
               <label className="block mb-1">{t("Montant (")}{currency})</label>
-              <input
+              <AmountInput
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
@@ -124,7 +131,7 @@ export default function NewExpenseModal({
               onClick={onClose}
               className="px-4 py-2 text-gray-500 hover:text-gray-700 dark:text-slate-300 dark:hover:text-slate-100"
             >{t("Annuler")}</button>
-            <button type="button" onClick={handleSubmit} className="ui-primary">{t("Ajouter")}</button>
+            <button type="button" disabled={pending} onClick={handleSubmit} className="ui-primary">{t("Ajouter")}</button>
           </div>
         </Dialog.Panel>
       </div>

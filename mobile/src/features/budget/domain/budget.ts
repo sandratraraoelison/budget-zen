@@ -16,6 +16,7 @@ export interface TransactionInput {
   description: string;
 }
 export interface Transaction extends TransactionInput {
+  syncStatus?: "pending";
   id: string;
 }
 export interface BudgetSummary {

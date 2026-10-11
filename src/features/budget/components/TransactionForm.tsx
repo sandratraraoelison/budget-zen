@@ -1,4 +1,5 @@
 "use client";
+import AmountInput from "@/components/ui/AmountInput";
 import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useCurrency } from "@/features/settings/CurrencyProvider";
@@ -22,7 +23,7 @@ export default function TransactionForm({
 }) {
   const { t, language } = useLocale();
   const { currency, formatMoney } = useCurrency();
-  const { state, addTransaction } = useBudget();
+  const { state, addTransaction, pending } = useBudget();
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [formData, setFormData] = useState<Partial<Transaction>>({
@@ -33,8 +34,9 @@ export default function TransactionForm({
     description: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (pending) return;
     setSuccess("");
 
     if (!formData.category || !formData.amount) {
@@ -97,7 +99,7 @@ export default function TransactionForm({
     }
 
     try {
-      addTransaction(newTransaction);
+      await addTransaction(newTransaction);
     } catch (error) {
       setError((error as Error).message);
       return;
@@ -204,7 +206,7 @@ export default function TransactionForm({
             className="block text-sm font-medium mb-1"
           >{t("Montant (")}{currency})
           </label>
-          <input
+          <AmountInput
             id="transaction-amount"
             type="number"
             className="w-full p-2 border rounded"
@@ -242,7 +244,7 @@ export default function TransactionForm({
         />
       </div>
 
-      <button type="submit" className="ui-primary w-full">{t("Ajouter la transaction")}</button>
+      <button type="submit" disabled={pending} className="ui-primary w-full">{t("Ajouter la transaction")}</button>
     </form>
   );
 }

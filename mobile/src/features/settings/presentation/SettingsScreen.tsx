@@ -1,8 +1,11 @@
+import { View, Text } from "react-native";
 import { useState } from "react";
 import { useServices } from "../../../composition/ServicesProvider";
 import {
   Button,
   Card,
+  Choice,
+  Heading,
   ErrorMessage,
   Field,
   Label,
@@ -42,26 +45,61 @@ export default function SettingsScreen() {
   return (
     <Screen>
       <Card>
-        <Label>{session.user?.name}</Label>
-        <Label muted>{session.user?.email}</Label>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+          <View
+            style={{
+              height: 52,
+              width: 52,
+              borderRadius: 18,
+              backgroundColor: prefs.colors.accentSoft,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text
+              style={{
+                color: prefs.colors.accent,
+                fontSize: 22,
+                fontWeight: "700",
+              }}
+            >
+              {session.user?.name.slice(0, 1).toUpperCase()}
+            </Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Heading
+              title={session.user?.name ?? "BudgetZen"}
+              subtitle={session.user?.email}
+            />
+          </View>
+        </View>
       </Card>
       <Card>
-        <Label>{t("theme")}</Label>
-        <Button
-          title={prefs.dark ? "☀ Light" : "☾ Dark"}
-          secondary
-          onPress={() =>
-            prefs.update(prefs.language, prefs.dark ? "light" : "dark")
-          }
-        />
-        <Label>{t("language")}</Label>
-        <Button
-          title={prefs.language === "fr" ? "English" : "Français"}
-          secondary
-          onPress={() =>
-            prefs.update(prefs.language === "fr" ? "en" : "fr", prefs.theme)
-          }
-        />
+        <Heading title={t("appearance")} />
+        <Label muted>{t("theme")}</Label>
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          {(["light", "dark"] as const).map((theme) => (
+            <View key={theme} style={{ flex: 1 }}>
+              <Choice
+                title={t(theme)}
+                selected={theme === (prefs.dark ? "dark" : "light")}
+                onPress={() => prefs.update(prefs.language, theme)}
+              />
+            </View>
+          ))}
+        </View>
+        <Label muted>{t("language")}</Label>
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          {(["fr", "en"] as const).map((language) => (
+            <View key={language} style={{ flex: 1 }}>
+              <Choice
+                title={language === "fr" ? "Français" : "English"}
+                selected={prefs.language === language}
+                onPress={() => prefs.update(language, prefs.theme)}
+              />
+            </View>
+          ))}
+        </View>
       </Card>
       <Card>
         <Field
@@ -83,6 +121,7 @@ export default function SettingsScreen() {
       </Card>
       <ErrorMessage message={error} />
       <Button
+        icon="log-out-outline"
         title={t("logout")}
         secondary
         pending={pending}

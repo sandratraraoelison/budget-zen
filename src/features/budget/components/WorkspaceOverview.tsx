@@ -25,7 +25,7 @@ export default function WorkspaceOverview() {
     projects,
     loading: projectsLoading,
     error: projectsError,
-  } = useProjects({ readOnly: true });
+  } = useProjects();
   const {
     analytics,
     loading: businessLoading,

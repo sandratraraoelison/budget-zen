@@ -103,6 +103,59 @@ test("landing, registration, secure session, login, protected pages and logout w
       method, headers: { "Content-Type": "application/json", Origin: origin, ...(session ? { Cookie: session } : {}) },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
+    // The mobile bearer API and the web cookie BFF must use the same account data.
+    const mobileLogin = await fetch(`http://127.0.0.1:${backendPort}/api/v1/auth/login`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: input.email, password: input.password }),
+    });
+    assert.equal(mobileLogin.status, 200);
+    const mobileSession = await mobileLogin.json();
+    const mobile = (path, method = "GET", body, token = mobileSession.accessToken) => fetch(`http://127.0.0.1:${backendPort}/api/v1/${path}`, {
+      method, headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: body === undefined ? undefined : JSON.stringify(body),
+    });
+    const webIncome = await account("transactions", "POST", { amount: 2000000, date: "2026-10-11", description: "Salary", category: "salaire", type: "income" });
+    assert.equal(webIncome.status, 201);
+    const income = await webIncome.json();
+    assert.equal((await (await mobile("budget/summary")).json()).balance, 2000000);
+    const phoneExpense = await mobile("transactions", "POST", { amount: 1200.50, date: "2026-10-11", description: "Food", category: "nourriture", type: "expense" });
+    assert.equal(phoneExpense.status, 201);
+    const expense = await phoneExpense.json();
+    const synced = await (await account("budget/summary")).json();
+    assert.equal(synced.balance, 1998799.50);
+    assert.ok(synced.transactions.some(t => t.id === expense.id));
+    const budgetResponse = await account("budgets", "POST", { category: "nourriture", limit: 5000 });
+    assert.equal(budgetResponse.status, 201);
+    const syncedBudget = await budgetResponse.json();
+    assert.equal((await (await mobile("budgets")).json())[0].current, 1200.50);
+    const editBudget = await account(`budgets/${syncedBudget.id}`, "PATCH", { limit: 6000 });
+    assert.equal(editBudget.status, 200); await editBudget.text();
+    assert.equal((await (await mobile("budgets")).json())[0].limit, 6000);
+    const projectResponse = await account("projects", "POST", { name: "Synced project", initialFund: 10000 });
+    assert.equal(projectResponse.status, 201);
+    const project = await projectResponse.json();
+    const projectExpense = await account(`projects/${project.id}/expenses`, "POST", { description: "Materials", amount: 1500, date: "2026-10-11", category: "other" });
+    assert.equal(projectExpense.status, 201); await projectExpense.text();
+    assert.equal((await (await mobile(`projects/${project.id}`)).json()).currentFund, 8500);
+    const creditResponse = await account("credits", "POST", { contact: "Test", initialAmount: 2000, type: "lent", startDate: "2026-10-11" });
+    assert.equal(creditResponse.status, 201);
+    const credit = await creditResponse.json();
+    const paymentResponse = await account(`credits/${credit.id}/payments`, "POST", { amount: 500, date: "2026-10-11", note: "Repayment" });
+    assert.equal(paymentResponse.status, 201);
+    const payment = await paymentResponse.json();
+    assert.equal((await (await mobile(`credits/${credit.id}`)).json()).remainingAmount, 1500);
+    const paymentDelete = await account(`credits/${credit.id}/payments/${payment.payments.at(-1).id}`, "DELETE");
+    assert.equal(paymentDelete.status, 204);
+    assert.equal((await (await mobile(`credits/${credit.id}`)).json()).remainingAmount, 2000);
+    const isolatedRegister = await post("register", { ...input, email: "isolated@example.com" });
+    assert.equal(isolatedRegister.status, 201); await isolatedRegister.text();
+    const isolatedCookie = isolatedRegister.headers.get("set-cookie").split(";")[0];
+    assert.deepEqual((await (await account("budget/summary", "GET", undefined, isolatedCookie)).json()).transactions, []);
+    const forbiddenProject = await account(`projects/${project.id}`, "PATCH", { name: "Forbidden" }, isolatedCookie);
+    assert.equal(forbiddenProject.status, 404); await forbiddenProject.text();
+    const crossOriginWrite = await account("transactions", "POST", { amount: 10 }, cookie, "https://other.example.com");
+    assert.equal(crossOriginWrite.status, 403); await crossOriginWrite.text();
+    assert.equal((await account(`transactions/${income.id}`, "DELETE")).status, 204);
+    assert.equal((await mobile(`transactions/${expense.id}`, "DELETE")).status, 204);
+    assert.deepEqual((await (await account("budget/summary")).json()).transactions, []);
     const settings = await account("settings");
     assert.equal(settings.status, 200);
     assert.equal((await settings.json()).currency, "MGA");

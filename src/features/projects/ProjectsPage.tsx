@@ -1,4 +1,5 @@
 "use client";
+import SyncStatus from "@/components/ui/SyncStatus";
 import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useState } from "react";
@@ -18,7 +19,14 @@ import { reconcileProject } from "./domain/project";
 
 export default function ProjectsPage() {
   const { t } = useLocale();
-  const { projects, setProjects, error } = useProjects();
+  const {
+    projects,
+    setProjects,
+    error,
+    loading,
+    pending,
+    importLocalProjects,
+  } = useProjects();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState("tous");
   const [searchQuery, setSearchQuery] = useState("");
@@ -35,7 +43,7 @@ export default function ProjectsPage() {
     return matchesStatus && matchesSearch && matchesDate;
   });
 
-  const addProject = (newProject: {
+  const addProject = async (newProject: {
     name: string;
     initialFund: number;
     startDate?: string;
@@ -47,33 +55,43 @@ export default function ProjectsPage() {
       expenses: [],
       status: "en-cours",
     });
-    setProjects((prev) => [...prev, project]);
+    await setProjects((prev) => [...prev, project]);
   };
 
   const deleteProject = (projectId: string) => {
     if (!window.confirm(t("Supprimer ce projet et ses dépenses ?"))) return;
-    setProjects((prev) => prev.filter((p) => p.id !== projectId));
+    void setProjects((prev) => prev.filter((p) => p.id !== projectId)).catch(
+      () => {},
+    );
   };
 
   return (
     <div className="workspace">
       <Navigation />
       <main id="main-content" className="workspace-main" tabIndex={-1}>
-        {error && (
-          <p role="alert" className="mb-4 text-red-600 dark:text-red-300">
-            {t(error)}
-          </p>
-        )}
+        <button
+          type="button"
+          disabled={loading || pending}
+          className="ui-secondary mb-4"
+          onClick={() => void importLocalProjects().catch(() => {})}
+        >
+          {t("Importer les anciens projets de ce navigateur")}
+        </button>
+        <SyncStatus loading={loading} pending={pending} error={error} />
         <PageHeader
           title={t("Projets")}
-          description={t("Faites avancer vos projets en gardant la maîtrise des dépenses.")}
+          description={t(
+            "Faites avancer vos projets en gardant la maîtrise des dépenses.",
+          )}
           action={
             <button
-              disabled={!!error}
+              disabled={loading || pending || !!error}
               onClick={() => setIsModalOpen(true)}
               className="ui-primary flex items-center gap-2"
             >
-              <PlusIcon className="w-5 h-5" />{t("Nouveau Projet")}</button>
+              <PlusIcon className="w-5 h-5" />
+              {t("Nouveau Projet")}
+            </button>
           }
         />
 

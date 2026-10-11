@@ -11,7 +11,7 @@ import { recordExpense } from "../domain/project";
 
 type ExpenseListProps = {
   project: Project;
-  setProjects: React.Dispatch<React.SetStateAction<Project[]>>;
+  setProjects: (update: React.SetStateAction<Project[]>) => Promise<void>;
 };
 
 export default function ExpenseList({
@@ -22,12 +22,12 @@ export default function ExpenseList({
   const { formatMoney } = useCurrency();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const addExpense = (expense: Omit<Expense, "id">) => {
+  const addExpense = async (expense: Omit<Expense, "id">) => {
     const updated = recordExpense(project, {
       ...expense,
       id: crypto.randomUUID(),
     });
-    setProjects((prev) => prev.map((p) => (p.id === project.id ? updated : p)));
+    await setProjects((prev) => prev.map((p) => (p.id === project.id ? updated : p)));
   };
 
   return (

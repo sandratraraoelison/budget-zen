@@ -39,6 +39,7 @@ export interface CustomCategory {
   createdAt: string;
 }
 export interface BudgetState {
+  syncReceipts?: { clientId: string; transaction: Transaction }[];
   transactions: Transaction[];
   budgets: Budget[];
   savingsGoals: SavingsGoal[];
@@ -52,6 +53,7 @@ export const emptyBudgetState = (): BudgetState => ({
 });
 
 export interface TransactionInput {
+  clientId?: string;
   amount: number;
   date: string;
   description: string;

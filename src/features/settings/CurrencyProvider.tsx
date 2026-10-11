@@ -14,6 +14,7 @@ import { useLocale } from "./LocaleProvider";
 const CurrencyContext = createContext<{
   currency: string;
   formatMoney: (amount: number) => string;
+  formatNumber: (amount: number) => string;
   changeCurrency: (currency: string) => Promise<void>;
   loading: boolean;
   error: string;
@@ -54,16 +55,27 @@ export function CurrencyProvider({
       });
     return () => controller.abort();
   }, [version]);
+  useEffect(() => {
+    const resume = () => { if (document.visibilityState === "visible") setVersion(v => v + 1); };
+    const timer = window.setInterval(resume, 15000);
+    window.addEventListener("focus", resume);
+    return () => { clearInterval(timer); window.removeEventListener("focus", resume); };
+  }, []);
   const formatter = useMemo(
     () =>
       new Intl.NumberFormat(locale, {
         style: "currency",
         currency,
         currencyDisplay: "code",
+        useGrouping: true,
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       }),
     [currency, locale],
+  );
+  const numberFormatter = useMemo(
+    () => new Intl.NumberFormat(locale, { useGrouping: true, maximumFractionDigits: 2 }),
+    [locale],
   );
   const changeCurrency = async (next: string) => {
     setPending(true);
@@ -85,6 +97,7 @@ export function CurrencyProvider({
       value={{
         currency,
         formatMoney: (amount) => formatter.format(amount),
+        formatNumber: (amount) => numberFormatter.format(amount),
         changeCurrency,
         loading,
         pending,

@@ -1,4 +1,5 @@
 "use client";
+import AmountInput from "@/components/ui/AmountInput";
 import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useCurrency } from "@/features/settings/CurrencyProvider";
@@ -106,7 +107,7 @@ export default function AddBusinessTransactionModal({
 
             <div>
               <label>{t("Montant (")}{currency})</label>
-              <input
+              <AmountInput
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}

@@ -56,7 +56,7 @@ Les tests utilisent le runner natif Node.js via `tsx`. Les données démo du pro
 
 ## Stockage et limites actuelles
 
-Le tableau de bord inclut une vue d’ensemble des quatre rubriques : consommation et alertes des budgets, avancement des projets, crédits non soldés et résultat business du mois courant. Les cartes proposent un accès direct aux pages correspondantes. Le résumé des projets lit la sauvegarde locale sans la modifier ; celui du business utilise les statistiques de l’API. L’état des crédits est partagé au niveau de l’espace connecté, pour conserver les données lors du passage entre le tableau de bord et la page Crédits.
+Le tableau de bord inclut une vue d’ensemble des quatre rubriques : consommation et alertes des budgets, avancement des projets, crédits non soldés et résultat business du mois courant. Les cartes proposent un accès direct aux pages correspondantes. Les résumés des projets et du business utilisent les données de l’API. L’état des crédits est partagé au niveau de l’espace connecté, pour conserver les données lors du passage entre le tableau de bord et la page Crédits.
 
 Les pages de gestion partagent les composants `PageHeader` et `EmptyState`, ainsi que les classes `workspace`, `workspace-main`, `ui-card`, `ui-primary` et `ui-dialog` définies dans `src/app/globals.css`. Le tableau de bord présente les indicateurs financiers en tête, puis les transactions et le suivi des budgets. Le bouton œil masque le solde disponible pendant la consultation. Le formulaire de transaction s’ouvre dans une modale depuis « Ajouter une transaction » ; après un ajout réussi, la modale se ferme et une confirmation apparaît sur le tableau de bord. Les formulaires restent distincts des cartes pour éviter les conteneurs imbriqués. Les graphiques vides, recherches sans résultat et chargements disposent d’un affichage dédié.
 
@@ -76,7 +76,7 @@ npm run dev:backend
 
 API : http://127.0.0.1:3001/api/v1 — Swagger : http://127.0.0.1:3001/api/docs.
 
-Le backend nécessite Node.js 24 ou supérieur. Le frontend utilise l’API pour l’authentification, le business et les préférences du compte. Les budgets personnels, crédits et projets utilisent encore leur état local. La documentation du backend détaille les routes, les règles métier et le stockage SQLite.
+Le backend nécessite Node.js 24 ou supérieur. Le frontend et le mobile utilisent la même API pour les transactions, budgets, objectifs, catégories personnalisées, projets, crédits, business et devise du compte. Les données sont conservées dans SQLite et isolées par utilisateur. Une actualisation toutes les 15 secondes et au retour dans l’application récupère les changements de l’autre appareil. Les deux applications doivent utiliser le même serveur NestJS et le même compte. Le mode démo conserve un budget local indépendant. La documentation du backend détaille les routes, les règles métier et le stockage SQLite.
 
 ## Règles métier et devise
 
@@ -120,3 +120,7 @@ npm run test:auth
 ```
 
 Ce test construit les deux applications, les lance sur des ports temporaires avec une base isolée et vérifie l’authentification, la protection des pages, la devise sauvegardée et les opérations/statistiques business à travers les routes Next.js. Il ne modifie pas la base de développement. `NEXT_BUILD_DIR=.next-validation` permet de construire le frontend dans un dossier distinct pendant qu'un serveur de développement utilise `.next`.
+
+### Recuperer les anciennes donnees web
+
+Dans Projets, le bouton d’import transfère les projets de ce navigateur vers le serveur, avec leurs dépenses, sans supprimer la sauvegarde locale. Les imports réussis sont marqués pour permettre une reprise après une erreur. Les anciennes transactions et crédits étaient uniquement en mémoire : ils ne peuvent pas être récupérés après fermeture ou rechargement de la page. Les nouveaux enregistrements sont persistés sur le serveur.

@@ -1,5 +1,5 @@
 import { ActivityIndicator } from "react-native";
-import { Button, ErrorMessage, Label } from "./components";
+import { Button, ErrorMessage, EmptyState } from "./components";
 import { usePreferences } from "../../features/settings/PreferencesProvider";
 export default function ResourceState({
   loading,
@@ -21,10 +21,5 @@ export default function ResourceState({
         <Button title={t("retry")} onPress={reload} />
       </>
     );
-  return (
-    <>
-      {empty && <Label muted>{t("empty")}</Label>}
-      <Button secondary title={t("refresh")} onPress={reload} />
-    </>
-  );
+  return empty ? <EmptyState title={t("empty")} /> : null;
 }

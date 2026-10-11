@@ -1,5 +1,7 @@
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useState } from "react";
 import { Text, View } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useServices } from "../../../composition/ServicesProvider";
 import {
   Button,
@@ -12,6 +14,7 @@ import {
 import { usePreferences } from "../../settings/PreferencesProvider";
 import { validateCredentials, type AuthMode } from "../domain/auth";
 export default function AuthScreen() {
+  const insets = useSafeAreaInsets();
   const { session } = useServices();
   const { t, colors } = usePreferences();
   const [mode, setMode] = useState<AuthMode>("login");
@@ -40,12 +43,25 @@ export default function AuthScreen() {
   }
   return (
     <Screen>
+      <View
+        style={{
+          marginTop: Math.max(insets.top, 16),
+          width: 72,
+          height: 72,
+          borderRadius: 24,
+          backgroundColor: colors.accentSoft,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Ionicons name="wallet-outline" size={34} color={colors.accent} />
+      </View>
       <Text
         style={{
           color: colors.accent,
           fontSize: 30,
           fontWeight: "800",
-          marginTop: 32,
+          letterSpacing: -1,
         }}
       >
         BudgetZen

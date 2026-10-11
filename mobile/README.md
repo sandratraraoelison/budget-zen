@@ -53,7 +53,7 @@ Chaque fonctionnalité sépare `domain` (modèles, contrats et validation sans R
 - Thèmes clair/sombre et FR/EN conservés sur l’appareil. Les messages métier renvoyés par NestJS restent dans la langue du serveur.
 - Devise sauvegardée par compte via `/settings`, sans conversion des montants.
 
-Le mobile utilise directement `/api/v1` avec Bearer JWT. Il ne passe pas par les routes BFF de Next.js. Budgets, crédits et projets mobiles utilisent les données serveur ; les états locaux encore utilisés par le frontend web ne se synchronisent pas avec eux. Pas de mode hors ligne ni de refresh token.
+Le mobile utilise directement `/api/v1` avec Bearer JWT. Il ne passe pas par les routes BFF de Next.js. Budgets, transactions, projets, crédits et business utilisent les mêmes données serveur que le web. Connectez-vous au même compte et configurez le même serveur NestJS. Une actualisation toutes les 15 secondes en premier plan et au retour dans l’application récupère les changements web. Pas de mode hors ligne ni de refresh token.
 
 ## Vérifier
 

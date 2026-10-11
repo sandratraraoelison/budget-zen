@@ -1,7 +1,14 @@
 import { useCallback } from "react";
 import { useServices } from "../../../composition/ServicesProvider";
 import { useResource } from "../../../shared/application/useResource";
-import { Card, Label, Screen } from "../../../shared/ui/components";
+import {
+  Card,
+  Heading,
+  IconButton,
+  Label,
+  ProgressBar,
+  Screen,
+} from "../../../shared/ui/components";
 import ResourceState from "../../../shared/ui/ResourceState";
 import { useCurrency } from "../../settings/CurrencyProvider";
 import { usePreferences } from "../../settings/PreferencesProvider";
@@ -15,14 +22,35 @@ export default function ProjectsScreen() {
   );
   const resource = useResource(load);
   return (
-    <Screen>
+    <Screen
+      onRefresh={resource.reload}
+      refreshing={resource.loading && !!resource.data}
+    >
+      <Heading
+        title={t("projects")}
+        subtitle={t("projectsHint")}
+        action={
+          <IconButton
+            icon="refresh-outline"
+            label={t("refresh")}
+            onPress={resource.reload}
+          />
+        }
+      />
       <ResourceState {...resource} empty={!resource.data?.length} />
       {resource.data?.map((item) => (
         <Card key={item.id}>
-          <Label>{item.name}</Label>
+          <Heading title={item.name} />
           <Label muted>
             {t(item.status === "en-cours" ? "active" : "completed")}
           </Label>
+          <ProgressBar
+            value={
+              item.initialFund > 0
+                ? (item.initialFund - item.currentFund) / item.initialFund
+                : 0
+            }
+          />
           <Label>
             {t("remaining")} · {formatMoney(item.currentFund)} /{" "}
             {formatMoney(item.initialFund)}

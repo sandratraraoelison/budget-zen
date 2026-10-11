@@ -1,4 +1,5 @@
 "use client";
+import AmountInput from "@/components/ui/AmountInput";
 import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useCurrency } from "@/features/settings/CurrencyProvider";
@@ -15,7 +16,7 @@ export default function AddPaymentModal({
 }: {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (payment: { amount: number; date: string; note: string }) => void;
+  onSave: (payment: { amount: number; date: string; note: string }) => Promise<void>;
   maxAmount: number;
   minDate: string;
 }) {
@@ -24,13 +25,14 @@ export default function AddPaymentModal({
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [note, setNote] = useState("");
+  const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = () => {
+  const saveForm = async () => {
     const amountNum = parseFloat(amount);
     if (amountNum > 0 && amountNum <= maxAmount) {
       try {
-        onSave({ amount: amountNum, date, note });
+        await onSave({ amount: amountNum, date, note });
       } catch (error) {
         setError((error as Error).message);
         return;
@@ -45,6 +47,11 @@ export default function AddPaymentModal({
       );
   };
 
+  const handleSubmit = async () => {
+    if (pending) return;
+    setPending(true);
+    try { await saveForm(); } finally { setPending(false); }
+  };
   return (
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
@@ -60,7 +67,7 @@ export default function AddPaymentModal({
             )}
             <div>
               <label>{t("Montant (max")}{formatMoney(maxAmount)})</label>
-              <input
+              <AmountInput
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
@@ -92,7 +99,7 @@ export default function AddPaymentModal({
 
           <div className="flex justify-end gap-2 mt-6">
             <button onClick={onClose} className="px-4 py-2 text-gray-500 dark:text-slate-300">{t("Annuler")}</button>
-            <button onClick={handleSubmit} className="ui-primary">{t("Enregistrer")}</button>
+            <button disabled={pending} onClick={handleSubmit} className="ui-primary">{t("Enregistrer")}</button>
           </div>
         </Dialog.Panel>
       </div>

@@ -15,7 +15,7 @@ export interface Transaction {
   date: Date;
   description: string;
   category: TransactionCategory;
-  type: 'income' | 'expense';
+  type: "income" | "expense";
 }
 
 export interface CustomCategory {
@@ -44,18 +44,25 @@ export interface AppState {
 
 export interface BudgetContextType {
   state: AppState;
-  addTransaction: (transaction: Transaction) => void;
-  addBudget: (budget: Budget) => void;
-  addSavingsGoal: (goal: SavingsGoal) => void;
+  error: string;
+  loading: boolean;
+  pending: boolean;
+  reload: () => void;
+  addTransaction: (transaction: Transaction) => Promise<void>;
+  addBudget: (budget: Budget) => Promise<void>;
+  addSavingsGoal: (goal: SavingsGoal) => Promise<void>;
   getCategorySpending: (category: string) => number;
-  resetDemoData: () => void;
+  resetDemoData: () => Promise<void>;
   totalIncome: number;
   totalExpenses: number;
   balance: number;
   customCategories: CustomCategory[];
-  addCustomCategory: (name: string, budget: number) => void;
-  addCustomTransaction: (categoryId: string, transaction: Omit<Transaction, 'id'>) => void;
-  removeTransaction: (transactionId: string) => void;
-  removeBudget: (budgetId: string) => void;
-  updateBudget: (updatedBudget: Budget) => void;
+  addCustomCategory: (name: string, budget: number) => Promise<void>;
+  addCustomTransaction: (
+    categoryId: string,
+    transaction: Omit<Transaction, "id">,
+  ) => Promise<void>;
+  removeTransaction: (transactionId: string) => Promise<void>;
+  removeBudget: (budgetId: string) => Promise<void>;
+  updateBudget: (updatedBudget: Budget) => Promise<void>;
 }

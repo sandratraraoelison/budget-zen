@@ -1,4 +1,5 @@
 "use client";
+import AmountInput from "@/components/ui/AmountInput";
 import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useCurrency } from "@/features/settings/CurrencyProvider";
@@ -14,15 +15,16 @@ import {
 export default function BudgetForm() {
   const { t } = useLocale();
   const { currency } = useCurrency();
-  const { addBudget, state } = useBudget();
+  const { addBudget, state, pending } = useBudget();
   const [error, setError] = useState("");
   const [formData, setFormData] = useState<Omit<Budget, "id" | "current">>({
     category: "",
     limit: 0,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (pending) return;
 
     if (!formData.category || formData.limit <= 0) {
       setError(t("Choisissez une catégorie et saisissez une limite positive."));
@@ -30,7 +32,7 @@ export default function BudgetForm() {
     }
 
     try {
-      addBudget({
+      await addBudget({
         ...formData,
         id: crypto.randomUUID(),
         current: 0,
@@ -74,7 +76,7 @@ export default function BudgetForm() {
 
         <label htmlFor="budget-limit" className="block">{t("Limite (")}{currency})
         </label>
-        <input
+        <AmountInput
           id="budget-limit"
           type="number"
           placeholder={`Limite du budget (${currency})`}
@@ -89,7 +91,7 @@ export default function BudgetForm() {
         />
         <p className="text-sm text-gray-500 dark:text-slate-300">{t("La limite s’applique aux dépenses cumulées de cette catégorie.")}</p>
 
-        <button type="submit" className="ui-primary w-full">{t("Créer le budget")}</button>
+        <button type="submit" disabled={pending} className="ui-primary w-full">{t("Créer le budget")}</button>
       </form>
     </div>
   );

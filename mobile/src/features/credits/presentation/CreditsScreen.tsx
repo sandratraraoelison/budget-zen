@@ -1,7 +1,14 @@
 import { useCallback } from "react";
 import { useServices } from "../../../composition/ServicesProvider";
 import { useResource } from "../../../shared/application/useResource";
-import { Card, Label, Screen } from "../../../shared/ui/components";
+import {
+  Card,
+  Heading,
+  IconButton,
+  Label,
+  ProgressBar,
+  Screen,
+} from "../../../shared/ui/components";
 import ResourceState from "../../../shared/ui/ResourceState";
 import { useCurrency } from "../../settings/CurrencyProvider";
 import { usePreferences } from "../../settings/PreferencesProvider";
@@ -15,14 +22,36 @@ export default function CreditsScreen() {
   );
   const resource = useResource(load);
   return (
-    <Screen>
+    <Screen
+      onRefresh={resource.reload}
+      refreshing={resource.loading && !!resource.data}
+    >
+      <Heading
+        title={t("credits")}
+        subtitle={t("creditsHint")}
+        action={
+          <IconButton
+            icon="refresh-outline"
+            label={t("refresh")}
+            onPress={resource.reload}
+          />
+        }
+      />
       <ResourceState {...resource} empty={!resource.data?.length} />
       {resource.data?.map((item) => (
         <Card key={item.id}>
-          <Label>{item.contact}</Label>
+          <Heading title={item.contact} />
           <Label muted>
             {t(item.type === "borrowed" ? "borrowed" : "lent")}
           </Label>
+          <ProgressBar
+            value={
+              item.initialAmount > 0
+                ? (item.initialAmount - item.remainingAmount) /
+                  item.initialAmount
+                : 0
+            }
+          />
           <Label>
             {t("remaining")} · {formatMoney(item.remainingAmount)} /{" "}
             {formatMoney(item.initialAmount)}

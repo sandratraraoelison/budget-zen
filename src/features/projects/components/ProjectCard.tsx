@@ -1,4 +1,5 @@
 "use client";
+import AmountInput from "@/components/ui/AmountInput";
 import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useCurrency } from "@/features/settings/CurrencyProvider";
@@ -11,7 +12,7 @@ import { projectProgress, reconcileProject } from "../domain/project";
 
 type ProjectCardProps = {
   project: Project;
-  setProjects: React.Dispatch<React.SetStateAction<Project[]>>;
+  setProjects: (update: React.SetStateAction<Project[]>) => Promise<void>;
   onDelete: (projectId: string) => void;
 };
 
@@ -26,14 +27,14 @@ export default function ProjectCard({
   const [fund, setFund] = useState(project.initialFund.toString());
   const [error, setError] = useState("");
 
-  const updateFund = () => {
+  const updateFund = async () => {
     try {
       if (!fund.trim()) throw new Error(t("Saisissez le budget du projet."));
       const updated = reconcileProject({
         ...project,
         initialFund: Number(fund),
       });
-      setProjects((prev) =>
+      await setProjects((prev) =>
         prev.map((p) => (p.id === project.id ? updated : p)),
       );
       setIsEditing(false);
@@ -44,9 +45,9 @@ export default function ProjectCard({
   };
 
   const updateStatus = (newStatus: "en-cours" | "achevée") => {
-    setProjects((prev) =>
+    void setProjects((prev) =>
       prev.map((p) => (p.id === project.id ? { ...p, status: newStatus } : p)),
-    );
+    ).catch(() => {});
   };
 
   return (
@@ -111,7 +112,7 @@ export default function ProjectCard({
 
       {isEditing && (
         <div className="flex items-center gap-2 mb-4">
-          <input
+          <AmountInput
             type="number"
             min="0"
             step="0.01"

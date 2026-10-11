@@ -8,6 +8,38 @@ import {
 import { useColorScheme } from "react-native";
 import * as SecureStore from "expo-secure-store";
 const messages = {
+  quickActions: ["Acc\u00e8s rapides", "Quick actions"],
+  overview: ["Votre vue d’ensemble", "Your overview"],
+  dashboardHint: [
+    "Vos finances, en un coup d’œil.",
+    "Your finances at a glance.",
+  ],
+  swipeHint: [
+    "Glissez pour voir les autres montants",
+    "Swipe to see the other amounts",
+  ],
+  noBudgets: ["Vos budgets apparaîtront ici", "Your budgets will appear here"],
+  noTransactions: ["Votre historique commence ici", "Your history starts here"],
+  transactionHint: [
+    "Ajoutez une transaction pour suivre vos finances.",
+    "Add a transaction to track your finances.",
+  ],
+  projectsHint: [
+    "Gardez vos objectifs et vos dépenses en vue.",
+    "Keep your goals and spending in sight.",
+  ],
+  creditsHint: [
+    "Suivez vos prêts et vos remboursements.",
+    "Track your loans and repayments.",
+  ],
+  businessHint: [
+    "Les chiffres essentiels du mois en cours.",
+    "Key figures for the current month.",
+  ],
+  appearance: ["Personnalisez votre espace", "Make it your own"],
+  light: ["Clair", "Light"],
+  dark: ["Sombre", "Dark"],
+  home: ["Accueil", "Home"],
   login: ["Connexion", "Sign in"],
   register: ["Inscription", "Sign up"],
   name: ["Nom", "Name"],
@@ -97,13 +129,20 @@ function usePreferencesState() {
     update,
     locale: language === "fr" ? "fr-FR" : "en-US",
     colors: {
-      background: dark ? "#020617" : "#f6f8fa",
-      card: dark ? "#0f172a" : "#ffffff",
-      text: dark ? "#f1f5f9" : "#0f172a",
-      muted: dark ? "#cbd5e1" : "#64748b",
-      border: dark ? "#334155" : "#e2e8f0",
-      accent: dark ? "#5eead4" : "#115e59",
-      danger: dark ? "#fca5a5" : "#b91c1c",
+      background: dark ? "#101122" : "#f6f5fb",
+      card: dark ? "#1b1d34" : "#ffffff",
+      text: dark ? "#f5f4ff" : "#252441",
+      muted: dark ? "#b8b9d0" : "#73738b",
+      border: dark ? "#30334e" : "#eeedf6",
+      primary: "#6054e8",
+      accent: dark ? "#b2aaff" : "#6054e8",
+      danger: dark ? "#ffadbd" : "#c34463",
+      soft: dark ? "#252740" : "#f5f4fa",
+      accentSoft: dark ? "#302b52" : "#efedff",
+      blueSoft: dark ? "#223952" : "#eaf4ff",
+      coralSoft: dark ? "#452b3b" : "#fff0f3",
+      blue: dark ? "#a3d0ff" : "#306bac",
+      coral: dark ? "#ffb3c3" : "#ad395c",
     },
     t: (key: keyof typeof messages) =>
       messages[key][language === "fr" ? 0 : 1] as string,

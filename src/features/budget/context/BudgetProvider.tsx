@@ -6,6 +6,7 @@ import {
   useState,
   useRef,
   useMemo,
+  useCallback,
   type ReactNode,
 } from "react";
 import type {
@@ -21,6 +22,9 @@ import {
   getTransactionTotals,
 } from "../domain/selectors";
 
+import { loadBudget, saveAction } from "../infrastructure/budget-repository";
+import { useAccountResource } from "@/shared/application/useAccountResource";
+
 const BudgetContext = createContext<BudgetContextType | null>(null);
 
 export const BudgetProvider = ({
@@ -30,7 +34,7 @@ export const BudgetProvider = ({
   children: ReactNode;
   isDemo?: boolean;
 }) => {
-  const [state, setState] = useState(() =>
+  const [localState, setState] = useState(() =>
     isDemo
       ? createDemoState()
       : {
@@ -41,12 +45,23 @@ export const BudgetProvider = ({
           customCategories: [],
         },
   );
+  const load = useCallback(loadBudget, []);
+  const remote = useAccountResource(load, !isDemo);
+  const state = isDemo ? localState : (remote.data ?? localState);
   const currentState = useRef(state);
+  currentState.current = state;
   const dispatch = (action: BudgetAction) => {
     // Validate synchronously so the form can display failures without crashing React.
     const next = budgetReducer(currentState.current, action);
-    currentState.current = next;
-    setState(next);
+    if (isDemo) {
+      currentState.current = next;
+      setState(next);
+      return Promise.resolve();
+    }
+    return remote.mutate(async (previous) => {
+      budgetReducer(previous, action);
+      await saveAction(action);
+    });
   };
   const { totalIncome, totalExpenses, balance } = useMemo(
     () => getTransactionTotals(state.transactions),
@@ -92,6 +107,10 @@ export const BudgetProvider = ({
     <BudgetContext.Provider
       value={{
         state,
+        error: remote.error,
+        loading: remote.loading,
+        pending: remote.pending,
+        reload: remote.reload,
         addTransaction,
         removeTransaction,
         addBudget,

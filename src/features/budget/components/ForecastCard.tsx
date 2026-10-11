@@ -17,7 +17,7 @@ import {
 export default function ForecastCard() {
   const { t } = useLocale();
   const { state } = useBudget();
-  const { formatMoney, currency } = useCurrency();
+  const { formatMoney, formatNumber, currency } = useCurrency();
   const forecastData = useMemo(
     () => spendingForecast(state.transactions),
     [state.transactions],
@@ -35,6 +35,8 @@ export default function ForecastCard() {
           <LineChart data={forecastData}>
             <XAxis dataKey="month" />
             <YAxis
+                tickFormatter={formatNumber}
+                width={100}
               label={{ value: currency, angle: -90, position: "insideLeft" }}
             />
             <Tooltip formatter={(value: number) => formatMoney(value)} />
