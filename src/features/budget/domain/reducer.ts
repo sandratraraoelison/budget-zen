@@ -361,6 +361,44 @@ export function budgetReducer(state: AppState, action: BudgetAction): AppState {
   }
   // Balances are projections of the ledger, never independently mutable values.
   getTransactionTotals(next.transactions);
+  if (action.type.startsWith("savings/")) {
+    const history = [...(state.fundingHistory ?? [])];
+    for (const goal of [
+      ...state.savingsGoals,
+      ...next.savingsGoals.filter(
+        (g) => !state.savingsGoals.some((old) => old.id === g.id),
+      ),
+    ]) {
+      const before =
+        state.savingsGoals.find((g) => g.id === goal.id)?.current ?? 0;
+      const after =
+        next.savingsGoals.find((g) => g.id === goal.id)?.current ?? 0;
+      const delta = (Math.round(after * 100) - Math.round(before * 100)) / 100;
+      if (delta)
+        history.push({
+          id: crypto.randomUUID(),
+          goalId: goal.id,
+          goalName: goal.name,
+          source: "savings",
+          date: new Date().toISOString(),
+          amount: delta,
+          reason:
+            action.type === "savings/remove"
+              ? "release"
+              : delta > 0
+                ? "deposit"
+                : "withdrawal",
+        });
+    }
+    next = {
+      ...next,
+      fundingHistory: history,
+      savingsGoals: next.savingsGoals.map((goal) => ({
+        ...goal,
+        history: history.filter((entry) => entry.goalId === goal.id),
+      })),
+    };
+  }
   next = {
     ...next,
     budgets: next.budgets.map((budget) => ({

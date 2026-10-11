@@ -8,12 +8,52 @@ import {
 import { useColorScheme } from "react-native";
 import * as SecureStore from "expo-secure-store";
 const messages = {
+  delete: ["Supprimer", "Delete"],
+  edit: ["Modifier", "Edit"],
+  businessMonth: ["Mois", "Month"],
+  businessQuarter: ["Trimestre", "Quarter"],
+  businessYear: ["Année", "Year"],
+  businessPeriodDate: ["Date dans la période", "Date within period"],
+  businessRevenue: ["Chiffre d’affaires", "Revenue"],
+  businessPrevious: ["période précédente", "previous period"],
+  businessNoComparison: [
+    "Pas de base de comparaison",
+    "No comparison available",
+  ],
+  businessMargin: ["Marge nette", "Net margin"],
+  businessMarginHint: [
+    "Bénéfice / chiffre d’affaires. Sans revenu, la marge ne peut pas être calculée.",
+    "Profit / revenue. Without revenue, margin cannot be calculated.",
+  ],
+  businessOperations: [
+    "opérations sur la période",
+    "operations in this period",
+  ],
+  businessTopExpenses: ["Principales dépenses", "Top expenses"],
+  businessNoExpenses: [
+    "Aucune dépense pour cette période.",
+    "No expenses in this period.",
+  ],
+  businessSearch: ["Rechercher une opération", "Search operations"],
+  businessAllTypes: ["Tout", "All"],
+  businessNoTransactions: [
+    "Aucune opération correspondante.",
+    "No matching operations.",
+  ],
+  businessDelete: ["Supprimer cette opération ?", "Delete this operation?"],
+  businessEdit: ["Modifier une opération", "Edit operation"],
   fundingHistory: ["Historique des mises de côté", "Savings history"],
-  fundingCashHint: ["Un versement réduit le solde disponible. Un retrait le réaugmente.", "A deposit reduces your available balance. A withdrawal increases it."],
+  fundingCashHint: [
+    "Un versement réduit le solde disponible. Un retrait le réaugmente.",
+    "A deposit reduces your available balance. A withdrawal increases it.",
+  ],
   fundingEmpty: ["Aucun mouvement pour le moment.", "No movements yet."],
   fundingDeposit: ["Mise de côté", "Set aside"],
   fundingAdjustment: ["Correction du montant", "Amount adjustment"],
-  fundingRelease: ["Restitution après suppression", "Funds released after deletion"],
+  fundingRelease: [
+    "Restitution après suppression",
+    "Funds released after deletion",
+  ],
   fundingMore: ["Afficher plus", "Show more"],
   categoryNameOptional: [
     "Nom de catégorie (optionnel)",

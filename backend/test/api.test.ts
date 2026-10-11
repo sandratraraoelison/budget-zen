@@ -950,14 +950,134 @@ test("savings contributions are validated, atomic and scoped to the owner", asyn
 });
 
 test("project funding contributions synchronize without inventing initial funds", async () => {
- const project = await request<Project & { savedFund:number }>("projects","POST",{ name:"Vacation fund",initialFund:1000,savedFund:0 },one.accessToken,201);
- assert.equal(project.currentFund,0);assert.equal(project.savedFund,0);
- const path = `projects/${project.id}/contributions`;
- const results = await Promise.all([request<Project & {savedFund:number}>(path,"POST",{ amount:100,direction:"add" },one.accessToken,201),request<Project & {savedFund:number}>(path,"POST",{ amount:200,direction:"add" },one.accessToken,201)]);
- assert.equal(Math.max(...results.map(project=>project.savedFund)),300);
- await request(path,"POST",{ amount:301,direction:"withdraw" },one.accessToken,400);
- await request(path,"POST",{ amount:1,direction:"add" },two.accessToken,404);
- const current = await request<Project>(`projects/${project.id}`,"GET",undefined,one.accessToken);
- assert.equal(current.currentFund,300);assert.equal("savedFundMinor" in current,false);
- await request(`projects/${project.id}`,"DELETE",undefined,one.accessToken,204);
+  const project = await request<Project & { savedFund: number }>(
+    "projects",
+    "POST",
+    { name: "Vacation fund", initialFund: 1000, savedFund: 0 },
+    one.accessToken,
+    201,
+  );
+  assert.equal(project.currentFund, 0);
+  assert.equal(project.savedFund, 0);
+  const path = `projects/${project.id}/contributions`;
+  const results = await Promise.all([
+    request<Project & { savedFund: number }>(
+      path,
+      "POST",
+      { amount: 100, direction: "add" },
+      one.accessToken,
+      201,
+    ),
+    request<Project & { savedFund: number }>(
+      path,
+      "POST",
+      { amount: 200, direction: "add" },
+      one.accessToken,
+      201,
+    ),
+  ]);
+  assert.equal(Math.max(...results.map((project) => project.savedFund)), 300);
+  await request(
+    path,
+    "POST",
+    { amount: 301, direction: "withdraw" },
+    one.accessToken,
+    400,
+  );
+  await request(
+    path,
+    "POST",
+    { amount: 1, direction: "add" },
+    two.accessToken,
+    404,
+  );
+  const current = await request<Project>(
+    `projects/${project.id}`,
+    "GET",
+    undefined,
+    one.accessToken,
+  );
+  assert.equal(current.currentFund, 300);
+  assert.equal("savedFundMinor" in current, false);
+  await request(
+    `projects/${project.id}`,
+    "DELETE",
+    undefined,
+    one.accessToken,
+    204,
+  );
+});
+
+test("project and savings reservations update the common cash summary and retain a permanent journal", async () => {
+  type Summary = {
+    balance: number;
+    totalExpenses: number;
+    fundingHistory: { goalId: string; amount: number }[];
+  };
+  const summary = () =>
+    request<Summary>("budget/summary", "GET", undefined, one.accessToken);
+  const before = await summary();
+  const project = await request<{ id: string }>(
+    "projects",
+    "POST",
+    { name: "Reserved trip", initialFund: 500, savedFund: 0 },
+    one.accessToken,
+    201,
+  );
+  await request(
+    `projects/${project.id}/contributions`,
+    "POST",
+    { amount: 100, direction: "add" },
+    one.accessToken,
+    201,
+  );
+  const savings = await request<{ id: string }>(
+    "savings-goals",
+    "POST",
+    { name: "Reserve", target: 100, current: 50, deadline: "2026-12-15" },
+    one.accessToken,
+    201,
+  );
+  assert.equal((await summary()).balance, before.balance - 150);
+  await request(
+    `projects/${project.id}/expenses`,
+    "POST",
+    {
+      amount: 30,
+      description: "Booking",
+      category: "Travel",
+      date: "2026-10-11",
+    },
+    one.accessToken,
+    201,
+  );
+  assert.equal((await summary()).balance, before.balance - 150);
+  await request(
+    `projects/${project.id}`,
+    "DELETE",
+    undefined,
+    one.accessToken,
+    204,
+  );
+  await request(
+    `savings-goals/${savings.id}`,
+    "DELETE",
+    undefined,
+    one.accessToken,
+    204,
+  );
+  const after = await summary();
+  assert.equal(after.balance, before.balance - 30);
+  assert.equal(after.totalExpenses, before.totalExpenses);
+  assert.deepEqual(
+    after.fundingHistory
+      .filter((e) => e.goalId === project.id)
+      .map((e) => e.amount)
+      .sort((a, b) => a - b),
+    [-70, 100],
+  );
+  assert.equal(
+    after.fundingHistory.filter((e) => e.goalId === savings.id).length,
+    2,
+  );
 });

@@ -9,7 +9,7 @@ import type {
   TimeRange,
 } from "../types";
 
-export function useBusiness(timeRange: TimeRange) {
+export function useBusiness(timeRange: TimeRange, date?: string) {
   const load = useCallback(
     async (signal?: AbortSignal) => {
       const [transactions, analytics] = await Promise.all([
@@ -17,13 +17,13 @@ export function useBusiness(timeRange: TimeRange) {
           signal,
         }),
         accountRequest<BusinessAnalytics>(
-          `business/analytics?timeRange=${timeRange}`,
+          `business/analytics?timeRange=${timeRange}${date ? `&date=${encodeURIComponent(date)}` : ""}`,
           { signal },
         ),
       ]);
       return { transactions, analytics };
     },
-    [timeRange],
+    [timeRange, date],
   );
   const resource = useAccountResource(load);
   const transactions = resource.data?.transactions ?? [];
@@ -44,6 +44,14 @@ export function useBusiness(timeRange: TimeRange) {
     addTransaction: (transaction: Omit<BusinessTransaction, "id">) =>
       mutate("business/transactions", {
         method: "POST",
+        body: JSON.stringify(transaction),
+      }),
+    updateTransaction: (
+      id: string,
+      transaction: Omit<BusinessTransaction, "id">,
+    ) =>
+      mutate(`business/transactions/${id}`, {
+        method: "PATCH",
         body: JSON.stringify(transaction),
       }),
     removeTransaction: (id: string) =>

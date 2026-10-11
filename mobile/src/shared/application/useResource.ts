@@ -1,4 +1,5 @@
 import { AppState } from "react-native";
+import { subscribeResourceChanges } from "./resource-events";
 import { useCallback, useEffect, useState } from "react";
 export function useResource<T>(load: (signal: AbortSignal) => Promise<T>) {
   const [data, setData] = useState<T | null>(null);
@@ -13,8 +14,13 @@ export function useResource<T>(load: (signal: AbortSignal) => Promise<T>) {
   useEffect(() => {
     const controller = new AbortController();
     let running = false;
+    let refreshRequested = false;
     const refresh = () => {
-      if (running || controller.signal.aborted) return;
+      if (controller.signal.aborted) return;
+      if (running) {
+        refreshRequested = true;
+        return;
+      }
       running = true;
       load(controller.signal)
         .then((result) => {
@@ -29,9 +35,14 @@ export function useResource<T>(load: (signal: AbortSignal) => Promise<T>) {
         .finally(() => {
           running = false;
           if (!controller.signal.aborted) setLoading(false);
+          if (refreshRequested && !controller.signal.aborted) {
+            refreshRequested = false;
+            refresh();
+          }
         });
     };
     refresh();
+    const unsubscribe = subscribeResourceChanges(refresh);
     const timer = setInterval(() => {
       if (AppState.currentState === "active") refresh();
     }, 15000);
@@ -39,6 +50,7 @@ export function useResource<T>(load: (signal: AbortSignal) => Promise<T>) {
       if (state === "active") refresh();
     });
     return () => {
+      unsubscribe();
       controller.abort();
       clearInterval(timer);
       subscription.remove();

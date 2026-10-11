@@ -97,7 +97,9 @@ export function budgetSummary(state: BudgetState) {
     else if (category.spent >= category.budget * 0.9)
       alerts.push(`Attention : 90% du budget ${category.name} utilisé`);
   }
-  const savingsReservedMinor = sumMinor(state.savingsGoals.map((g) => g.currentMinor));
+  const savingsReservedMinor = sumMinor(
+    state.savingsGoals.map((g) => g.currentMinor),
+  );
   return {
     savingsReserved: fromMinor(savingsReservedMinor),
     fundingHistory: (state.fundingHistory ?? []).map(fundingView),
@@ -112,13 +114,17 @@ export function budgetSummary(state: BudgetState) {
     savingsGoals: state.savingsGoals.map(
       ({ targetMinor, currentMinor, ...goal }) => ({
         ...goal,
-        history: (state.fundingHistory ?? []).filter((e) => e.goalId === goal.id).map(fundingView),
+        history: (state.fundingHistory ?? [])
+          .filter((e) => e.goalId === goal.id)
+          .map(fundingView),
         target: fromMinor(targetMinor),
         current: fromMinor(currentMinor),
       }),
     ),
     totalIncome: fromMinor(totalIncomeMinor),
     totalExpenses: fromMinor(totalExpensesMinor),
-    balance: fromMinor(totalIncomeMinor - totalExpensesMinor - savingsReservedMinor),
+    balance: fromMinor(
+      totalIncomeMinor - totalExpensesMinor - savingsReservedMinor,
+    ),
   };
 }

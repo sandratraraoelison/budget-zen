@@ -1,7 +1,21 @@
 // French messages are stable translation keys; user-entered data is never translated.
 export const english: Record<string, string> = {
+  "Modifier une opération Business": "Edit Business operation",
+  "Supprimer cette opération ?": "Delete this operation?",
+  "Tous les types": "All types",
+  "Rechercher une opération…": "Search operations…",
+  "Date dans la période": "Date within period",
+  "Aucune dépense pour cette période.": "No expenses in this period.",
+  "Principales dépenses": "Top expenses",
+  "Bénéfice divisé par le chiffre d’affaires. Sans revenu, la marge ne peut pas être calculée.":
+    "Profit divided by revenue. Without revenue, margin cannot be calculated.",
+  "Marge nette": "Net margin",
+  "opérations sur la période": "operations in this period",
+  "Votre activité en détail": "Your business in detail",
+  "Après crédits et mises de côté": "After loans and savings",
   "Historique des mises de côté": "Savings history",
-  "Un versement réduit le solde disponible. Un retrait le réaugmente.": "A deposit reduces your available balance. A withdrawal increases it.",
+  "Un versement réduit le solde disponible. Un retrait le réaugmente.":
+    "A deposit reduces your available balance. A withdrawal increases it.",
   "Aucun mouvement pour le moment.": "No movements yet.",
   "Mise de côté": "Set aside",
   "Correction du montant": "Amount adjustment",

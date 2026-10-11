@@ -1,3 +1,4 @@
+import { notifyResourcesChanged } from "../application/resource-events";
 import {
   ApiError,
   type HttpClient,
@@ -214,7 +215,11 @@ export function createOfflineClient(
             : options.body
         ) as T;
       }
-      if (method !== "GET") return network.request<T>(path, options);
+      if (method !== "GET") {
+        const result = await network.request<T>(path, options);
+        notifyResourcesChanged();
+        return result;
+      }
       if (path === "auth/me") {
         // A previously authenticated account can open immediately without the network.
         if (connected)

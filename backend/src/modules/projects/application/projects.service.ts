@@ -12,7 +12,11 @@ import type {
   ProjectsState,
   UpdateProjectInput,
 } from "../domain/models";
-import { assertProjectFund, projectView } from "../domain/project";
+import {
+  assertProjectFund,
+  projectReservedMinor,
+  projectView,
+} from "../domain/project";
 
 export class ProjectsService {
   constructor(
@@ -22,11 +26,16 @@ export class ProjectsService {
 
   list(user: string) {
     const state = this.repository.read(user);
-    return state.projects.map((project) => projectView(project, state.fundingHistory));
+    return state.projects.map((project) =>
+      projectView(project, state.fundingHistory),
+    );
   }
   get(user: string, id: string) {
     const state = this.repository.read(user);
-    return projectView(required(state.projects.find((p) => p.id === id)), state.fundingHistory);
+    return projectView(
+      required(state.projects.find((p) => p.id === id)),
+      state.fundingHistory,
+    );
   }
 
   create(user: string, input: ProjectInput) {
@@ -48,7 +57,15 @@ export class ProjectsService {
         targetDate: input.targetDate,
       };
       state.projects.push(project);
-      recordFunding(state, this.runtime, project, "project", project.savedFundMinor ?? 0, "deposit");
+      recordFunding(
+        state,
+        this.runtime,
+        project,
+        "project",
+        project.savedFundMinor ?? 0,
+        "deposit",
+      );
+      projectReservedMinor(state);
       return projectView(project, state.fundingHistory);
     });
   }
@@ -69,14 +86,28 @@ export class ProjectsService {
         validateDateRange(project.startDate, project.targetDate ?? undefined);
       else if (project.targetDate) validateDateRange(project.targetDate);
       if (input.savedFund !== undefined) {
-        openingFunding(state, this.runtime, project, "project", project.savedFundMinor ?? 0);
+        openingFunding(
+          state,
+          this.runtime,
+          project,
+          "project",
+          project.savedFundMinor ?? 0,
+        );
         const saved = toMinor(input.savedFund, true);
-        recordFunding(state, this.runtime, project, "project", saved - (project.savedFundMinor ?? 0), "adjustment");
+        recordFunding(
+          state,
+          this.runtime,
+          project,
+          "project",
+          saved - (project.savedFundMinor ?? 0),
+          "adjustment",
+        );
         project.savedFundMinor = saved;
       }
       if (input.initialFund !== undefined)
         project.initialFundMinor = toMinor(input.initialFund, true);
       assertProjectFund(project);
+      projectReservedMinor(state);
       return projectView(project, state.fundingHistory);
     });
   }
@@ -100,10 +131,24 @@ export class ProjectsService {
         (input.direction === "add" ? 1 : -1) * toMinor(input.amount);
       if (!Number.isSafeInteger(next) || next < 0)
         throw new DomainError("VALIDATION", "Montant de cagnotte invalide.");
-      openingFunding(state, this.runtime, project, "project", project.savedFundMinor ?? 0);
-      recordFunding(state, this.runtime, project, "project", next - (project.savedFundMinor ?? 0), input.direction === "add" ? "deposit" : "withdrawal");
+      openingFunding(
+        state,
+        this.runtime,
+        project,
+        "project",
+        project.savedFundMinor ?? 0,
+      );
+      recordFunding(
+        state,
+        this.runtime,
+        project,
+        "project",
+        next - (project.savedFundMinor ?? 0),
+        input.direction === "add" ? "deposit" : "withdrawal",
+      );
       project.savedFundMinor = next;
       assertProjectFund(project);
+      projectReservedMinor(state);
       return projectView(project, state.fundingHistory);
     });
   }
@@ -113,9 +158,25 @@ export class ProjectsService {
       const project = required(state.projects.find((p) => p.id === id));
       if (project.savedFundMinor !== undefined) {
         const spent = sumMinor(project.expenses.map((e) => e.amountMinor));
-        openingFunding(state, this.runtime, project, "project", project.savedFundMinor);
-        recordFunding(state, this.runtime, project, "project", -(project.savedFundMinor - spent), "release");
-        state.spentDeletedProjectsMinor = sumMinor([state.spentDeletedProjectsMinor ?? 0, spent]);
+        openingFunding(
+          state,
+          this.runtime,
+          project,
+          "project",
+          project.savedFundMinor,
+        );
+        recordFunding(
+          state,
+          this.runtime,
+          project,
+          "project",
+          -(project.savedFundMinor - spent),
+          "release",
+        );
+        state.spentDeletedProjectsMinor = sumMinor([
+          state.spentDeletedProjectsMinor ?? 0,
+          spent,
+        ]);
       }
       state.projects = state.projects.filter((p) => p.id !== id);
     });
@@ -138,6 +199,7 @@ export class ProjectsService {
         category: input.category,
       });
       assertProjectFund(project);
+      projectReservedMinor(state);
       return projectView(project, state.fundingHistory);
     });
   }

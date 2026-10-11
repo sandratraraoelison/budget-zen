@@ -93,9 +93,14 @@ export const BudgetProvider = ({
           0,
         );
   const balance =
-    (Math.round(ledgerBalance * 100) + Math.round(creditBalance * 100) -
-      state.savingsGoals.reduce((sum, goal) => sum + Math.round(goal.current * 100), 0) -
-      Math.round((state.projectReserved ?? 0) * 100)) / 100;
+    (Math.round(ledgerBalance * 100) +
+      Math.round(creditBalance * 100) -
+      state.savingsGoals.reduce(
+        (sum, goal) => sum + Math.round(goal.current * 100),
+        0,
+      ) -
+      Math.round((state.projectReserved ?? 0) * 100)) /
+    100;
   const addTransaction = (transaction: Transaction) =>
     dispatch({ type: "transaction/add", transaction });
   const removeTransaction = (id: string) =>

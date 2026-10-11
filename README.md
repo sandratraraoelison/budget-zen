@@ -137,7 +137,7 @@ Chaque remboursement saisit le capital et, séparément, les intérêts et l'ass
 
 ### Dates des projets
 
-Les projets disposent d'une date de commencement et d'une date cible facultative (par exemple, des vacances le 15 décembre). Les dates futures sont autorisées et la date cible doit suivre le commencement. Les cartes web/mobile affichent les dates, les jours restants et l'état « À venir ». Le nom, le budget et les dates peuvent être modifiés ; vider la date cible la supprime via `targetDate: null`. Cette date sert à planifier : elle ne clôture pas le projet et ne bloque pas automatiquement les dépenses. La progression affichée correspond au budget utilisé.
+Les projets disposent d'une date de commencement et d'une date cible facultative (par exemple, des vacances le 15 décembre). Les dates futures sont autorisées et la date cible doit suivre le commencement. Les cartes web/mobile affichent les dates, les jours restants et l'état « À venir ». Le nom, le budget et les dates peuvent être modifiés ; vider la date cible la supprime via `targetDate: null`. Cette date sert à planifier : elle ne clôture pas le projet et ne bloque pas automatiquement les dépenses. La progression affichée correspond au financement de l’objectif.
 
 ### Objectifs d'épargne
 
@@ -148,3 +148,14 @@ La carte affiche l'épargne enregistrée, la progression, le montant restant et 
 ### Cagnotte des projets
 
 Le montant cible (`initialFund`) est distinct des fonds mis de côté (`savedFund`). Les nouveaux projets du web/mobile démarrent sans financement. Les projets existants conservent les fonds précédemment enregistrés ; le champ « Déjà mis de côté » permet une correction. `POST /projects/:id/contributions` ajoute ou retire des fonds de façon atomique. Un retrait ne peut pas utiliser des sommes déjà dépensées. La progression mesure le financement de la cible ; le disponible dans la cagnotte est le financement moins les dépenses. Ce suivi n'effectue aucun virement bancaire.
+
+
+### Solde disponible et mises de côté
+
+Le solde disponible est le revenu moins les dépenses, plus l'effet des crédits, moins l'épargne réservée et les fonds explicitement mis de côté pour les projets. Un retrait restitue les fonds disponibles. Les dépenses d'un projet utilisent sa cagnotte : elles ne sont pas déduites une seconde fois du solde disponible. Clôturer un projet ne libère pas sa cagnotte. Le supprimer restitue seulement les fonds non dépensés ; les sommes déjà utilisées restent déduites.
+
+Un journal propre au compte conserve les dates, noms d'objectifs et montants des versements, retraits, corrections et restitutions, même après suppression de l'objectif. Le web affiche ce journal dans le tableau de bord et Budgets, et sur les cartes d'objectifs ; le mobile l'affiche dans Budgets et les projets. Les anciens soldes d'épargne sont pris en compte ; lors du premier changement, leur montant d'ouverture est consigné sans reconstituer de dates historiques inconnues. Les anciens projets dont seul le budget cible était enregistré ne réservent pas automatiquement ce budget : renseigner `savedFund` confirme la somme mise de côté. Le cache mobile conserve ces réservations pendant les saisies hors ligne ; les mouvements d'épargne et de projet exigent toujours une connexion.
+
+### Vue Business
+
+Sur le web et le mobile, les statistiques portent sur le mois, trimestre ou année correspondant à la date choisie. Le chiffre d'affaires, les dépenses, le bénéfice, la comparaison avec la période précédente, la marge (bénéfice / revenus) et les principales catégories de dépenses sont calculés par l'API commune. La marge reste indéfinie en l'absence de revenus. L'historique est filtrable par recherche et type, avec modification et suppression confirmée des opérations. Business reste un suivi d'activité distinct du budget personnel ; il ne constitue pas une comptabilité fiscale ni une gestion de stock.

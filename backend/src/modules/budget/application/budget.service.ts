@@ -1,4 +1,8 @@
-import { fundingView, openingFunding, recordFunding } from "../../../shared/domain/funding";
+import {
+  fundingView,
+  openingFunding,
+  recordFunding,
+} from "../../../shared/domain/funding";
 import type {
   Runtime,
   StateRepository,
@@ -22,7 +26,10 @@ export class BudgetService {
     private readonly repository: StateRepository<BudgetState>,
     private readonly runtime: Runtime,
     private readonly creditBalanceMinor: (userId: string) => number = () => 0,
-    private readonly projectFunding: (userId: string) => { reservedMinor: number; history: import("../../../shared/domain/funding").FundingMovement[] } = () => ({ reservedMinor: 0, history: [] }),
+    private readonly projectFunding: (userId: string) => {
+      reservedMinor: number;
+      history: import("../../../shared/domain/funding").FundingMovement[];
+    } = () => ({ reservedMinor: 0, history: [] }),
   ) {}
 
   reorderCategories(userId: string, ids: string[]) {
@@ -57,9 +64,14 @@ export class BudgetService {
       ...summary,
       creditBalance,
       projectReserved: fromMinor(projects.reservedMinor),
-      fundingHistory: [...(summary.fundingHistory ?? []), ...projects.history.map(fundingView)].sort((a, b) => b.date.localeCompare(a.date)),
+      fundingHistory: [
+        ...(summary.fundingHistory ?? []),
+        ...projects.history.map(fundingView),
+      ].sort((a, b) => b.date.localeCompare(a.date)),
       balance: fromMinor(
-        Math.round(summary.balance * 100) + Math.round(creditBalance * 100) - projects.reservedMinor,
+        Math.round(summary.balance * 100) +
+          Math.round(creditBalance * 100) -
+          projects.reservedMinor,
       ),
     };
   }
@@ -234,7 +246,14 @@ export class BudgetService {
         deadline: input.deadline,
       };
       state.savingsGoals.push(goal);
-      recordFunding(state, this.runtime, goal, "savings", goal.currentMinor, "deposit");
+      recordFunding(
+        state,
+        this.runtime,
+        goal,
+        "savings",
+        goal.currentMinor,
+        "deposit",
+      );
       return required(
         budgetSummary(state).savingsGoals.find((g) => g.id === goal.id),
       );
@@ -249,7 +268,14 @@ export class BudgetService {
       if (input.current !== undefined) {
         openingFunding(state, this.runtime, goal, "savings", goal.currentMinor);
         const current = toMinor(input.current, true);
-        recordFunding(state, this.runtime, goal, "savings", current - goal.currentMinor, "adjustment");
+        recordFunding(
+          state,
+          this.runtime,
+          goal,
+          "savings",
+          current - goal.currentMinor,
+          "adjustment",
+        );
         goal.currentMinor = current;
       }
       if (input.deadline !== undefined) {
@@ -278,7 +304,14 @@ export class BudgetService {
           "Le retrait dépasse l’épargne disponible.",
         );
       openingFunding(state, this.runtime, goal, "savings", goal.currentMinor);
-      recordFunding(state, this.runtime, goal, "savings", next - goal.currentMinor, input.direction === "add" ? "deposit" : "withdrawal");
+      recordFunding(
+        state,
+        this.runtime,
+        goal,
+        "savings",
+        next - goal.currentMinor,
+        input.direction === "add" ? "deposit" : "withdrawal",
+      );
       goal.currentMinor = next;
       return required(
         budgetSummary(state).savingsGoals.find((goal) => goal.id === id),
@@ -290,7 +323,14 @@ export class BudgetService {
     this.repository.mutate(userId, (state) => {
       const goal = required(state.savingsGoals.find((g) => g.id === id));
       openingFunding(state, this.runtime, goal, "savings", goal.currentMinor);
-      recordFunding(state, this.runtime, goal, "savings", -goal.currentMinor, "release");
+      recordFunding(
+        state,
+        this.runtime,
+        goal,
+        "savings",
+        -goal.currentMinor,
+        "release",
+      );
       state.savingsGoals = state.savingsGoals.filter((g) => g.id !== id);
     });
   }

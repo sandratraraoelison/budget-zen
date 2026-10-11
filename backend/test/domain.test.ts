@@ -756,3 +756,126 @@ test("project funding starts empty and contributions are separate from expenses 
     service.contribute("two", project.id, { amount: 10, direction: "add" }),
   );
 });
+
+test("set-aside savings reduce spendable cash and their journal survives deletion", () => {
+  const repository = new MemoryRepository(emptyBudgetState);
+  const service = new BudgetService(repository, runtime());
+  service.addTransaction("one", { ...expense, type: "income", amount: 1000 });
+  const goal = service.addGoal("one", {
+    name: "Vacation",
+    target: 500,
+    current: 100,
+    deadline: "2026-12-15",
+  });
+  assert.equal(service.summary("one").balance, 900);
+  service.contributeGoal("one", goal.id, { amount: 200, direction: "add" });
+  assert.equal(service.summary("one").balance, 700);
+  service.contributeGoal("one", goal.id, { amount: 50, direction: "withdraw" });
+  assert.equal(service.summary("one").balance, 750);
+  const before = service.summary("one").fundingHistory.length;
+  assert.throws(() =>
+    service.contributeGoal("one", goal.id, {
+      amount: 251,
+      direction: "withdraw",
+    }),
+  );
+  assert.equal(service.summary("one").fundingHistory.length, before);
+  service.updateGoal("one", goal.id, { name: "Trip", current: 200 });
+  assert.equal(service.summary("one").balance, 800);
+  service.removeGoal("one", goal.id);
+  assert.equal(service.summary("one").balance, 1000);
+  assert.deepEqual(
+    service.summary("one").fundingHistory.map((e) => e.amount),
+    [100, 200, -50, -50, -200],
+  );
+  assert.equal(service.summary("two").fundingHistory.length, 0);
+});
+
+test("project cash is reserved once, and deletion releases only unspent funds", () => {
+  const projects = new MemoryRepository(emptyProjectsState);
+  const service = new ProjectsService(projects, runtime());
+  const budget = new BudgetService(
+    new MemoryRepository(emptyBudgetState),
+    runtime(),
+    () => 0,
+    (user) => {
+      const state = projects.read(user);
+      return {
+        reservedMinor: sumMinor([
+          state.spentDeletedProjectsMinor ?? 0,
+          ...state.projects.map((p) => p.savedFundMinor ?? 0),
+        ]),
+        history: state.fundingHistory ?? [],
+      };
+    },
+  );
+  budget.addTransaction("one", { ...expense, type: "income", amount: 1000 });
+  const goal = service.create("one", {
+    name: "Trip",
+    initialFund: 500,
+    savedFund: 0,
+  });
+  service.contribute("one", goal.id, { amount: 300, direction: "add" });
+  assert.equal(budget.summary("one").balance, 700);
+  service.addExpense("one", goal.id, {
+    description: "Booking",
+    amount: 100,
+    date: "2026-10-11",
+    category: "other",
+  });
+  assert.equal(budget.summary("one").balance, 700);
+  service.contribute("one", goal.id, { amount: 50, direction: "withdraw" });
+  assert.equal(budget.summary("one").balance, 750);
+  service.update("one", goal.id, { status: "achev\u00e9e" });
+  assert.equal(budget.summary("one").balance, 750);
+  service.remove("one", goal.id);
+  assert.equal(budget.summary("one").balance, 900);
+  assert.deepEqual(
+    budget.summary("one").fundingHistory.map((e) => e.amount),
+    [300, -50, -150],
+  );
+  assert.equal(budget.summary("one").totalExpenses, 0);
+  assert.equal(budget.summary("two").balance, 0);
+});
+
+test("business margin and category spending only use the selected calendar period", () => {
+  const service = new BusinessService(
+    new MemoryRepository(emptyBusinessState),
+    runtime(),
+  );
+  const add = (
+    type: "income" | "expense",
+    amount: number,
+    category: string,
+    date = "2026-10-11",
+  ) =>
+    service.create("one", {
+      type,
+      amount,
+      category,
+      date,
+      description: category,
+    });
+  add("income", 1000, "Sales");
+  add("expense", 100, "Rent");
+  add("expense", 50, "rent");
+  add("expense", 50, "Supplies");
+  add("expense", 900, "Rent", "2026-09-30");
+  const result = service.analytics("one", "month", "2026-10-11");
+  assert.equal(result.margin, 80);
+  assert.equal(result.transactionCount, 4);
+  assert.deepEqual(result.expenseCategories, [
+    { category: "rent", amount: 150, share: 75 },
+    { category: "Supplies", amount: 50, share: 25 },
+  ]);
+  assert.equal(service.analytics("one", "month", "2026-09-11").margin, null);
+  assert.equal(
+    service.analytics("two", "month", "2026-10-11").transactionCount,
+    0,
+  );
+  const transaction = service
+    .list("one")
+    .find((t) => t.category === "Supplies")!;
+  service.update("one", transaction.id, { amount: 100 });
+  assert.equal(service.analytics("one", "month", "2026-10-11").margin, 75);
+});

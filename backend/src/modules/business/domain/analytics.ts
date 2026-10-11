@@ -43,7 +43,26 @@ export function businessAnalytics(
         Date.parse(t.date) >= from.getTime() &&
         Date.parse(t.date) < to.getTime(),
     );
-  const current = totals(inPeriod(start, end));
+  const periodTransactions = inPeriod(start, end);
+  const current = totals(periodTransactions);
+  const categories = new Map<
+    string,
+    { category: string; amountMinor: number }
+  >();
+  for (const transaction of periodTransactions.filter(
+    (t) => t.type === "expense",
+  )) {
+    const key = transaction.category.trim().toLowerCase();
+    const category = categories.get(key) ?? {
+      category: transaction.category.trim(),
+      amountMinor: 0,
+    };
+    category.amountMinor = sumMinor([
+      category.amountMinor,
+      transaction.amountMinor,
+    ]);
+    categories.set(key, category);
+  }
   const previous = totals(inPeriod(previousStart, start));
   const buckets =
     range === "month"
@@ -73,6 +92,20 @@ export function businessAnalytics(
       : Math.round(((value - before) / Math.abs(before)) * 10000) / 100;
   return {
     timeRange: range,
+    transactionCount: periodTransactions.length,
+    margin:
+      current.revenue > 0
+        ? Math.round((current.profit / current.revenue) * 10000) / 100
+        : null,
+    expenseCategories: [...categories.values()]
+      .sort((a, b) => b.amountMinor - a.amountMinor)
+      .map((item) => ({
+        category: item.category,
+        amount: fromMinor(item.amountMinor),
+        share: current.expenses
+          ? Math.round((item.amountMinor / current.expenses) * 10000) / 100
+          : 0,
+      })),
     from: start.toISOString(),
     toExclusive: end.toISOString(),
     totals: {

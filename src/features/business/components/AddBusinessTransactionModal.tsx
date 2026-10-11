@@ -26,18 +26,28 @@ export default function AddBusinessTransactionModal({
   isOpen,
   onClose,
   onSave,
+  transaction,
 }: {
+  transaction?: BusinessTransaction;
   isOpen: boolean;
   onClose: () => void;
   onSave: (transaction: Omit<BusinessTransaction, "id">) => Promise<void>;
 }) {
   const { t } = useLocale();
   const { currency } = useCurrency();
-  const [type, setType] = useState<"income" | "expense">("income");
-  const [amount, setAmount] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
-  const [category, setCategory] = useState("");
-  const [description, setDescription] = useState("");
+  const [type, setType] = useState<"income" | "expense">(
+    transaction?.type ?? "income",
+  );
+  const [amount, setAmount] = useState(
+    transaction ? String(transaction.amount) : "",
+  );
+  const [date, setDate] = useState(
+    transaction?.date.slice(0, 10) ?? new Date().toISOString().split("T")[0],
+  );
+  const [category, setCategory] = useState(transaction?.category ?? "");
+  const [description, setDescription] = useState(
+    transaction?.description ?? "",
+  );
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
 
@@ -84,7 +94,13 @@ export default function AddBusinessTransactionModal({
       <div className="fixed inset-0 flex items-center justify-center p-4">
         <Dialog.Panel className="ui-dialog bg-white p-6 w-full max-w-md dark:bg-slate-900">
           <Dialog.Title className="text-xl font-bold mb-4 flex items-center gap-2">
-            <PlusCircleIcon className="w-6 h-6 text-primary" />{t("Nouvelle Transaction Business")}</Dialog.Title>
+            <PlusCircleIcon className="w-6 h-6 text-primary" />
+            {t(
+              transaction
+                ? "Modifier une opération Business"
+                : "Nouvelle Transaction Business",
+            )}
+          </Dialog.Title>
 
           <div className="space-y-4">
             {error && (
@@ -107,7 +123,10 @@ export default function AddBusinessTransactionModal({
             </div>
 
             <div>
-              <label>{t("Montant (")}{currency})</label>
+              <label>
+                {t("Montant (")}
+                {currency})
+              </label>
               <AmountInput
                 type="number"
                 value={amount}
@@ -138,8 +157,13 @@ export default function AddBusinessTransactionModal({
                 required
               >
                 <option value="">{t("Sélectionnez une catégorie")}</option>
-                {categories.map((cat) => (
-                  <option key={t(cat)} value={t(cat)}>
+                {Array.from(
+                  new Set([
+                    ...categories,
+                    ...(transaction?.category ? [transaction.category] : []),
+                  ]),
+                ).map((cat) => (
+                  <option key={cat} value={cat}>
                     {t(cat)}
                   </option>
                 ))}
@@ -162,12 +186,16 @@ export default function AddBusinessTransactionModal({
               disabled={pending}
               onClick={onClose}
               className="px-4 py-2 text-gray-500 hover:text-gray-700 dark:text-slate-300 dark:hover:text-slate-100"
-            >{t("Annuler")}</button>
+            >
+              {t("Annuler")}
+            </button>
             <button
               disabled={pending}
               onClick={handleSubmit}
               className="ui-primary"
-            >{t("Enregistrer")}</button>
+            >
+              {t("Enregistrer")}
+            </button>
           </div>
         </Dialog.Panel>
       </div>

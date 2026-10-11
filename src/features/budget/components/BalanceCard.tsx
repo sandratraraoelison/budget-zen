@@ -17,7 +17,7 @@ export default function BalanceCard() {
     {
       title: t("Solde disponible"),
       value: balance,
-      description: t("Revenus moins dépenses"),
+      description: t("Après crédits et mises de côté"),
       featured: true,
       hidden: balanceHidden,
       toggle: () => setBalanceHidden((hidden) => !hidden),

@@ -61,7 +61,7 @@ test("offline pending transactions preserve the credit cash balance", async () =
   assert.equal(offline.creditBalance, 30);
 });
 
-function fixture(creditBalance = 0) {
+function fixture(creditBalance = 0, reserved = 0) {
   const values = new Map<string, unknown>();
   const store: JsonStore = {
     async read<T>(key: string) {
@@ -110,6 +110,16 @@ function fixture(creditBalance = 0) {
         return {
           balance: 100,
           creditBalance,
+          projectReserved: reserved,
+          savingsGoals: [
+            {
+              id: "goal",
+              name: "Savings",
+              target: 100,
+              current: reserved,
+              deadline: "2026-12-15",
+            },
+          ],
           totalIncome: 100,
           totalExpenses: 0,
           transactions: [
@@ -299,4 +309,21 @@ test("401 responses cannot fall back to cached financial data", async () => {
     (e) => e instanceof ApiError && e.status === 401,
   );
   assert.equal(await f.tokens.read(), null);
+});
+
+test("offline transactions preserve both savings and project reservations", async () => {
+  const f = fixture(30, 20);
+  const client = f.create();
+  await f.login(client);
+  assert.equal(
+    (await client.request<BudgetSummary>("budget/summary")).balance,
+    90,
+  );
+  f.offline();
+  client.setConnected(false);
+  await client.request("transactions", { method: "POST", body: input });
+  assert.equal(
+    (await client.request<BudgetSummary>("budget/summary")).balance,
+    77.5,
+  );
 });

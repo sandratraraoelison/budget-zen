@@ -1,3 +1,4 @@
+import { projectReservedMinor } from "../projects/domain/project";
 import { emptyProjectsState } from "../projects/domain/models";
 import { Module } from "@nestjs/common";
 import { RUNTIME } from "../../infrastructure/infrastructure.module";
@@ -28,9 +29,13 @@ import { sumMinor } from "../../shared/domain/money";
                 .credits.map((c) => creditCashBalance(c)),
             ),
           (user) => {
-            const state = new SqliteStateRepository(db, "projects", emptyProjectsState).read(user);
+            const state = new SqliteStateRepository(
+              db,
+              "projects",
+              emptyProjectsState,
+            ).read(user);
             return {
-              reservedMinor: sumMinor([state.spentDeletedProjectsMinor ?? 0, ...state.projects.map((p) => p.savedFundMinor ?? 0)]),
+              reservedMinor: projectReservedMinor(state),
               history: state.fundingHistory ?? [],
             };
           },

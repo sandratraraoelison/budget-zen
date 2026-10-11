@@ -59,9 +59,13 @@ export function useAccountResource<T>(
       if (document.visibilityState === "visible")
         void refresh(controller.signal);
     };
+    const changed = () => {
+      generation.current++;
+      resume();
+    };
     const timer = window.setInterval(resume, 15000);
     window.addEventListener("focus", resume);
-    window.addEventListener("account-updated", resume);
+    window.addEventListener("account-updated", changed);
     window.addEventListener("online", resume);
     document.addEventListener("visibilitychange", resume);
     return () => {
@@ -71,7 +75,7 @@ export function useAccountResource<T>(
       controller.abort();
       clearInterval(timer);
       window.removeEventListener("focus", resume);
-      window.removeEventListener("account-updated", resume);
+      window.removeEventListener("account-updated", changed);
       window.removeEventListener("online", resume);
       document.removeEventListener("visibilitychange", resume);
     };
@@ -103,7 +107,10 @@ export function useAccountResource<T>(
       .catch((error) => {
         if (mounted.current) {
           setError(error.message);
-          notify(error.message || "Impossible de terminer l’opération.", "error");
+          notify(
+            error.message || "Impossible de terminer l’opération.",
+            "error",
+          );
         }
       })
       .finally(() => {
