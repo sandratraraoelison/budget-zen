@@ -94,6 +94,10 @@ Les règles sont isolées dans `src/shared/domain` et les dossiers `features/*/d
 
 Les routes Next.js `/api/account/*` transmettent uniquement les opérations business et préférences autorisées. Elles gardent le JWT côté serveur, vérifient l’origine des mutations et affichent les erreurs de validation ou d’indisponibilité dans les formulaires.
 
+## Application mobile
+
+Le dossier [`mobile`](mobile/README.md) contient une application React Native / Expo SDK 57 indépendante, organisée par fonctionnalités avec des contrats de domaine, adaptateurs API et écrans séparés. Elle propose l’authentification, une synthèse budgétaire, l’ajout de transactions et la consultation des projets, crédits et statistiques business. Voir son README pour configurer l’URL de NestJS et lancer l’application sur téléphone.
+
 ## Accueil et authentification
 
 Les contrôles de l’accueil et de la navigation permettent de choisir le thème clair/sombre et la langue français/anglais. Le thème suit initialement le système ; la langue initiale est le français. Les choix sont conservés dans ce navigateur (`budgetzen-theme`, `budgetzen-language`) et synchronisés entre les onglets. Les montants, noms de devises et dates affichées suivent la langue choisie. Les textes de l’interface sont centralisés dans `src/features/settings/translations/en.ts` et utilisés avec `useLocale()` ; les données saisies et les identifiants métier conservent leur valeur. Les tests d’hydratation couvrent également les préférences sauvegardées et le changement des deux réglages.

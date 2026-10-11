@@ -51,3 +51,8 @@ next-env.d.ts
 !/.env.example
 
 /.next-validation/
+
+/mobile/node_modules/
+/mobile/.expo/
+/mobile/dist/
+!/mobile/.env.example
