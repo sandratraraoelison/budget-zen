@@ -1,4 +1,4 @@
-﻿# BudgetZen
+# BudgetZen
 
 Application Next.js 14 / React 18 / TypeScript pour gérer un budget, des crédits et des projets. Les montants sont exprimés en MGA.
 
@@ -57,3 +57,17 @@ Les tests utilisent le runner natif Node.js via `tsx`. Les données démo du pro
 Les budgets et crédits restent en mémoire et sont réinitialisés au rechargement. Seuls les projets sont sauvegardés dans le navigateur, sous la clé `projects`. Le mode démo ne constitue pas une authentification. Les statistiques et graphiques business affichent encore des données de démonstration ; le sélecteur de période ne les recalcule pas.
 
 Le build utilise `next/font/google` et nécessite l'accès à Google Fonts pour télécharger Inter.
+
+## Backend NestJS
+
+Une API persistante est disponible dans [`backend/`](backend/README.md), avec authentification JWT, isolation par utilisateur et modules m?tier ind?pendants de NestJS.
+
+```sh
+npm --prefix backend ci
+npm --prefix backend run setup
+npm run dev:backend
+```
+
+API : http://127.0.0.1:3001/api/v1 ? Swagger : http://127.0.0.1:3001/api/docs.
+
+Le backend n?cessite Node.js 24 ou sup?rieur. Le frontend utilise encore son ?tat local ; la connexion de ses providers ? cette API reste ? effectuer. La documentation du backend d?taille les routes, les r?gles m?tier et le stockage SQLite.

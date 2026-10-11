@@ -10,10 +10,11 @@
     "build": "nest build",
     "start": "node dist/main.js",
     "lint": "eslint . --max-warnings=0",
-    "format": "prettier --write src test *.json *.mjs",
+    "format": "prettier --write src test scripts *.json *.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "npm run build && tsc -p tsconfig.json && node --test --test-concurrency=1 dist-test/test/*.test.js",
-    "check": "npm run lint && npm run typecheck && npm test"
+    "check": "npm run lint && npm run typecheck && npm test",
+    "setup": "node scripts/setup.mjs"
   },
   "dependencies": {
     "@nestjs/common": "^11.2.7",
@@ -31,7 +32,6 @@
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.0",
-    "@nestjs/testing": "^11.2.7",
     "@types/express": "^5.0.0",
     "@types/node": "^24.0.0",
     "eslint": "^9.0.0",

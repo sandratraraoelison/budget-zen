@@ -3,7 +3,7 @@ import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import type { INestApplication } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { createApplication } from "../src/bootstrap";
@@ -96,6 +96,7 @@ before(async () => {
 });
 after(async () => {
   if (app) await app.close();
+  assert.equal(dirname(directory), tmpdir());
   rmSync(directory, { recursive: true, force: true });
 });
 
@@ -576,5 +577,81 @@ test("data and authentication survive closing and reopening the server", async (
     (await request<Credit[]>("credits", "GET", undefined, two.accessToken))
       .length,
     0,
+  );
+});
+
+test("demo sessions are distinct and cannot see existing users' data", async () => {
+  const demo = await request<Session>(
+    "auth/demo",
+    "POST",
+    undefined,
+    undefined,
+    201,
+  );
+  assert.equal(demo.user.isDemo, true);
+  assert.notEqual(demo.user.id, one.user.id);
+  assert.deepEqual(
+    await request("credits", "GET", undefined, demo.accessToken),
+    [],
+  );
+});
+
+test("concurrent payments cannot spend the same remaining credit twice", async () => {
+  const credit = await request<Credit>(
+    "credits",
+    "POST",
+    {
+      contact: "Concurrent",
+      initialAmount: 100,
+      type: "lent",
+      startDate: "2026-10-01",
+    },
+    one.accessToken,
+    201,
+  );
+  const pay = () =>
+    fetch(`${base}/api/v1/credits/${credit.id}/payments`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${one.accessToken}`,
+      },
+      body: JSON.stringify({ amount: 60, date: "2026-10-11" }),
+    });
+  const responses = await Promise.all([pay(), pay()]);
+  assert.deepEqual(
+    responses.map((response) => response.status).sort(),
+    [201, 400],
+  );
+  for (const response of responses) await response.text();
+  assert.equal(
+    (
+      await request<Credit>(
+        `credits/${credit.id}`,
+        "GET",
+        undefined,
+        one.accessToken,
+      )
+    ).remainingAmount,
+    40,
+  );
+});
+
+test("login attempts are rate limited", async () => {
+  for (let attempt = 0; attempt < 10; attempt++) {
+    await request(
+      "auth/login",
+      "POST",
+      { email: "unknown@example.com", password: "incorrect-password" },
+      undefined,
+      401,
+    );
+  }
+  await request(
+    "auth/login",
+    "POST",
+    { email: "unknown@example.com", password: "incorrect-password" },
+    undefined,
+    429,
   );
 });

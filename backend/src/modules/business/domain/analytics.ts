@@ -16,6 +16,10 @@ function totals(transactions: BusinessTransaction[]) {
   return { revenue, expenses, profit: revenue - expenses };
 }
 
+export function assertBusinessTotals(transactions: BusinessTransaction[]) {
+  totals(transactions);
+}
+
 export function businessAnalytics(
   transactions: BusinessTransaction[],
   range: TimeRange,

@@ -259,3 +259,50 @@ test("business analytics use real transactions and calendar periods across years
     1100,
   );
 });
+
+test("credit deadline statuses respect UTC calendar boundaries", () => {
+  const service = new CreditsService(
+    new MemoryRepository(emptyCreditsState),
+    runtime(),
+  );
+  const input = {
+    contact: "Alex",
+    initialAmount: 100,
+    type: "lent",
+    startDate: "2026-10-01",
+  } as const;
+  assert.equal(
+    service.create("user", { ...input, endDate: "2026-10-10" }).status,
+    "expired",
+  );
+  assert.equal(
+    service.create("user", { ...input, endDate: "2026-10-11" }).status,
+    "warning",
+  );
+  assert.equal(
+    service.create("user", { ...input, endDate: "2026-10-18" }).status,
+    "warning",
+  );
+  assert.equal(
+    service.create("user", { ...input, endDate: "2026-10-19" }).status,
+    "unpaid",
+  );
+});
+
+test("money rejects tiny amounts and aggregate overflow without poisoning persisted state", () => {
+  assert.throws(() => toMinor(1e-9), DomainError);
+  assert.throws(() => toMinor(1e-9, true), DomainError);
+  assert.throws(() => toMinor(1.0000000001), DomainError);
+  assert.equal(toMinor(19.99), 1999);
+  const service = new BudgetService(
+    new MemoryRepository(emptyBudgetState),
+    runtime(),
+  );
+  service.addTransaction("user", { ...expense, amount: 50000000000000 });
+  assert.throws(
+    () =>
+      service.addTransaction("user", { ...expense, amount: 50000000000000 }),
+    DomainError,
+  );
+  assert.equal(service.summary("user").transactions.length, 1);
+});

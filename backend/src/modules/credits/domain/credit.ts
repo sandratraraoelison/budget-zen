@@ -30,8 +30,22 @@ export function creditView(
     initialAmountMinor,
     payments,
   });
-  const days = credit.endDate
-    ? Math.ceil((Date.parse(credit.endDate) - today.getTime()) / 86400000)
+  // Deadlines use calendar days in UTC; yesterday is overdue even if less
+  // than 24 hours have elapsed, and a deadline today remains due today.
+  const todayStart = Date.UTC(
+    today.getUTCFullYear(),
+    today.getUTCMonth(),
+    today.getUTCDate(),
+  );
+  const deadline = credit.endDate ? new Date(credit.endDate) : undefined;
+  const days = deadline
+    ? (Date.UTC(
+        deadline.getUTCFullYear(),
+        deadline.getUTCMonth(),
+        deadline.getUTCDate(),
+      ) -
+        todayStart) /
+      86400000
     : undefined;
   const status =
     remaining === 0

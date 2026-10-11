@@ -7,7 +7,7 @@ export function toMinor(amount: number, allowZero = false): number {
     !Number.isFinite(amount) ||
     !Number.isSafeInteger(scaled) ||
     (allowZero ? amount < 0 : amount <= 0) ||
-    Math.abs(amount * 100 - scaled) > 0.000001
+    amount !== Number(amount.toFixed(2))
   ) {
     throw new DomainError(
       "VALIDATION",

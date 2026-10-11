@@ -29,6 +29,7 @@ export class BudgetService {
     const transaction = this.transaction(input);
     return this.repository.mutate(userId, (state) => {
       state.transactions.unshift(transaction);
+      budgetSummary(state);
       return transactionView(transaction);
     });
   }
@@ -47,6 +48,7 @@ export class BudgetService {
       state.transactions = state.transactions.map((t) =>
         t.id === id ? next : t,
       );
+      budgetSummary(state);
       return transactionView(next);
     });
   }
@@ -187,6 +189,7 @@ export class BudgetService {
       );
       const transaction = this.transaction(input);
       category.transactions.push(transaction);
+      budgetSummary(state);
       return transactionView(transaction);
     });
   }

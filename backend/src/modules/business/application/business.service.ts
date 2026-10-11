@@ -7,6 +7,7 @@ import { toMinor } from "../../../shared/domain/money";
 import { validateDateRange } from "../../../shared/domain/dates";
 import type { BusinessInput, BusinessState, TimeRange } from "../domain/models";
 import {
+  assertBusinessTotals,
   businessAnalytics,
   businessTransactionView,
 } from "../domain/analytics";
@@ -39,6 +40,7 @@ export class BusinessService {
         description: input.description,
       };
       state.transactions.unshift(transaction);
+      assertBusinessTotals(state.transactions);
       return businessTransactionView(transaction);
     });
   }
@@ -55,6 +57,7 @@ export class BusinessService {
       if (input.category !== undefined) transaction.category = input.category;
       if (input.description !== undefined)
         transaction.description = input.description;
+      assertBusinessTotals(state.transactions);
       return businessTransactionView(transaction);
     });
   }
