@@ -90,3 +90,25 @@
 }
 
 .budgetzen-datepicker { z-index: 80 !important; }
+
+/* Credit cards retain a distinct halo in both themes without enlarging the grid. */
+.credit-card {
+  min-width: 0;
+  border: 1px solid;
+  border-radius: 1rem;
+  padding: 1rem;
+  background-color: #fff;
+}
+.credit-card--borrowed {
+  border-color: rgb(239 68 68 / 35%);
+  background-image: radial-gradient(ellipse at top left, rgb(239 68 68 / 8%), transparent 70%);
+  box-shadow: 0 4px 20px rgb(239 68 68 / 10%);
+}
+.credit-card--lent {
+  border-color: rgb(16 185 129 / 35%);
+  background-image: radial-gradient(ellipse at top left, rgb(16 185 129 / 8%), transparent 70%);
+  box-shadow: 0 4px 20px rgb(16 185 129 / 10%);
+}
+.dark .credit-card { background-color: #0f172a; }
+.dark .credit-card--borrowed { box-shadow: 0 4px 24px rgb(239 68 68 / 14%); }
+.dark .credit-card--lent { box-shadow: 0 4px 24px rgb(16 185 129 / 14%); }

@@ -22,6 +22,7 @@ export interface Transaction extends TransactionInput {
   id: string;
 }
 export interface BudgetSummary {
+  creditBalance?: number;
   categoryOrder?: string[];
   hiddenCategories?: string[];
   customCategories?: {

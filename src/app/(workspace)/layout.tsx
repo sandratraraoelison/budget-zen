@@ -4,6 +4,7 @@ import { BudgetProvider } from "@/features/budget/context/BudgetProvider";
 import { CurrencyProvider } from "@/features/settings/CurrencyProvider";
 import { getAccountCurrency } from "@/features/settings/server/currency";
 import { CreditsProvider } from "@/features/credits/context/CreditsProvider";
+import WorkspaceReady from "@/components/ui/WorkspaceReady";
 
 export default async function WorkspaceLayout({
   children,
@@ -16,7 +17,7 @@ export default async function WorkspaceLayout({
   return (
     <CurrencyProvider key={user.id} initialCurrency={currency}>
       <CreditsProvider>
-        <BudgetProvider isDemo={user.isDemo}>{children}</BudgetProvider>
+        <BudgetProvider isDemo={user.isDemo}><WorkspaceReady>{children}</WorkspaceReady></BudgetProvider>
       </CreditsProvider>
     </CurrencyProvider>
   );

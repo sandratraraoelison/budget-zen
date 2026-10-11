@@ -68,3 +68,39 @@ test("an unpaid credit due today is a warning until the next UTC calendar day", 
   assert.equal(getCreditStatus(credit(), new Date("2026-10-04")), "warning");
   assert.equal(getCreditStatus(credit(), new Date("2026-10-03")), "unpaid");
 });
+
+test("bank payments subtract only principal from debt", () => {
+  const credit = reconcileCredit({
+    id: "bank",
+    contact: "Bank",
+    type: "borrowed",
+    initialAmount: 1000,
+    remainingAmount: 1000,
+    startDate: "2026-10-11",
+    payments: [],
+    bankLoan: {
+      rateType: "fixed",
+      annualRate: 12,
+      termMonths: 12,
+      firstPaymentDate: "2026-11-11",
+      insuranceMonthly: 2,
+      fees: 20,
+    },
+  });
+  const paid = recordPayment(credit, {
+    id: "payment",
+    amount: 112,
+    interest: 10,
+    insurance: 2,
+    date: "2026-11-11",
+  });
+  assert.equal(paid.remainingAmount, 900);
+  assert.throws(() =>
+    recordPayment(credit, {
+      id: "invalid",
+      amount: 10,
+      interest: 11,
+      date: "2026-11-11",
+    }),
+  );
+});

@@ -42,6 +42,7 @@ export interface Budget {
 }
 
 export interface AppState {
+  creditBalance?: number;
   categoryOrder?: string[];
   hiddenCategories?: string[];
   transactions: Transaction[];

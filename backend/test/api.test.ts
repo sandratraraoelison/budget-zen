@@ -755,3 +755,96 @@ test("offline client IDs are validated and repeated POSTs persist a single trans
     false,
   );
 });
+
+test("bank conditions and payment allocations persist through the authenticated API", async () => {
+  const before = await request<Summary>(
+    "budget/summary",
+    "GET",
+    undefined,
+    one.accessToken,
+  );
+  const bankLoan = {
+    rateType: "variable",
+    annualRate: 8,
+    termMonths: 24,
+    firstPaymentDate: "2026-11-11",
+    insuranceMonthly: 2,
+    fees: 10,
+  };
+  const loan = await request<Credit & { bankLoan: typeof bankLoan }>(
+    "credits",
+    "POST",
+    {
+      contact: "Bank API",
+      initialAmount: 500,
+      type: "borrowed",
+      startDate: "2026-10-11",
+      bankLoan,
+    },
+    one.accessToken,
+    201,
+  );
+  assert.deepEqual(loan.bankLoan, bankLoan);
+  assert.equal(
+    (
+      await request<Summary>(
+        "budget/summary",
+        "GET",
+        undefined,
+        one.accessToken,
+      )
+    ).balance,
+    before.balance + 490,
+  );
+  const paid = await request<Credit>(
+    `credits/${loan.id}/payments`,
+    "POST",
+    { amount: 55, interest: 3, insurance: 2, date: "2026-11-11" },
+    one.accessToken,
+    201,
+  );
+  assert.equal(paid.remainingAmount, 450);
+  assert.equal(
+    (
+      await request<Summary>(
+        "budget/summary",
+        "GET",
+        undefined,
+        one.accessToken,
+      )
+    ).balance,
+    before.balance + 435,
+  );
+  await request(
+    `credits/${loan.id}`,
+    "PATCH",
+    { bankLoan: { ...bankLoan, annualRate: 9 } },
+    one.accessToken,
+  );
+  await request(
+    `credits/${loan.id}`,
+    "PATCH",
+    { bankLoan: { ...bankLoan, termMonths: 0 } },
+    one.accessToken,
+    400,
+  );
+  await request(`credits/${loan.id}`, "GET", undefined, two.accessToken, 404);
+  await request(
+    `credits/${loan.id}`,
+    "DELETE",
+    undefined,
+    one.accessToken,
+    204,
+  );
+  assert.equal(
+    (
+      await request<Summary>(
+        "budget/summary",
+        "GET",
+        undefined,
+        one.accessToken,
+      )
+    ).balance,
+    before.balance,
+  );
+});

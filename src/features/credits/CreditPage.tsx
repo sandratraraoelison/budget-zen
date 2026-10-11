@@ -41,9 +41,17 @@ export default function CreditPage() {
         <SyncStatus loading={loading} pending={pending} error={error} />
         <PageHeader
           title={t("Crédits")}
-          description={t("Gardez une vue claire sur vos prêts, emprunts et remboursements.")}
+          description={t(
+            "Gardez une vue claire sur vos prêts, emprunts et remboursements.",
+          )}
           action={
-            <button disabled={loading || pending} onClick={() => setIsModalOpen(true)} className="ui-primary">{t("+ Nouveau Crédit")}</button>
+            <button
+              disabled={loading || pending}
+              onClick={() => setIsModalOpen(true)}
+              className="ui-primary"
+            >
+              {t("+ Nouveau Crédit")}
+            </button>
           }
         />
 
@@ -64,7 +72,9 @@ export default function CreditPage() {
             description={
               credits.length
                 ? t("Modifiez les filtres pour retrouver vos crédits.")
-                : t("Ajoutez un prêt ou un emprunt pour suivre son remboursement.")
+                : t(
+                    "Ajoutez un prêt ou un emprunt pour suivre son remboursement.",
+                  )
             }
             action={
               <button

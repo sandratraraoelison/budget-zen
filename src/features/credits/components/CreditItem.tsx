@@ -4,8 +4,10 @@ import { useLocale } from "@/features/settings/LocaleProvider";
 import { useCurrency } from "@/features/settings/CurrencyProvider";
 
 import { Credit, Payment } from "@/features/credits/types";
-import { PencilIcon, TrashIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/solid";
+import { bankProjection } from "../domain/bank-loan";
+import BankLoanDetails from "./BankLoanDetails";
 import AddPaymentModal from "./AddPaymentModal";
 import EditCreditModal from "./EditCreditModal";
 import { useState, useEffect } from "react";
@@ -76,104 +78,116 @@ export default function CreditItem({
   const dateStatus = getDateStatus();
   const isPaid = localCredit.remainingAmount === 0;
 
+  const borrowed = localCredit.type === "borrowed";
+  const progress =
+    localCredit.initialAmount > 0
+      ? Math.min(
+          100,
+          Math.max(
+            0,
+            (1 - localCredit.remainingAmount / localCredit.initialAmount) * 100,
+          ),
+        )
+      : 0;
   return (
     <div
-      className={`
-      ui-card relative
-      ${
-        localCredit.type === "borrowed"
-          ? "border-l-4 border-red-500"
-          : "border-l-4 border-green-500"
-      }
-    `}
+      className={`credit-card ${borrowed ? "credit-card--borrowed" : "credit-card--lent"}`}
     >
-      {/* Badge statut paiement */}
-      <div
-        className={`
-        absolute -top-3 right-2 px-3 py-1 rounded-full text-sm font-medium
-        ${
-          isPaid
-            ? "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300"
-            : "bg-yellow-100 text-yellow-800"
-        }
-      `}
-      >
-        {isPaid ? t("Payé") : t("Non payé")}
-      </div>
-
-      {/* Alerte date */}
-      {dateStatus && (
-        <div
-          className={`
-          mb-4 p-3 rounded-lg flex items-center gap-2
-          ${
-            dateStatus.status === "expired"
-              ? "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300"
-              : "bg-yellow-100 text-yellow-800"
-          }
-        `}
+      <div className="flex items-center justify-between gap-3">
+        <span
+          className={`inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-semibold ${borrowed ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-200" : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-200"}`}
         >
-          <ExclamationTriangleIcon className="w-5 h-5" />
-          <span className="text-sm">{dateStatus.message}</span>
-        </div>
-      )}
-
-      <div className="flex justify-between items-start mb-4">
-        <div className="pr-8">
-          <h3 className="text-xl font-semibold">
-            {localCredit.type === "borrowed" ? t("À : ") : t("De : ")}
-            <span className="text-primary">{localCredit.contact}</span>
-          </h3>
-
-          <div className="mt-2 space-y-1">
-            <p className="text-gray-600 dark:text-slate-300">{t("Initial:")}{" "}
-              <span className="font-medium">
-                {formatMoney(localCredit.initialAmount)}
-              </span>
-            </p>
-            <p
-              className={`text-lg ${
-                localCredit.remainingAmount > 0
-                  ? "text-red-600 dark:text-red-300"
-                  : "text-green-600 dark:text-green-300"
-              }`}
-            >{t("Restant:")}{formatMoney(localCredit.remainingAmount)}
-            </p>
-            <p className="text-sm text-gray-500 dark:text-slate-300">{t("Début:")}{" "}
-              {new Date(localCredit.startDate).toLocaleDateString(locale)}
-              {localCredit.endDate &&
-                ` • ${t("Fin:")} ${new Date(localCredit.endDate).toLocaleDateString(locale,
-                )}`}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex gap-2">
-          <button
-            onClick={() => setIsPaymentModalOpen(true)}
-            disabled={isPaid}
-            className="text-green-600 hover:text-green-700 dark:text-green-300 dark:hover:text-green-300"
-            title={t("Ajouter un paiement")}
+          <span aria-hidden="true">{borrowed ? "↙" : "↗"}</span>
+          {t(
+            localCredit.bankLoan
+              ? "Crédit bancaire"
+              : borrowed
+                ? "Emprunt"
+                : "Prêt",
+          )}
+        </span>
+        <div className="flex items-center gap-1">
+          <span
+            className={`mr-1 rounded-full px-2 py-1 text-xs font-medium ${isPaid ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"}`}
           >
-            <PlusIcon className="w-6 h-6" />
-          </button>
+            {isPaid ? t("Payé") : t("Non payé")}
+          </span>
           <button
             onClick={() => setIsEditing(true)}
-            className="text-blue-600 hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-300"
-            title="Modifier"
+            className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+            title={t("Modifier")}
+            aria-label={t("Modifier")}
           >
-            <PencilIcon className="w-6 h-6" />
+            <PencilIcon className="h-4 w-4" />
           </button>
           <button
             onClick={() => onDelete(localCredit.id)}
-            className="text-red-600 hover:text-red-700 dark:text-red-300 dark:hover:text-red-300"
+            className="rounded-lg p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-950"
             title={t("Supprimer")}
+            aria-label={t("Supprimer")}
           >
-            <TrashIcon className="w-6 h-6" />
+            <TrashIcon className="h-4 w-4" />
           </button>
         </div>
       </div>
+      <h3 className="mt-2 break-words text-lg font-semibold text-slate-900 dark:text-slate-100">
+        {localCredit.contact}
+      </h3>
+      <div className="mt-3">
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          {t(
+            borrowed
+              ? "Montant restant à rembourser"
+              : "Montant restant à récupérer",
+          )}
+        </p>
+        <p
+          className={`mt-1 break-words text-2xl font-bold tabular-nums ${borrowed ? "text-red-600 dark:text-red-300" : "text-emerald-600 dark:text-emerald-300"}`}
+        >
+          {formatMoney(localCredit.remainingAmount)}
+        </p>
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-1 text-xs text-slate-500 dark:text-slate-400">
+          <span>
+            {t("Initial:")} {formatMoney(localCredit.initialAmount)}
+          </span>
+          <span>{Math.round(progress)} %</span>
+        </div>
+        <div
+          className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"
+          role="progressbar"
+          aria-label={t("Ajouter un paiement")}
+          aria-valuenow={Math.round(progress)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+        >
+          <div
+            className={`h-full rounded-full ${borrowed ? "bg-red-500" : "bg-emerald-500"}`}
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      </div>
+      <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+        {t("Début:")}{" "}
+        {new Date(localCredit.startDate).toLocaleDateString(locale)}
+        {localCredit.endDate &&
+          ` • ${t("Fin:")} ${new Date(localCredit.endDate).toLocaleDateString(locale)}`}
+      </p>
+      {dateStatus && (
+        <div className="mt-2 flex items-center gap-2 text-xs text-amber-700 dark:text-amber-300">
+          <ExclamationTriangleIcon className="h-4 w-4 shrink-0" />
+          {dateStatus.message}
+        </div>
+      )}
+      {!isPaid && (
+        <button
+          onClick={() => setIsPaymentModalOpen(true)}
+          className={`mt-4 w-full rounded-xl px-3 py-2.5 text-sm font-semibold text-white transition-colors ${borrowed ? "bg-red-600 hover:bg-red-700" : "bg-emerald-600 hover:bg-emerald-700"}`}
+        >
+          {t(borrowed ? "Rembourser" : "Recevoir un remboursement")}
+        </button>
+      )}
 
+      <BankLoanDetails credit={localCredit} update={handleSave} />
       <EditCreditModal
         isOpen={isEditing}
         onClose={() => setIsEditing(false)}
@@ -185,14 +199,34 @@ export default function CreditItem({
         isOpen={isPaymentModalOpen}
         onClose={() => setIsPaymentModalOpen(false)}
         onSave={addPayment}
+        bank={!!localCredit.bankLoan}
+        suggestedPayment={
+          localCredit.bankLoan
+            ? {
+                monthly: bankProjection(
+                  localCredit.initialAmount,
+                  localCredit.bankLoan,
+                ).monthlyPayment,
+                interest:
+                  Math.round(
+                    (localCredit.remainingAmount *
+                      localCredit.bankLoan.annualRate) /
+                      12,
+                  ) / 100,
+                insurance: localCredit.bankLoan.insuranceMonthly,
+              }
+            : undefined
+        }
         maxAmount={localCredit.remainingAmount}
         minDate={localCredit.startDate}
       />
 
       {localCredit.payments.length > 0 && (
-        <div className="mt-4 pt-4 border-t">
-          <h4 className="font-semibold mb-3">{t("Historique des paiements :")}</h4>
-          <div className="space-y-2">
+        <details className="mt-3 border-t border-slate-200 pt-3 dark:border-slate-800">
+          <summary className="cursor-pointer text-sm font-medium">
+            {t("Historique des paiements :")}
+          </summary>
+          <div className="mt-3 space-y-2">
             {localCredit.payments.map((payment) => (
               <div
                 key={payment.id}
@@ -200,7 +234,8 @@ export default function CreditItem({
               >
                 <div>
                   <p className="font-medium text-gray-800 dark:text-slate-100">
-                    - {formatMoney(payment.amount)}
+                    {localCredit.type === "borrowed" ? "−" : "+"}{" "}
+                    {formatMoney(payment.amount)}
                   </p>
                   <p className="text-sm text-gray-500 mt-1 dark:text-slate-300">
                     {new Date(payment.date).toLocaleDateString(locale)}
@@ -214,7 +249,7 @@ export default function CreditItem({
               </div>
             ))}
           </div>
-        </div>
+        </details>
       )}
     </div>
   );

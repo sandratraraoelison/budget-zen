@@ -6,6 +6,9 @@ import type { Runtime } from "../../shared/application/state-repository";
 import { BudgetService } from "./application/budget.service";
 import { emptyBudgetState } from "./domain/models";
 import { BudgetController } from "./presentation/budget.controller";
+import { emptyCreditsState } from "../credits/domain/models";
+import { creditCashBalance } from "../credits/domain/credit";
+import { sumMinor } from "../../shared/domain/money";
 
 @Module({
   controllers: [BudgetController],
@@ -17,6 +20,12 @@ import { BudgetController } from "./presentation/budget.controller";
         new BudgetService(
           new SqliteStateRepository(db, "budget", emptyBudgetState),
           runtime,
+          (user) =>
+            sumMinor(
+              new SqliteStateRepository(db, "credits", emptyCreditsState)
+                .read(user)
+                .credits.map((c) => creditCashBalance(c)),
+            ),
         ),
     },
   ],

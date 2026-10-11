@@ -8,6 +8,34 @@ import { AppRouterContext } from "next/dist/shared/lib/app-router-context.shared
 import LandingPage from "../src/features/auth/LandingPage";
 import { AuthProvider } from "../src/features/auth/context/AuthProvider";
 import PreferencesProvider from "../src/features/settings/PreferencesProvider";
+import WorkspaceReady from "../src/components/ui/WorkspaceReady";
+
+test("account content with browser-only formatting mounts after a matching hydration", async () => {
+  function BrowserContent() { return <p>{typeof window === "undefined" ? "server" : "browser"}</p>; }
+  const view = <WorkspaceReady><BrowserContent /></WorkspaceReady>;
+  const html = renderToString(view);
+  assert.ok(html.includes('role="status"'));
+  assert.ok(!html.includes("<p>server</p>"));
+  const dom = new JSDOM(`<div id="root">${html}</div>`, { url: "http://localhost:3000" });
+  const original = Object.getOwnPropertyDescriptors(globalThis);
+  const globals = { window: dom.window, document: dom.window.document, IS_REACT_ACT_ENVIRONMENT: true };
+  for (const [key, value] of Object.entries(globals)) Object.defineProperty(globalThis, key, { configurable: true, value });
+  const errors: unknown[] = [];
+  let root: Root | undefined;
+  try {
+    const container = dom.window.document.getElementById("root")!;
+    await act(async () => { root = hydrateRoot(container, view, { onRecoverableError: error => errors.push(error) }); });
+    assert.deepEqual(errors, []);
+    assert.equal(container.textContent, "browser");
+  } finally {
+    if (root) await act(async () => root!.unmount());
+    dom.window.close();
+    for (const key of Object.keys(globals)) {
+      if (original[key]) Object.defineProperty(globalThis, key, original[key]);
+      else Reflect.deleteProperty(globalThis, key);
+    }
+  }
+});
 
 for (const mode of ["register", "login"] as const) {
   test(`the ${mode} landing hydrates its SVG icons and keeps the form interactive`, async () => {

@@ -1,9 +1,16 @@
 import { DomainError } from "../../../shared/domain/errors";
-import { fromMinor, sumMinor } from "../../../shared/domain/money";
+import { fromMinor, sumMinor, toMinor } from "../../../shared/domain/money";
 import type { Credit, Payment } from "./models";
 
 export function paidAmount(credit: Credit) {
-  return sumMinor(credit.payments.map((p) => p.amountMinor));
+  return sumMinor(
+    credit.payments.map(
+      (p) =>
+        p.amountMinor -
+        toMinor(p.interest ?? 0, true) -
+        toMinor(p.insurance ?? 0, true),
+    ),
+  );
 }
 export function remainingAmount(credit: Credit) {
   return credit.initialAmountMinor - paidAmount(credit);
@@ -62,4 +69,13 @@ export function creditView(
     payments: payments.map(paymentView),
     status,
   };
+}
+
+export function creditCashBalance(credit: Credit) {
+  return (
+    (credit.type === "borrowed" ? 1 : -1) *
+      (credit.initialAmountMinor -
+        sumMinor(credit.payments.map((p) => p.amountMinor))) -
+    toMinor(credit.bankLoan?.fees ?? 0, true)
+  );
 }

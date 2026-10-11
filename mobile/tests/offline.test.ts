@@ -47,7 +47,21 @@ test("a named Other category survives offline restart and replay", async () => {
   assert.equal([...f.remote.values()][0].customCategoryName, "Voyage");
   assert.equal(client.getStatus().pending, 0);
 });
-function fixture() {
+test("offline pending transactions preserve the credit cash balance", async () => {
+  const f = fixture(30);
+  const client = f.create();
+  await f.login(client);
+  const summary = await client.request<BudgetSummary>("budget/summary");
+  assert.equal(summary.balance, 130);
+  f.offline();
+  client.setConnected(false);
+  await client.request("transactions", { method: "POST", body: input });
+  const offline = await client.request<BudgetSummary>("budget/summary");
+  assert.equal(offline.balance, 117.5);
+  assert.equal(offline.creditBalance, 30);
+});
+
+function fixture(creditBalance = 0) {
   const values = new Map<string, unknown>();
   const store: JsonStore = {
     async read<T>(key: string) {
@@ -95,6 +109,7 @@ function fixture() {
       if (path === "budget/summary")
         return {
           balance: 100,
+          creditBalance,
           totalIncome: 100,
           totalExpenses: 0,
           transactions: [

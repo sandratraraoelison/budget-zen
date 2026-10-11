@@ -126,3 +126,11 @@ Ce test construit les deux applications, les lance sur des ports temporaires ave
 Dans Projets, le bouton d’import transfère les projets de ce navigateur vers le serveur, avec leurs dépenses, sans supprimer la sauvegarde locale. Les imports réussis sont marqués pour permettre une reprise après une erreur. Les anciennes transactions et crédits étaient uniquement en mémoire : ils ne peuvent pas être récupérés après fermeture ou rechargement de la page. Les nouveaux enregistrements sont persistés sur le serveur.
 
 Le mobile dispose d’un cache SQLite et d’une file de synchronisation pour les transactions et la devise. Consultez le README mobile pour les conditions d’utilisation hors ligne. Le backend accepte un `clientId` UUID optionnel sur les transactions ; ses recus persistants garantissent qu’un reenvoi identique ne cree pas de doublon.
+
+### Crédits bancaires
+
+Le web et le mobile proposent un crédit bancaire dans la création des crédits : banque, référence, taux annuel nominal, durée (1–600 mois), première échéance, assurance mensuelle et frais de dossier. Les types fixe, variable et renouvelable sont disponibles. Les conditions se modifient depuis le crédit ; le renouvelable permet des tirages supplémentaires dans la limite du capital restant utilisé.
+
+L'échéancier est une projection amortissable mensuelle au taux actuel, avec arrondis au centime et ajustement de la dernière échéance. Pour le variable et le renouvelable, il suppose un taux constant et aucun nouveau tirage. Il ne constitue pas le calendrier contractuel de la banque ni un TAEG. Les taux futurs, pénalités et reports ne sont pas calculés automatiquement.
+
+Chaque remboursement saisit le capital et, séparément, les intérêts et l'assurance réellement payés. La mensualité estimée peut préremplir ces champs ; ils restent modifiables. Le capital restant ne diminue que du capital remboursé ; le solde disponible reçoit le capital débloqué, puis diminue des frais de dossier et de la totalité des remboursements. Les frais de dossier sont considérés payés au déblocage. Les écritures bancaires utilisent l'API commune ; elles exigent une connexion sur mobile.

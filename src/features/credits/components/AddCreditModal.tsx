@@ -1,4 +1,6 @@
 "use client";
+import BankLoanFields, { newBankLoan } from "./BankLoanFields";
+import type { BankLoan } from "../domain/bank-loan";
 import DateInput from "@/components/ui/DateInput";
 import AmountInput from "@/components/ui/AmountInput";
 import { useLocale } from "@/features/settings/LocaleProvider";
@@ -10,6 +12,7 @@ import { useState } from "react";
 
 export type CreditInput = {
   contact: string;
+  bankLoan?: BankLoan;
   initialAmount: number;
   type: "borrowed" | "lent";
   startDate: string;
@@ -27,6 +30,7 @@ export default function AddCreditModal({
 }) {
   const { t } = useLocale();
   const { currency } = useCurrency();
+  const [bankLoan, setBankLoan] = useState<BankLoan | undefined>();
   const [contact, setContact] = useState("");
   const [amount, setAmount] = useState("");
   const [type, setType] = useState<"borrowed" | "lent">("borrowed");
@@ -46,6 +50,7 @@ export default function AddCreditModal({
     try {
       await onSave({
         contact,
+        ...(bankLoan ? { bankLoan } : {}),
         initialAmount: parseFloat(amount),
         type,
         startDate,
@@ -58,6 +63,7 @@ export default function AddCreditModal({
     setError("");
 
     // Reset Form
+    setBankLoan(undefined);
     setContact("");
     setAmount("");
     setType("borrowed");
@@ -69,14 +75,20 @@ export default function AddCreditModal({
   const handleSubmit = async () => {
     if (pending) return;
     setPending(true);
-    try { await saveForm(); } finally { setPending(false); }
+    try {
+      await saveForm();
+    } finally {
+      setPending(false);
+    }
   };
   return (
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center p-4">
         <Dialog.Panel className="ui-dialog bg-white p-6 w-full max-w-md dark:bg-slate-900">
-          <Dialog.Title className="text-xl font-bold mb-4">{t("Nouveau Crédit")}</Dialog.Title>
+          <Dialog.Title className="text-xl font-bold mb-4">
+            {t("Nouveau Crédit")}
+          </Dialog.Title>
 
           <div className="space-y-4">
             {error && (
@@ -85,7 +97,7 @@ export default function AddCreditModal({
               </p>
             )}
             <div>
-              <label>{t("Contact")}</label>
+              <label>{t(bankLoan ? "Banque" : "Contact")}</label>
               <input
                 type="text"
                 value={contact}
@@ -98,17 +110,29 @@ export default function AddCreditModal({
             <div>
               <label>{t("Type")}</label>
               <select
-                value={type}
-                onChange={(e) => setType(e.target.value as "borrowed" | "lent")}
+                value={bankLoan ? "bank" : type}
+                onChange={(e) => {
+                  if (e.target.value === "bank") {
+                    setType("borrowed");
+                    setBankLoan(newBankLoan(startDate));
+                  } else {
+                    setBankLoan(undefined);
+                    setType(e.target.value as "borrowed" | "lent");
+                  }
+                }}
                 className="w-full p-2 border rounded"
               >
-                <option value="borrowed">{t("J&apos;ai emprunté")}</option>
-                <option value="lent">{t("J&apos;ai prêté")}</option>
+                <option value="bank">{t("Crédit bancaire")}</option>
+                <option value="borrowed">{t("J’ai emprunté")}</option>
+                <option value="lent">{t("J’ai prêté")}</option>
               </select>
             </div>
 
             <div>
-              <label>{t("Montant initial (")}{currency})</label>
+              <label>
+                {t("Montant initial (")}
+                {currency})
+              </label>
               <AmountInput
                 type="number"
                 value={amount}
@@ -139,14 +163,29 @@ export default function AddCreditModal({
                 min={startDate}
               />
             </div>
+            {bankLoan && (
+              <BankLoanFields
+                value={bankLoan}
+                change={setBankLoan}
+                startDate={startDate}
+              />
+            )}
           </div>
 
           <div className="flex justify-end gap-2 mt-6">
             <button
               onClick={onClose}
               className="px-4 py-2 text-gray-500 hover:text-gray-700 dark:text-slate-300 dark:hover:text-slate-100"
-            >{t("Annuler")}</button>
-            <button disabled={pending} onClick={handleSubmit} className="ui-primary">{t("Enregistrer")}</button>
+            >
+              {t("Annuler")}
+            </button>
+            <button
+              disabled={pending}
+              onClick={handleSubmit}
+              className="ui-primary"
+            >
+              {t("Enregistrer")}
+            </button>
           </div>
         </Dialog.Panel>
       </div>

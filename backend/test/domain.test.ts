@@ -1,3 +1,5 @@
+import { creditCashBalance } from "../src/modules/credits/domain/credit";
+import { bankProjection } from "../src/modules/credits/domain/bank-loan";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import type {
@@ -13,6 +15,8 @@ import {
 } from "../src/modules/budget/domain/models";
 import { CreditsService } from "../src/modules/credits/application/credits.service";
 import { emptyCreditsState } from "../src/modules/credits/domain/models";
+import { remainingAmount } from "../src/modules/credits/domain/credit";
+import { sumMinor } from "../src/shared/domain/money";
 import { ProjectsService } from "../src/modules/projects/application/projects.service";
 import { emptyProjectsState } from "../src/modules/projects/domain/models";
 import { BusinessService } from "../src/modules/business/application/business.service";
@@ -46,6 +50,46 @@ const expense = {
   category: "nourriture",
   type: "expense",
 } as const;
+
+test("borrowed funds increase and lent funds reduce available funds and follow payments, edits and deletion", () => {
+  const repository = new MemoryRepository(emptyCreditsState);
+  const credits = new CreditsService(repository, runtime());
+  const budget = new BudgetService(
+    new MemoryRepository(emptyBudgetState),
+    runtime(),
+    (user) =>
+      sumMinor(
+        repository
+          .read(user)
+          .credits.map(
+            (c) => (c.type === "borrowed" ? 1 : -1) * remainingAmount(c),
+          ),
+      ),
+  );
+  budget.addTransaction("user", { ...expense, amount: 1000, type: "income" });
+  const borrowed = credits.create("user", {
+    contact: "Alex",
+    initialAmount: 300,
+    type: "borrowed",
+    startDate: "2026-10-11",
+  });
+  credits.create("user", {
+    contact: "Sam",
+    initialAmount: 200,
+    type: "lent",
+    startDate: "2026-10-11",
+  });
+  assert.equal(budget.summary("user").balance, 1100);
+  assert.equal(budget.summary("user").totalIncome, 1000);
+  assert.equal(budget.summary("user").totalExpenses, 0);
+  assert.equal(budget.summary("other").creditBalance, 0);
+  credits.addPayment("user", borrowed.id, { amount: 100, date: "2026-10-11" });
+  assert.equal(budget.summary("user").balance, 1000);
+  credits.update("user", borrowed.id, { initialAmount: 400 });
+  assert.equal(budget.summary("user").balance, 1100);
+  credits.remove("user", borrowed.id);
+  assert.equal(budget.summary("user").balance, 800);
+});
 
 test("named Other categories are reused without double counting and empty names fall back", () => {
   const service = new BudgetService(
@@ -511,4 +555,86 @@ test("category order persists per account and rejects missing or foreign categor
   );
   assert.throws(() => service.reorderCategories("another", order), DomainError);
   assert.deepEqual(service.summary("user").categoryOrder, order);
+});
+
+test("bank loan repayments separate principal from costs and preserve account isolation", () => {
+  const repository = new MemoryRepository(emptyCreditsState);
+  const service = new CreditsService(repository, runtime());
+  const bankLoan = {
+    rateType: "fixed" as const,
+    annualRate: 12,
+    termMonths: 12,
+    firstPaymentDate: "2026-11-11",
+    insuranceMonthly: 2,
+    fees: 20,
+  };
+  const loan = service.create("one", {
+    contact: "Bank",
+    initialAmount: 1000,
+    type: "borrowed",
+    startDate: "2026-10-11",
+    bankLoan,
+  });
+  assert.equal(creditCashBalance(repository.read("one").credits[0]!), 98000);
+  const paid = service.addPayment("one", loan.id, {
+    amount: 112,
+    interest: 10,
+    insurance: 2,
+    date: "2026-11-11",
+  });
+  assert.equal(paid.remainingAmount, 900);
+  assert.equal(creditCashBalance(repository.read("one").credits[0]!), 86800);
+  assert.throws(() =>
+    service.addPayment("one", loan.id, {
+      amount: 10,
+      interest: 11,
+      date: "2026-11-11",
+    }),
+  );
+  assert.throws(() =>
+    service.addPayment("two", loan.id, { amount: 10, date: "2026-11-11" }),
+  );
+  assert.equal(service.list("two").length, 0);
+  service.removePayment("one", loan.id, paid.payments[0]!.id);
+  assert.equal(service.get("one", loan.id).remainingAmount, 1000);
+  assert.equal(
+    bankProjection(1200, { ...bankLoan, annualRate: 0 }).monthlyPayment,
+    102,
+  );
+});
+test("revolving credit allows new draws after repayments but enforces the outstanding limit", () => {
+  const repository = new MemoryRepository(emptyCreditsState);
+  const service = new CreditsService(repository, runtime());
+  const bankLoan = {
+    rateType: "revolving" as const,
+    annualRate: 15,
+    termMonths: 12,
+    firstPaymentDate: "2026-11-11",
+    insuranceMonthly: 0,
+    fees: 0,
+    creditLimit: 1000,
+  };
+  const loan = service.create("one", {
+    contact: "Bank",
+    initialAmount: 1000,
+    type: "borrowed",
+    startDate: "2026-10-11",
+    bankLoan,
+  });
+  service.addPayment("one", loan.id, { amount: 500, date: "2026-11-11" });
+  assert.equal(
+    service.update("one", loan.id, { initialAmount: 1500 }).remainingAmount,
+    1000,
+  );
+  assert.throws(() => service.update("one", loan.id, { initialAmount: 1501 }));
+  assert.equal(service.get("one", loan.id).remainingAmount, 1000);
+  assert.throws(() =>
+    service.create("one", {
+      contact: "Bank",
+      initialAmount: 1001,
+      type: "borrowed",
+      startDate: "2026-10-11",
+      bankLoan,
+    }),
+  );
 });

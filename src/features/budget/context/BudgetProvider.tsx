@@ -16,6 +16,8 @@ import type {
   Transaction,
 } from "../types";
 import { createDemoState } from "../data/demo";
+import { sumAmounts } from "@/shared/domain/money";
+import { useCredits } from "@/features/credits/context/CreditsProvider";
 import { budgetReducer, type BudgetAction } from "../domain/reducer";
 import {
   getCategorySpending as selectCategorySpending,
@@ -48,6 +50,7 @@ export const BudgetProvider = ({
   );
   const load = useCallback(loadBudget, []);
   const remote = useAccountResource(load, !isDemo);
+  const creditResource = useCredits();
   const state = isDemo ? localState : (remote.data ?? localState);
   const currentState = useRef(state);
   currentState.current = state;
@@ -65,10 +68,32 @@ export const BudgetProvider = ({
       await saveAction(action);
     });
   };
-  const { totalIncome, totalExpenses, balance } = useMemo(
+  const {
+    totalIncome,
+    totalExpenses,
+    balance: ledgerBalance,
+  } = useMemo(
     () => getTransactionTotals(state.transactions),
     [state.transactions],
   );
+  const creditBalance =
+    creditResource.loading || creditResource.error
+      ? (state.creditBalance ?? 0)
+      : creditResource.credits.reduce(
+          (total, credit) =>
+            total +
+            ((credit.type === "borrowed" ? 1 : -1) *
+              (Math.round(credit.initialAmount * 100) -
+                credit.payments.reduce(
+                  (paid, payment) => paid + Math.round(payment.amount * 100),
+                  0,
+                ))) /
+              100 -
+            (credit.bankLoan?.fees ?? 0),
+          0,
+        );
+  const balance =
+    (Math.round(ledgerBalance * 100) + Math.round(creditBalance * 100)) / 100;
   const addTransaction = (transaction: Transaction) =>
     dispatch({ type: "transaction/add", transaction });
   const removeTransaction = (id: string) =>
@@ -108,7 +133,7 @@ export const BudgetProvider = ({
   return (
     <BudgetContext.Provider
       value={{
-        reorderCategories: ids => dispatch({ type: "category/order", ids }),
+        reorderCategories: (ids) => dispatch({ type: "category/order", ids }),
         saveCategory: (category, create = false) =>
           dispatch({
             type: create ? "category/add" : "category/update",

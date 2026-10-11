@@ -43,6 +43,7 @@ next-env.d.ts
 # NestJS backend
 /backend/node_modules/
 /backend/dist/
+/backend/dist-dev/
 /backend/dist-test/
 /backend/data/
 /backend/coverage/

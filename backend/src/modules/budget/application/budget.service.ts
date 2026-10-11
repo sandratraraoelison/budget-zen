@@ -3,7 +3,7 @@ import type {
   StateRepository,
 } from "../../../shared/application/state-repository";
 import { DomainError, required } from "../../../shared/domain/errors";
-import { toMinor } from "../../../shared/domain/money";
+import { fromMinor, toMinor } from "../../../shared/domain/money";
 import { validateDateRange } from "../../../shared/domain/dates";
 import {
   CATEGORIES,
@@ -20,6 +20,9 @@ export class BudgetService {
   constructor(
     private readonly repository: StateRepository<BudgetState>,
     private readonly runtime: Runtime,
+    private readonly creditBalanceMinor: (
+      userId: string,
+    ) => number = () => 0,
   ) {}
 
   reorderCategories(userId: string, ids: string[]) {
@@ -47,7 +50,18 @@ export class BudgetService {
     });
   }
   summary(userId: string) {
-    return budgetSummary(this.repository.read(userId));
+    const summary = budgetSummary(this.repository.read(userId));
+    const creditBalance = fromMinor(
+      this.creditBalanceMinor(userId),
+    );
+    return {
+      ...summary,
+      creditBalance,
+      balance: fromMinor(
+        Math.round(summary.balance * 100) +
+          Math.round(creditBalance * 100),
+      ),
+    };
   }
 
   addTransaction(userId: string, input: TransactionInput) {

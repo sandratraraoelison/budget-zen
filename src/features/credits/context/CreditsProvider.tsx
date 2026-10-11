@@ -16,6 +16,7 @@ const config: CollectionConfig<Credit> = {
     contact: c.contact,
     initialAmount: c.initialAmount,
     type: c.type,
+    ...(c.bankLoan ? { bankLoan: c.bankLoan } : {}),
     startDate: c.startDate,
     ...(c.endDate ? { endDate: c.endDate } : {}),
   }),
@@ -24,6 +25,8 @@ const config: CollectionConfig<Credit> = {
     items: (c) => c.payments,
     body: (p) => ({
       amount: p.amount,
+      ...(p.interest !== undefined ? { interest: p.interest } : {}),
+      ...(p.insurance !== undefined ? { insurance: p.insurance } : {}),
       date: p.date,
       ...(p.note ? { note: p.note } : {}),
     }),
