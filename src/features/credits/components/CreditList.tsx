@@ -1,4 +1,5 @@
 "use client";
+import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { Credit } from "@/features/credits/types";
 import CreditItem from "./CreditItem";
@@ -9,8 +10,9 @@ interface CreditListProps {
 }
 
 export default function CreditList({ credits, setCredits }: CreditListProps) {
+  const { t } = useLocale();
   const deleteCredit = (id: string) => {
-    if (window.confirm("Êtes-vous sûr de vouloir supprimer ce crédit ?")) {
+    if (window.confirm(t("Êtes-vous sûr de vouloir supprimer ce crédit ?"))) {
       setCredits((prev) => prev.filter((credit) => credit.id !== id));
     }
   };

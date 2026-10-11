@@ -18,7 +18,7 @@ export default async function RootLayout({
 }) {
   const user = await getCurrentUser();
   return (
-    <html lang="fr">
+    <html lang="fr" suppressHydrationWarning>
       <body className={inter.className}>
         <Providers initialUser={user}>{children}</Providers>
       </body>

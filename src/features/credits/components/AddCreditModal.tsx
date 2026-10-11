@@ -1,4 +1,5 @@
 "use client";
+import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useCurrency } from "@/features/settings/CurrencyProvider";
 
@@ -22,6 +23,7 @@ export default function AddCreditModal({
   onClose: () => void;
   onSave: (credit: CreditInput) => void;
 }) {
+  const { t } = useLocale();
   const { currency } = useCurrency();
   const [contact, setContact] = useState("");
   const [amount, setAmount] = useState("");
@@ -34,7 +36,7 @@ export default function AddCreditModal({
 
   const handleSubmit = () => {
     if (!contact || !amount || !startDate) {
-      setError("Complétez les champs obligatoires.");
+      setError(t("Complétez les champs obligatoires."));
       return;
     }
 
@@ -65,19 +67,17 @@ export default function AddCreditModal({
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <Dialog.Panel className="ui-dialog bg-white p-6 w-full max-w-md">
-          <Dialog.Title className="text-xl font-bold mb-4">
-            Nouveau Crédit
-          </Dialog.Title>
+        <Dialog.Panel className="ui-dialog bg-white p-6 w-full max-w-md dark:bg-slate-900">
+          <Dialog.Title className="text-xl font-bold mb-4">{t("Nouveau Crédit")}</Dialog.Title>
 
           <div className="space-y-4">
             {error && (
-              <p role="alert" className="text-red-600">
-                {error}
+              <p role="alert" className="text-red-600 dark:text-red-300">
+                {t(error)}
               </p>
             )}
             <div>
-              <label>Contact</label>
+              <label>{t("Contact")}</label>
               <input
                 type="text"
                 value={contact}
@@ -88,19 +88,19 @@ export default function AddCreditModal({
             </div>
 
             <div>
-              <label>Type</label>
+              <label>{t("Type")}</label>
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value as "borrowed" | "lent")}
                 className="w-full p-2 border rounded"
               >
-                <option value="borrowed">J&apos;ai emprunté</option>
-                <option value="lent">J&apos;ai prêté</option>
+                <option value="borrowed">{t("J&apos;ai emprunté")}</option>
+                <option value="lent">{t("J&apos;ai prêté")}</option>
               </select>
             </div>
 
             <div>
-              <label>Montant initial ({currency})</label>
+              <label>{t("Montant initial (")}{currency})</label>
               <input
                 type="number"
                 value={amount}
@@ -113,7 +113,7 @@ export default function AddCreditModal({
             </div>
 
             <div>
-              <label>Date de début</label>
+              <label>{t("Date de début")}</label>
               <input
                 type="date"
                 value={startDate}
@@ -124,7 +124,7 @@ export default function AddCreditModal({
             </div>
 
             <div>
-              <label>Date de fin (optionnel)</label>
+              <label>{t("Date de fin (optionnel)")}</label>
               <input
                 type="date"
                 value={endDate}
@@ -138,13 +138,9 @@ export default function AddCreditModal({
           <div className="flex justify-end gap-2 mt-6">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-gray-500 hover:text-gray-700"
-            >
-              Annuler
-            </button>
-            <button onClick={handleSubmit} className="ui-primary">
-              Enregistrer
-            </button>
+              className="px-4 py-2 text-gray-500 hover:text-gray-700 dark:text-slate-300 dark:hover:text-slate-100"
+            >{t("Annuler")}</button>
+            <button onClick={handleSubmit} className="ui-primary">{t("Enregistrer")}</button>
           </div>
         </Dialog.Panel>
       </div>

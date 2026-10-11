@@ -1,4 +1,5 @@
 "use client";
+import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useBudget } from "@/features/budget/context/BudgetProvider";
 import { useMemo } from "react";
@@ -14,6 +15,7 @@ import {
 } from "recharts";
 
 export default function ForecastCard() {
+  const { t } = useLocale();
   const { state } = useBudget();
   const { formatMoney, currency } = useCurrency();
   const forecastData = useMemo(
@@ -23,16 +25,10 @@ export default function ForecastCard() {
 
   return (
     <div className="ui-card">
-      <h2 className="text-xl font-semibold mb-4">Prévisions de dépenses</h2>
-      <p className="mb-4 text-sm text-gray-500">
-        Estimation basée sur la moyenne des mois terminés, sans hypothèse de
-        croissance.
-      </p>
+      <h2 className="text-xl font-semibold mb-4">{t("Prévisions de dépenses")}</h2>
+      <p className="mb-4 text-sm text-gray-500 dark:text-slate-300">{t("Estimation basée sur la moyenne des mois terminés, sans hypothèse de croissance.")}</p>
       {forecastData.length === 0 && (
-        <p className="text-gray-500">
-          Enregistrez des dépenses sur un mois terminé pour obtenir une
-          estimation.
-        </p>
+        <p className="text-gray-500 dark:text-slate-300">{t("Enregistrez des dépenses sur un mois terminé pour obtenir une estimation.")}</p>
       )}
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">

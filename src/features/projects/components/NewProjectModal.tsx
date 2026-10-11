@@ -1,4 +1,5 @@
 "use client";
+import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useCurrency } from "@/features/settings/CurrencyProvider";
 
@@ -16,6 +17,7 @@ type Props = {
 };
 
 export default function NewProjectModal({ isOpen, onClose, onSave }: Props) {
+  const { t } = useLocale();
   const { currency } = useCurrency();
   const [name, setName] = useState("");
   const [initialFund, setInitialFund] = useState("");
@@ -46,19 +48,17 @@ export default function NewProjectModal({ isOpen, onClose, onSave }: Props) {
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <Dialog.Panel className="ui-dialog bg-white p-6 w-full max-w-md">
-          <Dialog.Title className="text-xl font-bold mb-4">
-            Nouveau Projet
-          </Dialog.Title>
+        <Dialog.Panel className="ui-dialog bg-white p-6 w-full max-w-md dark:bg-slate-900">
+          <Dialog.Title className="text-xl font-bold mb-4">{t("Nouveau Projet")}</Dialog.Title>
 
           <div className="space-y-4">
             {error && (
-              <p role="alert" className="text-red-600">
-                {error}
+              <p role="alert" className="text-red-600 dark:text-red-300">
+                {t(error)}
               </p>
             )}
             <div>
-              <label className="block mb-1">Nom du projet *</label>
+              <label className="block mb-1">{t("Nom du projet *")}</label>
               <input
                 type="text"
                 value={name}
@@ -69,8 +69,7 @@ export default function NewProjectModal({ isOpen, onClose, onSave }: Props) {
             </div>
 
             <div>
-              <label className="block mb-1">
-                Budget initial ({currency}) *
+              <label className="block mb-1">{t("Budget initial (")}{currency}) *
               </label>
               <input
                 type="number"
@@ -84,7 +83,7 @@ export default function NewProjectModal({ isOpen, onClose, onSave }: Props) {
             </div>
 
             <div>
-              <label className="block mb-1">Date de commencement</label>
+              <label className="block mb-1">{t("Date de commencement")}</label>
               <input
                 type="date"
                 value={startDate}
@@ -98,17 +97,13 @@ export default function NewProjectModal({ isOpen, onClose, onSave }: Props) {
           <div className="flex justify-end gap-2 mt-6">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-gray-500 hover:text-gray-700"
-            >
-              Annuler
-            </button>
+              className="px-4 py-2 text-gray-500 hover:text-gray-700 dark:text-slate-300 dark:hover:text-slate-100"
+            >{t("Annuler")}</button>
             <button
               onClick={handleSubmit}
               className="ui-primary disabled:opacity-50"
               disabled={!name || !initialFund}
-            >
-              Créer le projet
-            </button>
+            >{t("Créer le projet")}</button>
           </div>
         </Dialog.Panel>
       </div>

@@ -1,4 +1,5 @@
 "use client";
+import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useState } from "react";
 import CreditList from "@/features/credits/components/CreditList";
@@ -10,9 +11,11 @@ import Navigation from "@/components/Navigation";
 import { filterCredits } from "./domain/filterCredits";
 import SearchFilter from "@/features/credits/components/SearchFilter";
 import { reconcileCredit } from "./domain/credit";
+import { useCredits } from "./context/CreditsProvider";
 
 export default function CreditPage() {
-  const [credits, setCredits] = useState<Credit[]>([]);
+  const { t } = useLocale();
+  const { credits, setCredits } = useCredits();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<CreditStatus | "all">("all");
   const filteredCredits = filterCredits(credits, searchTerm, statusFilter);
@@ -35,12 +38,10 @@ export default function CreditPage() {
       <Navigation />
       <main id="main-content" className="workspace-main" tabIndex={-1}>
         <PageHeader
-          title="Crédits"
-          description="Gardez une vue claire sur vos prêts, emprunts et remboursements."
+          title={t("Crédits")}
+          description={t("Gardez une vue claire sur vos prêts, emprunts et remboursements.")}
           action={
-            <button onClick={() => setIsModalOpen(true)} className="ui-primary">
-              + Nouveau Crédit
-            </button>
+            <button onClick={() => setIsModalOpen(true)} className="ui-primary">{t("+ Nouveau Crédit")}</button>
           }
         />
 
@@ -55,13 +56,13 @@ export default function CreditPage() {
           <EmptyState
             title={
               credits.length
-                ? "Aucun crédit trouvé"
-                : "Votre suivi des crédits commence ici"
+                ? t("Aucun crédit trouvé")
+                : t("Votre suivi des crédits commence ici")
             }
             description={
               credits.length
-                ? "Modifiez les filtres pour retrouver vos crédits."
-                : "Ajoutez un prêt ou un emprunt pour suivre son remboursement."
+                ? t("Modifiez les filtres pour retrouver vos crédits.")
+                : t("Ajoutez un prêt ou un emprunt pour suivre son remboursement.")
             }
             action={
               <button
@@ -76,8 +77,8 @@ export default function CreditPage() {
                 className="ui-primary"
               >
                 {credits.length
-                  ? "Réinitialiser les filtres"
-                  : "Ajouter un crédit"}
+                  ? t("Réinitialiser les filtres")
+                  : t("Ajouter un crédit")}
               </button>
             }
           />

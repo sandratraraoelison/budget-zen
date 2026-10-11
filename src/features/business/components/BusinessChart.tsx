@@ -1,4 +1,5 @@
 "use client";
+import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useCurrency } from "@/features/settings/CurrencyProvider";
 import type { BusinessAnalytics } from "../types";
@@ -19,6 +20,7 @@ export default function BusinessChart({
 }: {
   data: BusinessAnalytics["chart"];
 }) {
+  const { t } = useLocale();
   const { formatMoney, currency } = useCurrency();
   if (
     !data.length ||
@@ -26,8 +28,8 @@ export default function BusinessChart({
   )
     return (
       <EmptyState
-        title="Aucune activité sur cette période"
-        description="Ajoutez une transaction pour visualiser les tendances de votre activité."
+        title={t("Aucune activité sur cette période")}
+        description={t("Ajoutez une transaction pour visualiser les tendances de votre activité.")}
       />
     );
   return (
@@ -51,14 +53,14 @@ export default function BusinessChart({
             dataKey="revenue"
             stroke="#0f766e"
             strokeWidth={2}
-            name="Chiffre d'affaires"
+            name={t("Chiffre d'affaires")}
           />
           <Line
             type="monotone"
             dataKey="expenses"
             stroke="#ef4444"
             strokeWidth={2}
-            name="Dépenses"
+            name={t("Dépenses")}
           />
         </LineChart>
       </ResponsiveContainer>

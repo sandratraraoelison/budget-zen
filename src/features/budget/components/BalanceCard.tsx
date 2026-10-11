@@ -1,4 +1,5 @@
 "use client";
+import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useState } from "react";
 import { ArrowDownLeft, ArrowUpRight, Wallet, Eye, EyeOff } from "lucide-react";
@@ -6,37 +7,38 @@ import { useCurrency } from "@/features/settings/CurrencyProvider";
 import { useBudget } from "../context/BudgetProvider";
 
 export default function BalanceCard() {
+  const { t } = useLocale();
   const { formatMoney } = useCurrency();
   const { totalIncome, totalExpenses, balance } = useBudget();
   const [balanceHidden, setBalanceHidden] = useState(true);
   const [incomeHidden, setIncomeHidden] = useState(true);
   const cards = [
     {
-      title: "Solde disponible",
+      title: t("Solde disponible"),
       value: balance,
-      description: "Revenus moins dépenses",
+      description: t("Revenus moins dépenses"),
       icon: Wallet,
       featured: true,
       hidden: balanceHidden,
       toggle: () => setBalanceHidden((hidden) => !hidden),
       amountId: "available-balance",
-      amountLabel: "le solde disponible",
+      amountLabel: t("le solde disponible"),
     },
     {
-      title: "Total des revenus",
+      title: t("Total des revenus"),
       value: totalIncome,
-      description: "Toutes vos entrées d’argent",
+      description: t("Toutes vos entrées d’argent"),
       icon: ArrowDownLeft,
       featured: false,
       hidden: incomeHidden,
       toggle: () => setIncomeHidden((hidden) => !hidden),
       amountId: "total-income",
-      amountLabel: "les revenus",
+      amountLabel: t("les revenus"),
     },
     {
-      title: "Total des dépenses",
+      title: t("Total des dépenses"),
       value: totalExpenses,
-      description: "Toutes vos sorties d’argent",
+      description: t("Toutes vos sorties d’argent"),
       icon: ArrowUpRight,
       featured: false,
     },
@@ -44,7 +46,7 @@ export default function BalanceCard() {
   return (
     <section
       className="grid gap-4 sm:grid-cols-3"
-      aria-label="Synthèse des finances"
+      aria-label={t("Synthèse des finances")}
     >
       {cards.map(
         ({
@@ -60,22 +62,22 @@ export default function BalanceCard() {
         }) => (
           <div
             key={title}
-            className={`min-w-0 rounded-2xl p-5 sm:p-6 ${featured ? "bg-teal-900 text-white shadow-sm" : "border border-slate-200/80 bg-white"}`}
+            className={`min-w-0 rounded-2xl p-5 sm:p-6 ${featured ? "bg-teal-900 text-white shadow-sm" : "border border-slate-200/80 bg-white dark:border-slate-700/80 dark:bg-slate-900"}`}
           >
             <div className="flex items-center justify-between gap-2">
               <p
-                className={`text-sm font-medium ${featured ? "text-teal-100" : "text-slate-500"}`}
+                className={`text-sm font-medium ${featured ? "text-teal-100" : "text-slate-500 dark:text-slate-300"}`}
               >
-                {title}
+                {t(title)}
               </p>
               {toggle ? (
                 <button
                   type="button"
                   onClick={toggle}
-                  aria-label={`${hidden ? "Afficher" : "Masquer"} ${amountLabel}`}
+                  aria-label={`${hidden ? t("Afficher") : t("Masquer")} ${t(amountLabel!)}`}
                   aria-pressed={hidden}
                   aria-controls={amountId}
-                  className={`inline-flex h-10 w-10 items-center justify-center rounded-lg ${featured ? "text-teal-100 hover:bg-white/10" : "text-slate-400 hover:bg-slate-100 hover:text-slate-700"}`}
+                  className={`inline-flex h-10 w-10 items-center justify-center rounded-lg ${featured ? "text-teal-100 hover:bg-white/10 dark:hover:bg-slate-900/10" : "text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"}`}
                 >
                   {hidden ? (
                     <EyeOff size={20} aria-hidden="true" />
@@ -86,7 +88,7 @@ export default function BalanceCard() {
               ) : (
                 <Icon
                   size={20}
-                  className={featured ? "text-teal-200" : "text-slate-400"}
+                  className={featured ? "text-teal-200" : "text-slate-400 dark:text-slate-400"}
                   aria-hidden="true"
                 />
               )}
@@ -100,7 +102,7 @@ export default function BalanceCard() {
                 <>
                   <span aria-hidden="true">••••••</span>
                   <span className="sr-only">
-                    {featured ? "Solde masqué" : "Revenus masqués"}
+                    {featured ? t("Solde masqué") : t("Revenus masqués")}
                   </span>
                 </>
               ) : (
@@ -108,9 +110,9 @@ export default function BalanceCard() {
               )}
             </p>
             <p
-              className={`mt-2 text-xs ${featured ? "text-teal-100" : "text-slate-500"}`}
+              className={`mt-2 text-xs ${featured ? "text-teal-100" : "text-slate-500 dark:text-slate-300"}`}
             >
-              {description}
+              {t(description)}
             </p>
           </div>
         ),

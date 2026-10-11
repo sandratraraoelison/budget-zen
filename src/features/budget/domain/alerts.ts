@@ -4,6 +4,8 @@ import { sumAmounts } from "../../../shared/domain/money";
 export const generateAlerts = (
   newState: AppState,
   formatMoney = (amount: number) => amount.toFixed(2),
+  message = (text: string, values: Record<string, string | number>) =>
+    text.replace(/\{(\w+)\}/g, (match, key: string) => String(values[key] ?? match)),
 ) => {
   const alerts: string[] = [];
 
@@ -16,13 +18,11 @@ export const generateAlerts = (
   // Global budget alerts
   if (totalBudgetSpent > totalBudgetLimit) {
     alerts.push(
-      `🚨 Budget global dépassé : ${formatMoney(totalBudgetSpent)}/${formatMoney(totalBudgetLimit)}`,
+      message("🚨 Budget global dépassé : {spent}/{limit}", { spent: formatMoney(totalBudgetSpent), limit: formatMoney(totalBudgetLimit) }),
     );
   } else if (budgetGlobalPercentage >= 90) {
     alerts.push(
-      `⚠️ Budget global à ${budgetGlobalPercentage.toFixed(
-        0,
-      )}% : ${formatMoney(totalBudgetSpent)}/${formatMoney(totalBudgetLimit)}`,
+      message("⚠️ Budget global à {percentage}% : {spent}/{limit}", { percentage: budgetGlobalPercentage.toFixed(0), spent: formatMoney(totalBudgetSpent), limit: formatMoney(totalBudgetLimit) }),
     );
   }
 
@@ -32,10 +32,10 @@ export const generateAlerts = (
 
     if (spent > budget.limit) {
       alerts.push(
-        `Dépassement du budget ${budget.category} (${formatMoney(spent)}/${formatMoney(budget.limit)})`,
+        message("Dépassement du budget {category} ({spent}/{limit})", { category: budget.category, spent: formatMoney(spent), limit: formatMoney(budget.limit) }),
       );
     } else if (spent >= budget.limit * 0.75) {
-      alerts.push(`Attention : 75% du budget ${budget.category} utilisé`);
+      alerts.push(message("Attention : 75% du budget {category} utilisé", { category: budget.category }));
     }
   });
 
@@ -43,10 +43,10 @@ export const generateAlerts = (
   newState.customCategories.forEach((category) => {
     if (category.spent > category.budget) {
       alerts.push(
-        `Dépassement du projet ${category.name} (${formatMoney(category.spent)}/${formatMoney(category.budget)})`,
+        message("Dépassement du projet {category} ({spent}/{limit})", { category: category.name, spent: formatMoney(category.spent), limit: formatMoney(category.budget) }),
       );
     } else if (category.spent >= category.budget * 0.9) {
-      alerts.push(`Attention : 90% du budget ${category.name} utilisé`);
+      alerts.push(message("Attention : 90% du budget {category} utilisé", { category: category.name }));
     }
   });
 

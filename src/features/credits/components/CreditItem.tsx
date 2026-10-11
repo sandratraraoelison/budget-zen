@@ -1,4 +1,5 @@
 "use client";
+import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useCurrency } from "@/features/settings/CurrencyProvider";
 
@@ -23,6 +24,7 @@ export default function CreditItem({
   onUpdate: (updated: Credit) => void;
   onDelete: (id: string) => void;
 }) {
+  const { t, locale } = useLocale();
   const { formatMoney } = useCurrency();
   const [isEditing, setIsEditing] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -60,12 +62,12 @@ export default function CreditItem({
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     if (status === "expired") {
-      return { status: "expired", message: "Échéance dépassée !" };
+      return { status: "expired", message: t("Échéance dépassée !") };
     }
     if (diffDays <= 7) {
       return {
         status: "warning",
-        message: `Échéance dans ${diffDays} jour(s)`,
+        message: t("Échéance dans {days} jour(s)", { days: diffDays }),
       };
     }
     return null;
@@ -91,12 +93,12 @@ export default function CreditItem({
         absolute -top-3 right-2 px-3 py-1 rounded-full text-sm font-medium
         ${
           isPaid
-            ? "bg-green-100 text-green-800"
+            ? "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300"
             : "bg-yellow-100 text-yellow-800"
         }
       `}
       >
-        {isPaid ? "Payé" : "Non payé"}
+        {isPaid ? t("Payé") : t("Non payé")}
       </div>
 
       {/* Alerte date */}
@@ -106,7 +108,7 @@ export default function CreditItem({
           mb-4 p-3 rounded-lg flex items-center gap-2
           ${
             dateStatus.status === "expired"
-              ? "bg-red-100 text-red-800"
+              ? "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300"
               : "bg-yellow-100 text-yellow-800"
           }
         `}
@@ -119,13 +121,12 @@ export default function CreditItem({
       <div className="flex justify-between items-start mb-4">
         <div className="pr-8">
           <h3 className="text-xl font-semibold">
-            {localCredit.type === "borrowed" ? "À : " : "De : "}
+            {localCredit.type === "borrowed" ? t("À : ") : t("De : ")}
             <span className="text-primary">{localCredit.contact}</span>
           </h3>
 
           <div className="mt-2 space-y-1">
-            <p className="text-gray-600">
-              Initial:{" "}
+            <p className="text-gray-600 dark:text-slate-300">{t("Initial:")}{" "}
               <span className="font-medium">
                 {formatMoney(localCredit.initialAmount)}
               </span>
@@ -133,18 +134,15 @@ export default function CreditItem({
             <p
               className={`text-lg ${
                 localCredit.remainingAmount > 0
-                  ? "text-red-600"
-                  : "text-green-600"
+                  ? "text-red-600 dark:text-red-300"
+                  : "text-green-600 dark:text-green-300"
               }`}
-            >
-              Restant: {formatMoney(localCredit.remainingAmount)}
+            >{t("Restant:")}{formatMoney(localCredit.remainingAmount)}
             </p>
-            <p className="text-sm text-gray-500">
-              Début:{" "}
-              {new Date(localCredit.startDate).toLocaleDateString("fr-FR")}
+            <p className="text-sm text-gray-500 dark:text-slate-300">{t("Début:")}{" "}
+              {new Date(localCredit.startDate).toLocaleDateString(locale)}
               {localCredit.endDate &&
-                ` • Fin: ${new Date(localCredit.endDate).toLocaleDateString(
-                  "fr-FR",
+                ` • ${t("Fin:")} ${new Date(localCredit.endDate).toLocaleDateString(locale,
                 )}`}
             </p>
           </div>
@@ -154,22 +152,22 @@ export default function CreditItem({
           <button
             onClick={() => setIsPaymentModalOpen(true)}
             disabled={isPaid}
-            className="text-green-600 hover:text-green-700"
-            title="Ajouter un paiement"
+            className="text-green-600 hover:text-green-700 dark:text-green-300 dark:hover:text-green-300"
+            title={t("Ajouter un paiement")}
           >
             <PlusIcon className="w-6 h-6" />
           </button>
           <button
             onClick={() => setIsEditing(true)}
-            className="text-blue-600 hover:text-blue-700"
+            className="text-blue-600 hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-300"
             title="Modifier"
           >
             <PencilIcon className="w-6 h-6" />
           </button>
           <button
             onClick={() => onDelete(localCredit.id)}
-            className="text-red-600 hover:text-red-700"
-            title="Supprimer"
+            className="text-red-600 hover:text-red-700 dark:text-red-300 dark:hover:text-red-300"
+            title={t("Supprimer")}
           >
             <TrashIcon className="w-6 h-6" />
           </button>
@@ -193,23 +191,23 @@ export default function CreditItem({
 
       {localCredit.payments.length > 0 && (
         <div className="mt-4 pt-4 border-t">
-          <h4 className="font-semibold mb-3">Historique des paiements :</h4>
+          <h4 className="font-semibold mb-3">{t("Historique des paiements :")}</h4>
           <div className="space-y-2">
             {localCredit.payments.map((payment) => (
               <div
                 key={payment.id}
-                className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
+                className="flex justify-between items-center p-3 bg-gray-50 rounded-lg dark:bg-slate-950"
               >
                 <div>
-                  <p className="font-medium text-gray-800">
+                  <p className="font-medium text-gray-800 dark:text-slate-100">
                     - {formatMoney(payment.amount)}
                   </p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {new Date(payment.date).toLocaleDateString("fr-FR")}
+                  <p className="text-sm text-gray-500 mt-1 dark:text-slate-300">
+                    {new Date(payment.date).toLocaleDateString(locale)}
                   </p>
                 </div>
                 {payment.note && (
-                  <p className="text-sm text-gray-600 max-w-[40%] truncate">
+                  <p className="text-sm text-gray-600 max-w-[40%] truncate dark:text-slate-300">
                     {payment.note}
                   </p>
                 )}

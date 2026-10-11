@@ -1,4 +1,5 @@
 "use client";
+import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useBudget } from "./context/BudgetProvider";
 import { useState } from "react";
@@ -13,8 +14,10 @@ import PageHeader from "@/components/ui/PageHeader";
 import EmptyState from "@/components/ui/EmptyState";
 import { TransactionsList } from "./components/TransactionsList";
 import BalanceCard from "./components/BalanceCard";
+import WorkspaceOverview from "./components/WorkspaceOverview";
 
 export default function Dashboard() {
+  const { t } = useLocale();
   const { state } = useBudget();
   const [transactionModalOpen, setTransactionModalOpen] = useState(false);
   const [notice, setNotice] = useState("");
@@ -23,8 +26,8 @@ export default function Dashboard() {
       <Navigation />
       <main id="main-content" className="workspace-main" tabIndex={-1}>
         <PageHeader
-          title="Tableau de bord"
-          description="Une vue claire de vos finances, pour savoir où vous en êtes et préparer la suite."
+          title={t("Tableau de bord")}
+          description={t("Une vue claire de vos finances, pour savoir où vous en êtes et préparer la suite.")}
           action={
             <button
               type="button"
@@ -33,16 +36,15 @@ export default function Dashboard() {
                 setTransactionModalOpen(true);
               }}
               className="ui-primary"
-            >
-              + Ajouter une transaction
-            </button>
+            >{t("+ Ajouter une transaction")}</button>
           }
         />
         <BalanceCard />
+        <WorkspaceOverview />
         {notice && (
           <p
             role="status"
-            className="mt-5 rounded-xl border border-teal-100 bg-teal-50 px-4 py-3 text-sm text-teal-800"
+            className="mt-5 rounded-xl border border-teal-100 bg-teal-50 px-4 py-3 text-sm text-teal-800 dark:border-teal-800 dark:bg-teal-950 dark:text-teal-300"
           >
             {notice}
           </p>
@@ -54,31 +56,31 @@ export default function Dashboard() {
           </div>
           <aside
             className="min-w-0 space-y-6"
-            aria-label="Suivi des budgets et objectifs"
+            aria-label={t("Suivi des budgets et objectifs")}
           >
             <AlertsCard />
-            <section className="ui-card" aria-label="Vos budgets">
+            <section
+              id="budget-summary"
+              className="ui-card scroll-mt-6"
+              aria-label={t("Vos budgets")}
+            >
               <BudgetCard />
               <details
-                className="mt-5 border-t border-slate-100 pt-4"
+                className="mt-5 border-t border-slate-100 pt-4 dark:border-slate-700"
                 open={state.budgets.length === 0}
               >
-                <summary className="cursor-pointer rounded-lg py-2 text-sm font-semibold text-teal-800">
-                  Ajouter un budget
-                </summary>
+                <summary className="cursor-pointer rounded-lg py-2 text-sm font-semibold text-teal-800 dark:text-teal-300">{t("Ajouter un budget")}</summary>
                 <div className="mt-3">
                   <BudgetForm />
                 </div>
               </details>
             </section>
             <section className="ui-card" aria-labelledby="savings-heading">
-              <h2 id="savings-heading" className="ui-title mb-4">
-                Objectifs d’épargne
-              </h2>
+              <h2 id="savings-heading" className="ui-title mb-4">{t("Objectifs d’épargne")}</h2>
               {state.savingsGoals.length === 0 ? (
                 <EmptyState
-                  title="Vos objectifs prennent forme ici"
-                  description="Aucun objectif d’épargne défini pour le moment."
+                  title={t("Vos objectifs prennent forme ici")}
+                  description={t("Aucun objectif d’épargne défini pour le moment.")}
                 />
               ) : (
                 state.savingsGoals.map((goal) => (
@@ -94,7 +96,7 @@ export default function Dashboard() {
         onClose={() => setTransactionModalOpen(false)}
         onSuccess={() => {
           setTransactionModalOpen(false);
-          setNotice("Transaction ajoutée à votre historique.");
+          setNotice(t("Transaction ajoutée à votre historique."));
         }}
       />
     </div>

@@ -1,4 +1,5 @@
 "use client";
+import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useCurrency } from "@/features/settings/CurrencyProvider";
 
@@ -10,6 +11,7 @@ interface SavingsGoalCardProps {
 }
 
 export default function SavingsGoalCard({ goal }: SavingsGoalCardProps) {
+  const { t } = useLocale();
   const { formatMoney } = useCurrency();
   const progress =
     goal.target > 0 ? Math.min(100, (goal.current / goal.target) * 100) : 0;
@@ -21,11 +23,11 @@ export default function SavingsGoalCard({ goal }: SavingsGoalCardProps) {
     <div className="p-4 border rounded-lg mb-4">
       <div className="flex justify-between items-center mb-2">
         <h3 className="font-medium">{goal.name}</h3>
-        <span className="text-sm text-gray-500">
+        <span className="text-sm text-gray-500 dark:text-slate-300">
           {goal.current >= goal.target
-            ? "Objectif atteint"
+            ? t("Objectif atteint")
             : daysLeft < 0
-              ? "Échéance dépassée"
+              ? t("Échéance dépassée")
               : `${daysLeft} jours restants`}
         </span>
       </div>

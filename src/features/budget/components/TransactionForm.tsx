@@ -1,9 +1,11 @@
 "use client";
+import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useCurrency } from "@/features/settings/CurrencyProvider";
 
 import { useState } from "react";
 import DatePicker from "react-datepicker";
+import { fr, enUS } from "date-fns/locale";
 import "react-datepicker/dist/react-datepicker.css";
 import { useBudget } from "@/features/budget/context/BudgetProvider";
 import { Transaction, TransactionCategory } from "@/features/budget/types";
@@ -18,6 +20,7 @@ export default function TransactionForm({
 }: {
   onSuccess?: () => void;
 }) {
+  const { t, language } = useLocale();
   const { currency, formatMoney } = useCurrency();
   const { state, addTransaction } = useBudget();
   const [error, setError] = useState("");
@@ -35,7 +38,7 @@ export default function TransactionForm({
     setSuccess("");
 
     if (!formData.category || !formData.amount) {
-      setError("Veuillez sélectionner une catégorie et saisir un montant");
+      setError(t("Veuillez sélectionner une catégorie et saisir un montant"));
       return;
     }
 
@@ -71,12 +74,15 @@ export default function TransactionForm({
         );
 
         if (projectedTotal > relatedBudget.limit) {
-          const confirmMessage =
-            `⚠️ Attention : Cette transaction dépasse le budget ${relatedBudget.category} !\n\n` +
-            `Limite actuelle : ${formatMoney(relatedBudget.limit)}\n` +
-            `Dépense actuelle : ${formatMoney(relatedBudget.current)}\n` +
-            `Nouveau total : ${formatMoney(projectedTotal)}\n\n` +
-            `Confirmez-vous cette dépense ?`;
+          const confirmMessage = [
+            t("⚠️ Attention : Cette transaction dépasse le budget {category} !", { category: t(getCategoryLabel(relatedBudget.category)) }),
+            "",
+            t("Limite actuelle : {amount}", { amount: formatMoney(relatedBudget.limit) }),
+            t("Dépense actuelle : {amount}", { amount: formatMoney(relatedBudget.current) }),
+            t("Nouveau total : {amount}", { amount: formatMoney(projectedTotal) }),
+            "",
+            t("Confirmez-vous cette dépense ?"),
+          ].join("\n");
 
           if (!confirm(confirmMessage)) return;
         } else if (
@@ -84,7 +90,7 @@ export default function TransactionForm({
           remainingBudget - newTransaction.amount > 0
         ) {
           alert(
-            `⚠️ Il restera seulement ${formatMoney(remainingBudget - newTransaction.amount)} dans le budget ${relatedBudget.category}`,
+            t("⚠️ Il restera seulement {amount} dans le budget {category}", { amount: formatMoney(remainingBudget - newTransaction.amount), category: t(getCategoryLabel(relatedBudget.category)) }),
           );
         }
       }
@@ -97,7 +103,7 @@ export default function TransactionForm({
       return;
     }
     setError("");
-    setSuccess("Transaction ajoutée à votre historique.");
+    setSuccess(t("Transaction ajoutée à votre historique."));
 
     // Reset Form
     setFormData({
@@ -115,14 +121,14 @@ export default function TransactionForm({
       {success && (
         <p
           role="status"
-          className="rounded-lg bg-teal-50 px-4 py-3 text-sm text-teal-800"
+          className="rounded-lg bg-teal-50 px-4 py-3 text-sm text-teal-800 dark:bg-teal-950 dark:text-teal-300"
         >
-          {success}
+          {t(success)}
         </p>
       )}
       {error && (
-        <p role="alert" className="text-red-600 mb-4">
-          {error}
+        <p role="alert" className="text-red-600 mb-4 dark:text-red-300">
+          {t(error)}
         </p>
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -130,9 +136,7 @@ export default function TransactionForm({
           <label
             htmlFor="transaction-type"
             className="block text-sm font-medium mb-1"
-          >
-            Type
-          </label>
+          >{t("Type")}</label>
           <select
             id="transaction-type"
             className="w-full p-2 border rounded"
@@ -144,8 +148,8 @@ export default function TransactionForm({
               })
             }
           >
-            <option value="expense">Dépense</option>
-            <option value="income">Revenu</option>
+            <option value="expense">{t("Dépense")}</option>
+            <option value="income">{t("Revenu")}</option>
           </select>
         </div>
 
@@ -153,17 +157,16 @@ export default function TransactionForm({
           <label
             htmlFor="transaction-date"
             className="block text-sm font-medium mb-1"
-          >
-            Date
-          </label>
+          >{t("Date")}</label>
           <DatePicker
+            locale={language === "fr" ? fr : enUS}
             id="transaction-date"
             selected={formData.date}
             onChange={(date) =>
               setFormData({ ...formData, date: date || new Date() })
             }
             className="w-full p-2 border rounded"
-            dateFormat="dd/MM/yyyy"
+            dateFormat={language === "fr" ? "dd/MM/yyyy" : "MM/dd/yyyy"}
           />
         </div>
       </div>
@@ -173,9 +176,7 @@ export default function TransactionForm({
           <label
             htmlFor="transaction-category"
             className="block text-sm font-medium mb-1"
-          >
-            Catégorie
-          </label>
+          >{t("Catégorie")}</label>
           <select
             id="transaction-category"
             className="w-full p-2 border rounded"
@@ -188,10 +189,10 @@ export default function TransactionForm({
             }
             required
           >
-            <option value="">Sélectionnez une catégorie</option>
+            <option value="">{t("Sélectionnez une catégorie")}</option>
             {TRANSACTION_CATEGORIES.map((category) => (
               <option key={category} value={category}>
-                {getCategoryLabel(category)}
+                {t(getCategoryLabel(category))}
               </option>
             ))}
           </select>
@@ -201,8 +202,7 @@ export default function TransactionForm({
           <label
             htmlFor="transaction-amount"
             className="block text-sm font-medium mb-1"
-          >
-            Montant ({currency})
+          >{t("Montant (")}{currency})
           </label>
           <input
             id="transaction-amount"
@@ -226,14 +226,12 @@ export default function TransactionForm({
         <label
           htmlFor="transaction-description"
           className="block text-sm font-medium mb-1"
-        >
-          Description (optionnel)
-        </label>
+        >{t("Description (optionnel)")}</label>
         <input
           id="transaction-description"
           type="text"
           className="w-full p-2 border rounded"
-          placeholder="Ajouter une description..."
+          placeholder={t("Ajouter une description...")}
           value={formData.description}
           onChange={(e) =>
             setFormData({
@@ -244,9 +242,7 @@ export default function TransactionForm({
         />
       </div>
 
-      <button type="submit" className="ui-primary w-full">
-        Ajouter la transaction
-      </button>
+      <button type="submit" className="ui-primary w-full">{t("Ajouter la transaction")}</button>
     </form>
   );
 }

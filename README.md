@@ -56,6 +56,8 @@ Les tests utilisent le runner natif Node.js via `tsx`. Les données démo du pro
 
 ## Stockage et limites actuelles
 
+Le tableau de bord inclut une vue d’ensemble des quatre rubriques : consommation et alertes des budgets, avancement des projets, crédits non soldés et résultat business du mois courant. Les cartes proposent un accès direct aux pages correspondantes. Le résumé des projets lit la sauvegarde locale sans la modifier ; celui du business utilise les statistiques de l’API. L’état des crédits est partagé au niveau de l’espace connecté, pour conserver les données lors du passage entre le tableau de bord et la page Crédits.
+
 Les pages de gestion partagent les composants `PageHeader` et `EmptyState`, ainsi que les classes `workspace`, `workspace-main`, `ui-card`, `ui-primary` et `ui-dialog` définies dans `src/app/globals.css`. Le tableau de bord présente les indicateurs financiers en tête, puis les transactions et le suivi des budgets. Le bouton œil masque le solde disponible pendant la consultation. Le formulaire de transaction s’ouvre dans une modale depuis « Ajouter une transaction » ; après un ajout réussi, la modale se ferme et une confirmation apparaît sur le tableau de bord. Les formulaires restent distincts des cartes pour éviter les conteneurs imbriqués. Les graphiques vides, recherches sans résultat et chargements disposent d’un affichage dédié.
 
 Les budgets et crédits du frontend restent en mémoire et sont réinitialisés au rechargement. Les projets sont sauvegardés dans le navigateur, avec une clé propre à chaque utilisateur (`budgetzen:projects:<id>`). Les nouveaux comptes démarrent avec un budget vide. Les transactions business et la devise du compte sont sauvegardées dans SQLite via l’API NestJS ; les statistiques et graphiques business utilisent les transactions réelles de la période sélectionnée.
@@ -93,6 +95,8 @@ Les règles sont isolées dans `src/shared/domain` et les dossiers `features/*/d
 Les routes Next.js `/api/account/*` transmettent uniquement les opérations business et préférences autorisées. Elles gardent le JWT côté serveur, vérifient l’origine des mutations et affichent les erreurs de validation ou d’indisponibilité dans les formulaires.
 
 ## Accueil et authentification
+
+Les contrôles de l’accueil et de la navigation permettent de choisir le thème clair/sombre et la langue français/anglais. Le thème suit initialement le système ; la langue initiale est le français. Les choix sont conservés dans ce navigateur (`budgetzen-theme`, `budgetzen-language`) et synchronisés entre les onglets. Les montants, noms de devises et dates affichées suivent la langue choisie. Les textes de l’interface sont centralisés dans `src/features/settings/translations/en.ts` et utilisés avec `useLocale()` ; les données saisies et les identifiants métier conservent leur valeur. Les tests d’hydratation couvrent également les préférences sauvegardées et le changement des deux réglages.
 
 Au premier accès, `/` affiche une landing page responsive avec inscription et connexion. `/auth/login` et `/auth/register` ouvrent le même écran dans le mode correspondant. Une session valide redirige l'accueil vers `/dashboard` ; les pages de gestion demandent une connexion. La navigation propose un bouton de déconnexion.
 

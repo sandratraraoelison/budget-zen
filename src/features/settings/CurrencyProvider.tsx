@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { accountRequest } from "@/shared/api/client";
+import { useLocale } from "./LocaleProvider";
 
 const CurrencyContext = createContext<{
   currency: string;
@@ -27,6 +28,7 @@ export function CurrencyProvider({
   children: ReactNode;
   initialCurrency?: string;
 }) {
+  const { locale } = useLocale();
   const [currency, setCurrency] = useState(initialCurrency);
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState(false);
@@ -54,14 +56,14 @@ export function CurrencyProvider({
   }, [version]);
   const formatter = useMemo(
     () =>
-      new Intl.NumberFormat("fr-FR", {
+      new Intl.NumberFormat(locale, {
         style: "currency",
         currency,
         currencyDisplay: "code",
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       }),
-    [currency],
+    [currency, locale],
   );
   const changeCurrency = async (next: string) => {
     setPending(true);

@@ -1,4 +1,5 @@
 "use client";
+import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useCurrency } from "@/features/settings/CurrencyProvider";
 
@@ -11,6 +12,7 @@ import {
 } from "../domain/categorization";
 
 export default function BudgetForm() {
+  const { t } = useLocale();
   const { currency } = useCurrency();
   const { addBudget, state } = useBudget();
   const [error, setError] = useState("");
@@ -23,7 +25,7 @@ export default function BudgetForm() {
     e.preventDefault();
 
     if (!formData.category || formData.limit <= 0) {
-      setError("Choisissez une catégorie et saisissez une limite positive.");
+      setError(t("Choisissez une catégorie et saisissez une limite positive."));
       return;
     }
 
@@ -46,13 +48,11 @@ export default function BudgetForm() {
     <div>
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <p role="alert" className="text-red-600">
-            {error}
+          <p role="alert" className="text-red-600 dark:text-red-300">
+            {t(error)}
           </p>
         )}
-        <label htmlFor="budget-category" className="block">
-          Catégorie
-        </label>
+        <label htmlFor="budget-category" className="block">{t("Catégorie")}</label>
         <select
           id="budget-category"
           className="w-full p-2 border rounded"
@@ -62,18 +62,17 @@ export default function BudgetForm() {
           }
           required
         >
-          <option value="">Choisir une catégorie</option>
+          <option value="">{t("Choisir une catégorie")}</option>
           {TRANSACTION_CATEGORIES.filter(
             (category) => !state.budgets.some((b) => b.category === category),
           ).map((category) => (
             <option key={category} value={category}>
-              {getCategoryLabel(category)}
+              {t(getCategoryLabel(category))}
             </option>
           ))}
         </select>
 
-        <label htmlFor="budget-limit" className="block">
-          Limite ({currency})
+        <label htmlFor="budget-limit" className="block">{t("Limite (")}{currency})
         </label>
         <input
           id="budget-limit"
@@ -88,13 +87,9 @@ export default function BudgetForm() {
           step="0.01"
           required
         />
-        <p className="text-sm text-gray-500">
-          La limite s’applique aux dépenses cumulées de cette catégorie.
-        </p>
+        <p className="text-sm text-gray-500 dark:text-slate-300">{t("La limite s’applique aux dépenses cumulées de cette catégorie.")}</p>
 
-        <button type="submit" className="ui-primary w-full">
-          Créer le budget
-        </button>
+        <button type="submit" className="ui-primary w-full">{t("Créer le budget")}</button>
       </form>
     </div>
   );

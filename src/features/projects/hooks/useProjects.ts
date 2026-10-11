@@ -26,7 +26,7 @@ const projectsSchema = z.array(
   }),
 );
 
-export function useProjects() {
+export function useProjects({ readOnly = false }: { readOnly?: boolean } = {}) {
   const { user } = useAuth();
   const storageKey = user ? `budgetzen:projects:${user.id}` : null;
   const [projects, setProjects] = useState<Project[]>([]);
@@ -57,14 +57,19 @@ export function useProjects() {
   }, [storageKey]);
 
   useEffect(() => {
-    if (!storageKey || loadedKey !== storageKey) return;
+    if (readOnly || !storageKey || loadedKey !== storageKey) return;
     try {
       localStorage.setItem(storageKey, JSON.stringify(projects));
     } catch (error) {
       console.warn("Impossible de sauvegarder les projets.", error);
       setError("Impossible de sauvegarder les projets dans ce navigateur.");
     }
-  }, [loadedKey, storageKey, projects]);
+  }, [loadedKey, storageKey, projects, readOnly]);
 
-  return { projects, setProjects, error };
+  return {
+    projects,
+    setProjects,
+    error,
+    loading: !!storageKey && loadedKey !== storageKey && !error,
+  };
 }

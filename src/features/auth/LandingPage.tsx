@@ -1,4 +1,5 @@
 "use client";
+import { useLocale } from "@/features/settings/LocaleProvider";
 
 import Link from "next/link";
 import {
@@ -11,6 +12,7 @@ import {
 } from "lucide-react";
 import AuthForm from "./components/AuthForm";
 import type { AuthMode } from "./types";
+import AppearanceControls from "@/features/settings/AppearanceControls";
 
 const features = [
   {
@@ -37,78 +39,64 @@ export default function LandingPage({
 }: {
   initialMode?: AuthMode;
 }) {
+  const { t } = useLocale();
   return (
-    <div className="min-h-screen bg-[#f8faf8] text-slate-900">
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6 sm:px-10">
+    <div className="min-h-screen bg-[#f8faf8] dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+      <header className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-6 sm:px-10">
         <Link
           href="/"
-          aria-label="BudgetZen, accueil"
+          aria-label={t("BudgetZen, accueil")}
           className="flex items-center gap-2.5 text-xl font-bold tracking-tight"
         >
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-800 text-white">
             <Leaf size={22} aria-hidden="true" />
           </span>
-          Budget<span className="-ml-2 text-teal-700">Zen</span>
+          Budget<span className="-ml-2 text-teal-700 dark:text-teal-300">Zen</span>
         </Link>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+        <AppearanceControls />
         <Link
           href="/auth/login"
-          className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold transition hover:border-teal-300 hover:text-teal-800 sm:px-5"
-        >
-          Se connecter{" "}
+          className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold transition hover:border-teal-300 hover:text-teal-800 sm:px-5 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-teal-800 dark:hover:text-teal-300"
+        >{t("Se connecter")}{" "}
           <ArrowUpRight size={14} className="ml-1 inline" aria-hidden="true" />
         </Link>
+        </div>
       </header>
 
       <main className="mx-auto max-w-6xl px-6 pb-12 pt-5 sm:px-10 sm:pt-12">
         <div className="grid items-center gap-12 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
           <section aria-labelledby="landing-heading" className="py-2 lg:py-8">
-            <div className="inline-flex items-center gap-2 rounded-full border border-teal-100 bg-teal-50 px-3.5 py-2 text-xs font-semibold text-teal-800">
-              <span className="h-1.5 w-1.5 rounded-full bg-teal-600" />
-              Moins de stress. Plus de clarté.
-            </div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-teal-100 bg-teal-50 px-3.5 py-2 text-xs font-semibold text-teal-800 dark:border-teal-800 dark:bg-teal-950 dark:text-teal-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-teal-600" />{t("Moins de stress. Plus de clarté.")}</div>
             <h1
               id="landing-heading"
               className="mt-6 text-4xl font-bold leading-[1.12] tracking-[-0.04em] sm:text-5xl lg:text-6xl"
-            >
-              Votre argent,
-              <br />
-              l’esprit <span className="text-teal-700">tranquille.</span>
+            >{t("Votre argent,")}<br />{t("l’esprit")}{" "}<span className="text-teal-700 dark:text-teal-300">{t("tranquille.")}</span>
             </h1>
-            <p className="mt-6 max-w-md text-base leading-7 text-slate-500 sm:text-lg sm:leading-8">
-              Un espace simple pour organiser votre budget, suivre vos projets
-              et avancer à votre rythme.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-x-5 gap-y-3 text-sm text-slate-600">
+            <p className="mt-6 max-w-md text-base leading-7 text-slate-500 sm:text-lg sm:leading-8 dark:text-slate-300">{t("Un espace simple pour organiser votre budget, suivre vos projets et avancer à votre rythme.")}</p>
+            <div className="mt-6 flex flex-wrap gap-x-5 gap-y-3 text-sm text-slate-600 dark:text-slate-300">
               <span className="flex items-center gap-2">
                 <CircleCheck
                   size={17}
-                  className="text-teal-600"
+                  className="text-teal-600 dark:text-teal-300"
                   aria-hidden="true"
-                />
-                Simple à prendre en main
-              </span>
+                />{t("Simple à prendre en main")}</span>
               <span className="flex items-center gap-2">
                 <CircleCheck
                   size={17}
-                  className="text-teal-600"
+                  className="text-teal-600 dark:text-teal-300"
                   aria-hidden="true"
-                />
-                Tout au même endroit
-              </span>
+                />{t("Tout au même endroit")}</span>
             </div>
-            <div className="mt-10 rounded-2xl border border-teal-100 bg-gradient-to-br from-teal-50 to-white p-5 sm:p-6">
+            <div className="mt-10 rounded-2xl border border-teal-100 bg-gradient-to-br from-teal-50 to-white p-5 sm:p-6 dark:border-teal-800 dark:from-teal-950 dark:to-slate-900">
               <div className="flex items-start gap-3">
-                <span className="rounded-xl bg-white p-2.5 text-teal-700 shadow-sm">
+                <span className="rounded-xl bg-white p-2.5 text-teal-700 shadow-sm dark:bg-slate-900 dark:text-teal-300">
                   <Leaf size={21} aria-hidden="true" />
                 </span>
                 <div>
-                  <p className="font-semibold text-teal-900">
-                    Un petit pas pour votre budget.
-                  </p>
-                  <p className="mt-1 text-sm leading-6 text-teal-800/70">
-                    Commencez par une vision claire de vos finances. Le reste, à
-                    votre rythme.
-                  </p>
+                  <p className="font-semibold text-teal-900 dark:text-teal-300">{t("Un petit pas pour votre budget.")}</p>
+                  <p className="mt-1 text-sm leading-6 text-teal-800/70 dark:text-teal-300/70">{t("Commencez par une vision claire de vos finances. Le reste, à votre rythme.")}</p>
                 </div>
               </div>
             </div>
@@ -117,27 +105,25 @@ export default function LandingPage({
         </div>
 
         <section
-          aria-label="Les fonctionnalités de BudgetZen"
-          className="mt-14 grid gap-6 border-t border-slate-200/80 pt-8 sm:grid-cols-3 lg:mt-16"
+          aria-label={t("Les fonctionnalités de BudgetZen")}
+          className="mt-14 grid gap-6 border-t border-slate-200/80 pt-8 sm:grid-cols-3 lg:mt-16 dark:border-slate-700/80"
         >
           {features.map(({ icon: Icon, title, description }) => (
             <article key={title} className="flex gap-3 sm:block">
-              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-teal-700 ring-1 ring-slate-200/80">
+              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-teal-700 ring-1 ring-slate-200/80 dark:bg-slate-900 dark:text-teal-300 dark:ring-slate-700/80">
                 <Icon size={20} aria-hidden="true" />
               </span>
               <div>
-                <h2 className="font-semibold sm:mt-3">{title}</h2>
-                <p className="mt-2 max-w-xs text-sm leading-6 text-slate-500">
-                  {description}
+                <h2 className="font-semibold sm:mt-3">{t(title)}</h2>
+                <p className="mt-2 max-w-xs text-sm leading-6 text-slate-500 dark:text-slate-300">
+                  {t(description)}
                 </p>
               </div>
             </article>
           ))}
         </section>
       </main>
-      <footer className="mx-auto max-w-6xl px-6 pb-6 text-xs text-slate-400 sm:px-10">
-        BudgetZen · Un quotidien financier plus serein.
-      </footer>
+      <footer className="mx-auto max-w-6xl px-6 pb-6 text-xs text-slate-400 sm:px-10 dark:text-slate-400">{t("BudgetZen · Un quotidien financier plus serein.")}</footer>
     </div>
   );
 }

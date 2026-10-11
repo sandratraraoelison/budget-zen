@@ -1,4 +1,5 @@
 "use client";
+import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { AlertTriangle, CircleCheck } from "lucide-react";
 import { useBudget } from "@/features/budget/context/BudgetProvider";
@@ -6,9 +7,10 @@ import { useCurrency } from "@/features/settings/CurrencyProvider";
 import { generateAlerts } from "../domain/alerts";
 
 export default function AlertsCard() {
+  const { t } = useLocale();
   const { state } = useBudget();
   const { formatMoney } = useCurrency();
-  const alerts = generateAlerts(state, formatMoney);
+  const alerts = generateAlerts(state, formatMoney, t);
 
   return (
     <section className="ui-card">
@@ -19,26 +21,20 @@ export default function AlertsCard() {
             aria-hidden="true"
           />
         ) : (
-          <CircleCheck className="text-teal-700 w-5 h-5" aria-hidden="true" />
-        )}
-        Points de vigilance
-      </h2>
+          <CircleCheck className="text-teal-700 w-5 h-5 dark:text-teal-300" aria-hidden="true" />
+        )}{t("Points de vigilance")}</h2>
 
       {alerts.length === 0 ? (
-        <div className="rounded-xl bg-teal-50 p-4">
-          <p className="text-sm font-medium text-teal-900">
-            Tout est sous contrôle
-          </p>
-          <p className="mt-1 text-sm leading-6 text-teal-800">
-            Aucun dépassement de budget à signaler.
-          </p>
+        <div className="rounded-xl bg-teal-50 p-4 dark:bg-teal-950">
+          <p className="text-sm font-medium text-teal-900 dark:text-teal-300">{t("Tout est sous contrôle")}</p>
+          <p className="mt-1 text-sm leading-6 text-teal-800 dark:text-teal-300">{t("Aucun dépassement de budget à signaler.")}</p>
         </div>
       ) : (
         <ul className="space-y-2">
           {alerts.map((alert, index) => (
             <li
               key={index}
-              className="rounded-lg bg-amber-50 p-3 text-amber-900 text-sm leading-6"
+              className="rounded-lg bg-amber-50 p-3 text-amber-900 text-sm leading-6 dark:bg-amber-950 dark:text-amber-300"
             >
               {alert}
             </li>

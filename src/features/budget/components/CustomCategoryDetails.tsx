@@ -1,4 +1,5 @@
 "use client";
+import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useBudget } from "@/features/budget/context/BudgetProvider";
 import { TransactionCategory } from "@/features/budget/types";
@@ -9,6 +10,7 @@ export default function CustomCategoryDetails({
 }: {
   categoryId: string;
 }) {
+  const { t } = useLocale();
   const { state, addCustomTransaction } = useBudget();
   const [error, setError] = useState("");
   const [transactionForm, setTransactionForm] = useState({
@@ -41,8 +43,8 @@ export default function CustomCategoryDetails({
         }}
       >
         {error && (
-          <p role="alert" className="text-red-600">
-            {error}
+          <p role="alert" className="text-red-600 dark:text-red-300">
+            {t(error)}
           </p>
         )}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -63,7 +65,7 @@ export default function CustomCategoryDetails({
           />
           <input
             type="text"
-            placeholder="Description"
+            placeholder={t("Description")}
             className="p-2 border rounded"
             value={transactionForm.description}
             onChange={(e) =>
@@ -92,9 +94,7 @@ export default function CustomCategoryDetails({
         <button
           type="submit"
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          Ajouter Dépense
-        </button>
+        >{t("Ajouter Dépense")}</button>
       </form>
     </div>
   );

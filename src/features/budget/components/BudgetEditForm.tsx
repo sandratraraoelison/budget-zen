@@ -1,4 +1,5 @@
 "use client";
+import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useState } from "react";
 import { useBudget } from "@/features/budget/context/BudgetProvider";
@@ -11,6 +12,7 @@ export default function BudgetEditForm({
   budget: Budget;
   onClose: () => void;
 }) {
+  const { t } = useLocale();
   const { updateBudget } = useBudget();
   const [error, setError] = useState("");
   const [formData, setFormData] = useState<Budget>(budget);
@@ -29,15 +31,15 @@ export default function BudgetEditForm({
   };
 
   return (
-    <div className="p-4 bg-gray-50 rounded-lg mt-2">
+    <div className="p-4 bg-gray-50 rounded-lg mt-2 dark:bg-slate-950">
       <form onSubmit={handleSubmit} className="flex flex-col gap-2">
         {error && (
-          <p role="alert" className="text-red-600">
-            {error}
+          <p role="alert" className="text-red-600 dark:text-red-300">
+            {t(error)}
           </p>
         )}
         <div className="flex items-center gap-2">
-          <label className="text-sm">Nouvelle limite :</label>
+          <label className="text-sm">{t("Nouvelle limite :")}</label>
           <input
             type="number"
             value={formData.limit}
@@ -53,16 +55,12 @@ export default function BudgetEditForm({
           <button
             type="submit"
             className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
-          >
-            Valider
-          </button>
+          >{t("Valider")}</button>
           <button
             type="button"
             onClick={onClose}
-            className="bg-gray-200 px-3 py-1 rounded text-sm hover:bg-gray-300"
-          >
-            Annuler
-          </button>
+            className="bg-gray-200 px-3 py-1 rounded text-sm hover:bg-gray-300 dark:bg-slate-800"
+          >{t("Annuler")}</button>
         </div>
       </form>
     </div>

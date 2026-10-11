@@ -30,8 +30,8 @@ export const autoCategorize = (description: string): TransactionCategory => {
   
   export type TransactionCategory = typeof TRANSACTION_CATEGORIES[number]
   
-  export const getCategoryLabel = (category: TransactionCategory) => {
-    const labels: Record<TransactionCategory, string> = {
+  export const getCategoryLabel = (category: string) => {
+    const labels: Record<string, string> = {
       salaire: '💼 Salaire',
       loyer: '🏠 Loyer',
       nourriture: '🛒 Nourriture',
@@ -41,5 +41,5 @@ export const autoCategorize = (description: string): TransactionCategory => {
       éducation: '📚 Éducation',
       autres: '❔ Autres'
     }
-    return labels[category]
+    return labels[category] ?? category
   }

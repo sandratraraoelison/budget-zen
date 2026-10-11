@@ -1,4 +1,5 @@
 "use client";
+import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useState } from "react";
 import BusinessStats from "@/features/business/components/BusinessStats";
@@ -13,6 +14,7 @@ import type { TimeRange } from "@/features/business/types";
 import { useBusiness } from "./hooks/useBusiness";
 
 export default function BusinessPage() {
+  const { t } = useLocale();
   const [timeRange, setTimeRange] = useState<TimeRange>("month");
   const {
     transactions,
@@ -32,31 +34,25 @@ export default function BusinessPage() {
       <main id="main-content" className="workspace-main" tabIndex={-1}>
         <PageHeader
           title="Business"
-          description="Suivez votre activité et les tendances de vos revenus."
+          description={t("Suivez votre activité et les tendances de vos revenus.")}
           action={
             <button
               disabled={pending || loading}
               onClick={() => setIsModalOpen(true)}
               className="ui-primary flex items-center gap-2"
             >
-              <PlusCircleIcon className="w-5 h-5" />
-              Ajouter Transaction
-            </button>
+              <PlusCircleIcon className="w-5 h-5" />{t("Ajouter Transaction")}</button>
           }
         />
 
         {error && (
-          <p role="alert" className="mb-4 text-red-600">
-            {error}{" "}
-            <button onClick={reload} className="underline">
-              Réessayer
-            </button>
+          <p role="alert" className="mb-4 text-red-600 dark:text-red-300">
+            {t(error)}{" "}
+            <button onClick={reload} className="underline">{t("Réessayer")}</button>
           </p>
         )}
         {loading && (
-          <p role="status" className="mb-4 text-gray-500">
-            Chargement des données…
-          </p>
+          <p role="status" className="mb-4 text-gray-500 dark:text-slate-300">{t("Chargement des données…")}</p>
         )}
         <div
           className="grid grid-cols-1 lg:grid-cols-3 gap-6"
@@ -67,28 +63,26 @@ export default function BusinessPage() {
           <div className="lg:col-span-2">
             <div className="ui-card">
               <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
-                <h2 className="text-xl font-semibold">Tendances financières</h2>
+                <h2 className="text-xl font-semibold">{t("Tendances financières")}</h2>
                 <select
-                  aria-label="Période des statistiques"
+                  aria-label={t("Période des statistiques")}
                   value={timeRange}
                   onChange={(e) => setTimeRange(e.target.value as TimeRange)}
                   className="p-2 border rounded-lg"
                 >
-                  <option value="month">Mensuel</option>
-                  <option value="quarter">Trimestriel</option>
-                  <option value="year">Annuel</option>
+                  <option value="month">{t("Mensuel")}</option>
+                  <option value="quarter">{t("Trimestriel")}</option>
+                  <option value="year">{t("Annuel")}</option>
                 </select>
               </div>
               {loading ? (
                 <div
                   role="status"
-                  aria-label="Chargement du graphique"
-                  className="h-64 animate-pulse rounded-xl bg-slate-100"
+                  aria-label={t("Chargement du graphique")}
+                  className="h-64 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800"
                 />
               ) : error ? (
-                <p className="py-8 text-sm text-slate-500">
-                  Le graphique sera disponible après le chargement des données.
-                </p>
+                <p className="py-8 text-sm text-slate-500 dark:text-slate-300">{t("Le graphique sera disponible après le chargement des données.")}</p>
               ) : (
                 <BusinessChart
                   data={loading || error ? [] : (analytics?.chart ?? [])}

@@ -1,4 +1,5 @@
 "use client";
+import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useCurrency } from "@/features/settings/CurrencyProvider";
 
@@ -6,6 +7,7 @@ import { useState } from "react";
 import { useBudget } from "@/features/budget/context/BudgetProvider";
 
 export default function CustomCategoryForm() {
+  const { t } = useLocale();
   const { currency } = useCurrency();
   const { addCustomCategory } = useBudget();
   const [error, setError] = useState("");
@@ -30,16 +32,16 @@ export default function CustomCategoryForm() {
 
   return (
     <div className="ui-card">
-      <h2 className="text-xl font-semibold mb-4">Nouveau Projet</h2>
+      <h2 className="text-xl font-semibold mb-4">{t("Nouveau Projet")}</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <p role="alert" className="text-red-600">
-            {error}
+          <p role="alert" className="text-red-600 dark:text-red-300">
+            {t(error)}
           </p>
         )}
         <input
           type="text"
-          placeholder="Nom du projet"
+          placeholder={t("Nom du projet")}
           className="w-full p-2 border rounded"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -60,9 +62,7 @@ export default function CustomCategoryForm() {
         <button
           type="submit"
           className="w-full bg-primary text-white py-2 px-4 rounded hover:bg-secondary"
-        >
-          Créer le Projet
-        </button>
+        >{t("Créer le Projet")}</button>
       </form>
     </div>
   );

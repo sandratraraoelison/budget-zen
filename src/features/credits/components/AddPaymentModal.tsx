@@ -1,4 +1,5 @@
 "use client";
+import { useLocale } from "@/features/settings/LocaleProvider";
 
 import { useCurrency } from "@/features/settings/CurrencyProvider";
 
@@ -18,6 +19,7 @@ export default function AddPaymentModal({
   maxAmount: number;
   minDate: string;
 }) {
+  const { t } = useLocale();
   const { formatMoney } = useCurrency();
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
@@ -39,7 +41,7 @@ export default function AddPaymentModal({
       onClose();
     } else
       setError(
-        "Saisissez un montant positif inférieur ou égal au solde restant.",
+        t("Saisissez un montant positif inférieur ou égal au solde restant."),
       );
   };
 
@@ -47,19 +49,17 @@ export default function AddPaymentModal({
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <Dialog.Panel className="ui-dialog bg-white p-6 w-full max-w-md">
-          <Dialog.Title className="text-xl font-bold mb-4">
-            Ajouter un paiement
-          </Dialog.Title>
+        <Dialog.Panel className="ui-dialog bg-white p-6 w-full max-w-md dark:bg-slate-900">
+          <Dialog.Title className="text-xl font-bold mb-4">{t("Ajouter un paiement")}</Dialog.Title>
 
           <div className="space-y-4">
             {error && (
-              <p role="alert" className="text-red-600">
-                {error}
+              <p role="alert" className="text-red-600 dark:text-red-300">
+                {t(error)}
               </p>
             )}
             <div>
-              <label>Montant (max {formatMoney(maxAmount)})</label>
+              <label>{t("Montant (max")}{formatMoney(maxAmount)})</label>
               <input
                 type="number"
                 value={amount}
@@ -71,7 +71,7 @@ export default function AddPaymentModal({
               />
             </div>
             <div>
-              <label>Date</label>
+              <label>{t("Date")}</label>
               <input
                 type="date"
                 min={minDate}
@@ -81,7 +81,7 @@ export default function AddPaymentModal({
               />
             </div>
             <div>
-              <label>Note (optionnel)</label>
+              <label>{t("Note (optionnel)")}</label>
               <textarea
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
@@ -91,12 +91,8 @@ export default function AddPaymentModal({
           </div>
 
           <div className="flex justify-end gap-2 mt-6">
-            <button onClick={onClose} className="px-4 py-2 text-gray-500">
-              Annuler
-            </button>
-            <button onClick={handleSubmit} className="ui-primary">
-              Enregistrer
-            </button>
+            <button onClick={onClose} className="px-4 py-2 text-gray-500 dark:text-slate-300">{t("Annuler")}</button>
+            <button onClick={handleSubmit} className="ui-primary">{t("Enregistrer")}</button>
           </div>
         </Dialog.Panel>
       </div>
