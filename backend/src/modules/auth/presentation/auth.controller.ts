@@ -28,6 +28,7 @@ export class AuthController {
     return this.auth.demo();
   }
   @Get("me")
+  @Throttle({ default: { limit: 120, ttl: 60000 } })
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   me(@CurrentUser() id: string) {

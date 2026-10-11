@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import type { Project } from "../types";
+import { useAuth } from "@/features/auth/context/AuthProvider";
 
 const projectsSchema = z.array(z.object({
   id: z.string(), name: z.string(), initialFund: z.number(), currentFund: z.number(),
@@ -12,12 +13,17 @@ const projectsSchema = z.array(z.object({
 }));
 
 export function useProjects() {
+  const { user } = useAuth();
+  const storageKey = user ? `budgetzen:projects:${user.id}` : null;
   const [projects, setProjects] = useState<Project[]>([]);
-  const [loaded, setLoaded] = useState(false);
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
 
   useEffect(() => {
+    setLoadedKey(null);
+    setProjects([]);
+    if (!storageKey) return;
     try {
-      const saved = localStorage.getItem("projects");
+      const saved = localStorage.getItem(storageKey);
       if (saved) {
         const result = projectsSchema.safeParse(JSON.parse(saved));
         if (result.success) setProjects(result.data);
@@ -25,14 +31,14 @@ export function useProjects() {
     } catch (error) {
       console.warn("Impossible de charger les projets sauvegardés.", error);
     }
-    setLoaded(true);
-  }, []);
+    setLoadedKey(storageKey);
+  }, [storageKey]);
 
   useEffect(() => {
-    if (!loaded) return;
-    try { localStorage.setItem("projects", JSON.stringify(projects)); }
+    if (!storageKey || loadedKey !== storageKey) return;
+    try { localStorage.setItem(storageKey, JSON.stringify(projects)); }
     catch (error) { console.warn("Impossible de sauvegarder les projets.", error); }
-  }, [loaded, projects]);
+  }, [loadedKey, storageKey, projects]);
 
   return { projects, setProjects };
 }

@@ -47,3 +47,7 @@ next-env.d.ts
 /backend/data/
 /backend/coverage/
 !/backend/.env.example
+
+!/.env.example
+
+/.next-validation/

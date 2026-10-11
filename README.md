@@ -54,13 +54,13 @@ Les tests utilisent le runner natif Node.js via `tsx`. Les données démo du pro
 
 ## Stockage et limites actuelles
 
-Les budgets et crédits restent en mémoire et sont réinitialisés au rechargement. Seuls les projets sont sauvegardés dans le navigateur, sous la clé `projects`. Le mode démo ne constitue pas une authentification. Les statistiques et graphiques business affichent encore des données de démonstration ; le sélecteur de période ne les recalcule pas.
+Les budgets et crédits du frontend restent en mémoire et sont réinitialisés au rechargement. Les projets sont sauvegardés dans le navigateur, avec une clé propre à chaque utilisateur (`budgetzen:projects:<id>`). Les nouveaux comptes démarrent avec un budget vide. Les statistiques et graphiques business affichent encore des données de démonstration ; le sélecteur de période ne les recalcule pas.
 
 Le build utilise `next/font/google` et nécessite l'accès à Google Fonts pour télécharger Inter.
 
 ## Backend NestJS
 
-Une API persistante est disponible dans [`backend/`](backend/README.md), avec authentification JWT, isolation par utilisateur et modules m?tier ind?pendants de NestJS.
+Une API persistante est disponible dans [`backend/`](backend/README.md), avec authentification JWT, isolation par utilisateur et modules métier indépendants de NestJS.
 
 ```sh
 npm --prefix backend ci
@@ -68,6 +68,27 @@ npm --prefix backend run setup
 npm run dev:backend
 ```
 
-API : http://127.0.0.1:3001/api/v1 ? Swagger : http://127.0.0.1:3001/api/docs.
+API : http://127.0.0.1:3001/api/v1 — Swagger : http://127.0.0.1:3001/api/docs.
 
-Le backend n?cessite Node.js 24 ou sup?rieur. Le frontend utilise encore son ?tat local ; la connexion de ses providers ? cette API reste ? effectuer. La documentation du backend d?taille les routes, les r?gles m?tier et le stockage SQLite.
+Le backend nécessite Node.js 24 ou supérieur. Le frontend utilise l'API pour l'authentification ; les fonctionnalités de gestion utilisent encore leur état local. La documentation du backend détaille les routes, les règles métier et le stockage SQLite.
+
+## Accueil et authentification
+
+Au premier accès, `/` affiche une landing page responsive avec inscription et connexion. `/auth/login` et `/auth/register` ouvrent le même écran dans le mode correspondant. Une session valide redirige l'accueil vers `/dashboard` ; les pages de gestion demandent une connexion. La navigation propose un bouton de déconnexion.
+
+Pour utiliser les formulaires, démarrer le backend et le frontend dans deux terminaux :
+
+```sh
+npm run dev:backend
+npm run dev
+```
+
+La variable serveur `BACKEND_API_URL` permet de changer l'adresse du backend ; sa valeur par défaut est `http://127.0.0.1:3001/api/v1`. Un exemple est disponible dans `.env.example`. Le navigateur appelle les routes Next.js `/api/auth/*`, qui transmettent les requêtes à NestJS. Le jeton JWT reste dans un cookie HttpOnly, avec `SameSite=Lax` et `Secure` en production. Les mutations d'authentification vérifient l'origine de la requête.
+
+La confirmation du mot de passe est vérifiée dans le formulaire. Les conflits d'adresse email, identifiants incorrects, limitations de tentatives et indisponibilités du backend sont affichés dans le formulaire. La session est conservée au rechargement jusqu'à l'expiration du jeton ; une nouvelle connexion est ensuite nécessaire.
+
+```sh
+npm run test:auth
+```
+
+Ce test construit les deux applications, les lance sur des ports temporaires avec une base isolée et vérifie inscription, connexion, cookie de session, protection des pages, déconnexion et indisponibilité du backend. Il ne modifie pas la base de développement. `NEXT_BUILD_DIR=.next-validation` permet de construire le frontend dans un dossier distinct pendant qu'un serveur de développement utilise `.next`.

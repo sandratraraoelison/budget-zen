@@ -8,8 +8,10 @@ import { getCategorySpending as selectCategorySpending, getTransactionTotals } f
 
 const BudgetContext = createContext<BudgetContextType | null>(null);
 
-export const BudgetProvider = ({ children }: { children: ReactNode }) => {
-  const [state, dispatch] = useReducer(budgetReducer, undefined, createDemoState);
+export const BudgetProvider = ({ children, isDemo = false }: { children: ReactNode; isDemo?: boolean }) => {
+  const [state, dispatch] = useReducer(budgetReducer, undefined, () => isDemo ? createDemoState() : {
+    transactions: [], budgets: [], savingsGoals: [], alerts: [], customCategories: [],
+  });
   const { totalIncome, totalExpenses, balance } = useMemo(() => getTransactionTotals(state.transactions), [state.transactions]);
   const addTransaction = (transaction: Transaction) => dispatch({ type: "transaction/add", transaction });
   const removeTransaction = (id: string) => dispatch({ type: "transaction/remove", id });

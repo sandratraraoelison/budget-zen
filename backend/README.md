@@ -21,7 +21,7 @@ npm run dev:backend
 - OpenAPI JSON : http://127.0.0.1:3001/api/docs-json
 - Santé : http://127.0.0.1:3001/api/v1/health
 
-Le frontend continue à fonctionner avec son état local. Ses providers et hooks ne sont pas encore connectés à cette API. Les configurations TypeScript et ESLint des deux applications sont indépendantes.
+Le frontend utilise cette API pour l'inscription, la connexion et la validation de session, via ses propres routes serveur Next.js. Le jeton est conservé dans un cookie HttpOnly. Les fonctionnalités de gestion utilisent encore leur état local ; leurs providers et hooks restent à connecter aux API métier. Les configurations TypeScript et ESLint des deux applications sont indépendantes.
 
 ## Architecture et dépendances
 
@@ -124,7 +124,7 @@ Les erreurs métier exposent `{ statusCode, code, message }` avec les statuts `4
 | `SWAGGER_ENABLED` | `true` ou `false` |
 | `DEMO_ENABLED` | `true` ou `false`, désactivé si absent |
 
-Les requêtes sont limitées à 120 par minute, par route et par adresse IP ; les routes auth à 10. La limitation utilise la mémoire de l'instance. Helmet configure les en-têtes HTTP. Pour exposer le backend, configurer l'origine réelle, HTTPS via un reverse proxy, les sauvegardes SQLite et désactiver les fonctions démo/Swagger si elles ne sont pas souhaitées.
+Les requêtes sont limitées à 120 par minute, par route et par adresse IP ; l'inscription, la connexion et la création d'un compte démo à 10. La lecture du profil (`auth/me`) conserve une limite de 120 pour les vérifications de session du frontend. La limitation utilise la mémoire de l'instance. Helmet configure les en-têtes HTTP. Pour exposer le backend, configurer l'origine réelle, HTTPS via un reverse proxy, les sauvegardes SQLite et désactiver les fonctions démo/Swagger si elles ne sont pas souhaitées.
 
 ## Vérification et production
 
